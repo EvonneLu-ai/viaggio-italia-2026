@@ -730,10 +730,6 @@ textarea{resize:vertical;}
       <div class="di-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
       <span class="di-label">旅行助理</span>
     </button>
-    <button class="drawer-item" id="di-memory" onclick="goTab('memory');closeDrawer()">
-      <div class="di-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
-      <span class="di-label">旅後回憶</span>
-    </button>
   </div>
   <div class="drawer-footer">
     <div style="font-size:12px;color:var(--t3);text-align:center;padding:4px 0;">
@@ -1346,32 +1342,6 @@ textarea{resize:vertical;}
   <div class="pb"></div>
 </div>
 
-<!-- ══════ PANEL: 旅後回憶 ══════ -->
-<div class="panel" id="p-memory">
-  <div style="padding:20px 16px 8px;display:flex;align-items:center;justify-content:space-between;">
-    <div>
-      <div style="font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--t1);margin-bottom:4px;">旅後回憶錄</div>
-      <div style="font-size:14px;color:var(--t2);">記錄旅途中的精彩瞬間</div>
-    </div>
-    <label style="display:flex;align-items:center;gap:6px;padding:9px 14px;background:var(--blue-bg);color:var(--blue);border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-      新增
-      <input type="file" id="mem-file" accept="image/*" capture="environment" style="display:none;" onchange="addMemory(this)"/>
-    </label>
-  </div>
-  <div id="mem-list"></div>
-  <!-- 新增表單（隱藏，上傳後顯示）-->
-  <div id="mem-form" style="display:none;margin:0 16px 16px;padding:14px;background:var(--surface);border-radius:14px;border:1px solid var(--border);">
-    <img id="mem-preview" style="width:100%;border-radius:10px;margin-bottom:10px;max-height:200px;object-fit:cover;" alt=""/>
-    <input type="text" id="mem-title-inp" placeholder="這是哪裡？" style="margin-bottom:8px;"/>
-    <input type="text" id="mem-note-inp" placeholder="一句話記錄這個瞬間…" style="margin-bottom:8px;"/>
-    <div style="display:flex;gap:8px;">
-      <button class="btn btn-primary" style="flex:1;" onclick="saveMemory()">儲存回憶</button>
-      <button class="btn btn-outline" onclick="cancelMemory()">取消</button>
-    </div>
-  </div>
-  <div class="pb"></div>
-</div>
 
 <!-- ── BOTTOM NAV ── -->
 <nav id="nav">
@@ -1631,7 +1601,6 @@ function goTab(t){
   if(t==='docs')renderDocs();
   if(t==='shopping')renderLuggage();
   if(t==='assist')renderCultureTips();
-  if(t==='memory')renderMemories();
 }
 
 /* ════════════════ ITINERARY ════════════════ */
