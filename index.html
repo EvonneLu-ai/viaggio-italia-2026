@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<title>Viaggio Italia 2026</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+/* ═══════════════════ TOKENS ═══════════════════ */
+:root {
+  --bg:#ffffff; --surface:#f5f5f7; --surface2:#e8e8ed; --surface3:#d1d1d6;
+  --border:rgba(0,0,0,.08); --border2:rgba(0,0,0,.05);
+  --t1:#1d1d1f; --t2:#6e6e73; --t3:#aeaeb2;
+  --blue:#0071e3; --blue-bg:rgba(0,113,227,.08); --blue-light:rgba(0,113,227,.15);
+  --green:#34c759; --red:#ff3b30; --orange:#ff9500; --purple:#bf5af2; --teal:#5ac8fa;
+  --warn-bg:rgba(255,59,48,.06); --warn-border:#ff3b30;
+  --overlay:rgba(0,0,0,.35);
+  --shadow:0 2px 16px rgba(0,0,0,.07); --shadow-md:0 4px 24px rgba(0,0,0,.10);
+  --nh:60px; --hh:52px; --r:16px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:#000000; --surface:#1c1c1e; --surface2:#2c2c2e; --surface3:#3a3a3c;
+    --border:rgba(255,255,255,.1); --border2:rgba(255,255,255,.06);
+    --t1:#ffffff; --t2:rgba(235,235,245,.6); --t3:rgba(235,235,245,.3);
+    --blue:#0a84ff; --blue-bg:rgba(10,132,255,.12); --blue-light:rgba(10,132,255,.2);
+    --green:#30d158; --red:#ff453a; --orange:#ff9f0a; --purple:#bf5af2; --teal:#64d2ff;
+    --warn-bg:rgba(255,69,58,.1); --warn-border:#ff453a;
+    --overlay:rgba(0,0,0,.6);
+    --shadow:0 2px 20px rgba(0,0,0,.4); --shadow-md:0 4px 28px rgba(0,0,0,.5);
+  }
+}
+/* ═══════════════════ RESET ═══════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;background:var(--bg);}
+body{font-family:-apple-system,'PingFang TC','Helvetica Neue',sans-serif;
+  color:var(--t1);-webkit-font-smoothing:antialiased;transition:background .25s,color .25s;}
+/* ═══════════════════ HEADER ═══════════════════ */
+#hdr{
+  position:fixed;top:0;left:0;right:0;height:var(--hh);
+  background:color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;z-index:300;
+}
+#hdr .brand{display:flex;align-items:center;gap:10px;}
+#hdr .brand-icon{
+  width:30px;height:30px;border-radius:8px;
+  background:linear-gradient(145deg,#2c2c2e,#1a1a1c);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+#hdr .brand-icon svg{width:16px;height:16px;}
+#hdr .brand-name{font-size:16px;font-weight:700;letter-spacing:-.3px;color:var(--t1);}
+#hdr .hdr-right{display:flex;align-items:center;gap:4px;}
+.icon-btn{
+  width:36px;height:36px;border-radius:9px;background:none;border:none;
+  color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .15s;
+}
+.icon-btn:hover{background:var(--surface);}
+.icon-btn svg{width:20px;height:20px;}
+#theme-btn svg.moon{display:none;}
+/* theme toggle removed — follows system preference */
+/* ═══════════════════ DRAWER ═══════════════════ */
+#drawer-overlay{
+  display:none;position:fixed;inset:0;background:var(--overlay);
+  z-index:400;opacity:0;transition:opacity .25s;
+}
+#drawer-overlay.on{display:block;opacity:1;}
+#drawer{
+  position:fixed;top:0;left:0;bottom:0;width:280px;
+  background:var(--bg);border-right:1px solid var(--border);
+  z-index:500;transform:translateX(-100%);transition:transform .3s cubic-bezier(.32,.72,0,1);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+#drawer.on{transform:translateX(0);}
+.drawer-header{
+  padding:20px 20px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;
+}
+.drawer-header .di{
+  width:42px;height:42px;border-radius:11px;
+  background:linear-gradient(145deg,#2c2c2e,#1a1a1c);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.drawer-header .di svg{width:22px;height:22px;}
+.drawer-app-name{font-size:17px;font-weight:800;letter-spacing:-.3px;color:var(--t1);}
+.drawer-app-sub{font-size:12px;color:var(--t2);margin-top:2px;}
+.drawer-nav{flex:1;overflow-y:auto;padding:12px 0;}
+.drawer-section-label{
+  font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--t3);padding:10px 20px 6px;
+}
+.drawer-item{
+  display:flex;align-items:center;gap:14px;
+  padding:13px 20px;cursor:pointer;border:none;background:none;
+  width:100%;text-align:left;font-family:inherit;border-radius:0;
+  transition:background .1s;
+}
+.drawer-item:hover,.drawer-item.on{background:var(--surface);}
+.drawer-item.on .di-icon{background:var(--blue);color:#fff;}
+.drawer-item.on .di-label{color:var(--blue);}
+.di-icon{
+  width:34px;height:34px;border-radius:9px;background:var(--surface2);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  color:var(--t2);transition:all .15s;
+}
+.di-icon svg{width:17px;height:17px;}
+.di-label{font-size:15px;font-weight:500;color:var(--t1);}
+.drawer-footer{
+  padding:16px 20px;border-top:1px solid var(--border);
+}
+.dark-toggle{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;background:var(--surface);border-radius:12px;
+  cursor:pointer;border:none;width:100%;font-family:inherit;
+}
+.dark-toggle-label{font-size:14px;font-weight:500;color:var(--t1);}
+.toggle-switch{
+  width:44px;height:26px;border-radius:13px;background:var(--surface3);
+  position:relative;transition:background .2s;flex-shrink:0;
+}
+.toggle-switch::after{
+  content:'';position:absolute;top:3px;left:3px;
+  width:20px;height:20px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.3);transition:transform .2s;
+}
+[data-theme="dark"] .toggle-switch{background:var(--blue);}
+[data-theme="dark"] .toggle-switch::after{transform:translateX(18px);}
+/* ═══════════════════ PANELS ═══════════════════ */
+.panel{
+  display:none;position:fixed;top:var(--hh);left:0;right:0;bottom:var(--nh);
+  overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg);
+}
+.panel.on{display:block;}
+#p-map.on{display:flex;flex-direction:column;}
+/* ═══════════════════ BOTTOM NAV ═══════════════════ */
+#nav{
+  position:fixed;bottom:0;left:0;right:0;height:var(--nh);
+  background:color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-top:1px solid var(--border);display:flex;z-index:300;
+  padding-bottom:env(safe-area-inset-bottom,0);
+}
+.nb{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;background:none;border:none;
+  color:var(--t3);cursor:pointer;transition:color .15s;padding-bottom:2px;
+}
+.nb.on{color:var(--blue);}
+.nb svg{width:22px;height:22px;}
+.nb span{font-size:10px;font-weight:500;}
+/* ═══════════════════ COMMON ═══════════════════ */
+.sec-label{
+  font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--t3);padding:20px 20px 10px;
+}
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);margin:0 16px 10px;overflow:hidden;
+}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:10px 16px;border-radius:10px;border:none;
+  font-size:14px;font-weight:600;cursor:pointer;
+  font-family:inherit;transition:opacity .15s,background .15s;
+}
+.btn:active{opacity:.7;}
+.btn-primary{background:var(--blue);color:#fff;}
+.btn-ghost{background:var(--blue-bg);color:var(--blue);}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--t1);}
+.btn-danger{background:var(--warn-bg);color:var(--red);}
+.btn-sm{padding:7px 12px;font-size:12px;border-radius:8px;}
+input,textarea,select{
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--t1);border-radius:10px;padding:10px 14px;
+  font-size:14px;width:100%;outline:none;font-family:inherit;
+  appearance:none;-webkit-appearance:none;transition:border-color .15s,box-shadow .15s;
+}
+input:focus,textarea:focus,select:focus{
+  border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-light);
+}
+textarea{resize:vertical;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.lbl{display:block;font-size:12px;font-weight:500;color:var(--t2);margin-bottom:5px;}
+.divider{height:1px;background:var(--border2);}
+.pb{height:20px;}
+.prog-bar{height:3px;background:var(--surface2);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--blue);border-radius:2px;transition:width .6s;}
+
+/* ═══════════════════════════════════════════════
+   TAB 1 — ITINERARY REDESIGN
+═══════════════════════════════════════════════ */
+.itin-header{padding:24px 20px 16px;}
+.itin-title{font-size:26px;font-weight:800;letter-spacing:-.6px;color:var(--t1);}
+.itin-sub{font-size:14px;color:var(--t2);margin:4px 0 14px;}
+
+/* ── City section ── */
+.cs{margin-bottom:0;}
+.cs-hdr{
+  display:flex;align-items:center;gap:14px;
+  padding:20px 20px 12px;
+}
+.cs-bar{width:3px;border-radius:2px;flex-shrink:0;align-self:stretch;}
+.cs-info{}
+.cs-name{font-size:19px;font-weight:800;letter-spacing:-.4px;color:var(--t1);}
+.cs-meta{font-size:12px;color:var(--t2);margin-top:3px;font-weight:500;}
+
+/* ── Day section ── */
+.ds{padding:0 20px 4px;}
+.ds-label{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 0 10px;
+  border-top:1px solid var(--border);
+}
+.ds-date{font-size:13px;font-weight:700;color:var(--t1);}
+.ds-badge{
+  font-size:10px;font-weight:800;letter-spacing:.5px;
+  padding:3px 9px;border-radius:99px;
+}
+.ds-today{background:var(--blue);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;margin-left:6px;}
+
+/* ── Event row ── */
+.ev-row{
+  display:flex;gap:12px;
+  padding:10px 0;
+  border-bottom:1px solid var(--border2);
+}
+.ev-row:last-of-type{border-bottom:none;}
+.ev-time{
+  font-size:11px;font-weight:700;
+  min-width:40px;padding-top:2px;
+  flex-shrink:0;letter-spacing:.2px;
+  font-variant-numeric:tabular-nums;
+}
+.ev-body{flex:1;min-width:0;}
+.ev-title{font-size:14px;font-weight:600;color:var(--t1);line-height:1.35;margin-bottom:3px;}
+.ev-note{font-size:12px;color:var(--t2);line-height:1.65;}
+.ev-warns{margin-top:7px;display:flex;flex-direction:column;gap:5px;}
+.warn-chip{
+  display:flex;align-items:flex-start;gap:7px;
+  font-size:12px;color:var(--red);line-height:1.5;
+  padding:6px 10px;background:var(--warn-bg);
+  border-radius:8px;border-left:2px solid var(--red);
+}
+.warn-chip-dot{width:4px;height:4px;border-radius:50%;background:var(--red);flex-shrink:0;margin-top:5px;}
+
+/* ── Map link ── */
+.cs-map-row{
+  padding:4px 20px 16px;
+}
+.cs-map-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:600;color:var(--blue);
+  background:var(--blue-bg);border:none;border-radius:8px;
+  padding:7px 12px;cursor:pointer;font-family:inherit;
+}
+.cs-map-btn svg{width:13px;height:13px;}
+
+/* ═══════════════════════════════════════════════
+   TAB 2 — EXPENSE
+═══════════════════════════════════════════════ */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px;}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:14px 16px;
+}
+.stat-val{font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--t1);}
+.stat-label{font-size:11px;color:var(--t2);margin-top:3px;}
+.exp-item-row{display:flex;align-items:center;gap:12px;padding:11px 16px;}
+.exp-cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.exp-info{flex:1;min-width:0;}
+.exp-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.exp-meta{font-size:11px;color:var(--t2);margin-top:2px;}
+.exp-eur{font-size:15px;font-weight:700;color:var(--t1);}
+.exp-twd{font-size:11px;color:var(--t2);}
+.del-btn{
+  width:28px;height:28px;border-radius:7px;background:none;
+  border:none;cursor:pointer;color:var(--t3);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:background .1s,color .1s;
+}
+.del-btn:hover{background:var(--warn-bg);color:var(--red);}
+.del-btn svg{width:13px;height:13px;}
+.bar-row{margin-bottom:10px;}
+.bar-label{display:flex;justify-content:space-between;font-size:12px;color:var(--t2);margin-bottom:5px;}
+.bar-label span:last-child{font-weight:700;color:var(--t1);}
+.bar-bg{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;}
+
+/* ═══════════════════════════════════════════════
+   TAB 3 — MAP
+═══════════════════════════════════════════════ */
+.map-ctrls{
+  padding:10px 12px;background:var(--bg);
+  border-bottom:1px solid var(--border);
+  display:flex;flex-direction:column;gap:8px;
+}
+.hscroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;}
+.hscroll::-webkit-scrollbar{display:none;}
+.city-btn,.poi-btn{
+  flex-shrink:0;background:var(--surface);border:1px solid var(--border);
+  color:var(--t2);border-radius:99px;padding:5px 14px;
+  font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;
+  font-family:inherit;transition:all .15s;
+}
+.city-btn.on{border-color:currentColor;}
+.poi-btn{display:flex;align-items:center;gap:5px;}
+.poi-btn svg{width:13px;height:13px;}
+.poi-btn.on{background:rgba(52,199,89,.12);border-color:rgba(52,199,89,.4);color:var(--green);}
+#map-wrap{flex:1;position:relative;min-height:0;}
+#lmap{width:100%;height:100%;}
+#gps-btn{
+  position:absolute;bottom:12px;right:12px;z-index:999;
+  width:44px;height:44px;border-radius:12px;background:var(--bg);
+  border:1px solid var(--border);box-shadow:var(--shadow-md);
+  color:var(--blue);display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+#gps-btn svg{width:20px;height:20px;}
+
+/* 底部景點/POI 面板 */
+.map-panel{
+  height:200px;overflow-y:auto;background:var(--bg);
+  border-top:1px solid var(--border);flex-shrink:0;
+}
+.map-panel-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px 8px;position:sticky;top:0;background:var(--bg);
+  border-bottom:1px solid var(--border2);z-index:10;
+}
+.map-panel-title{font-size:12px;font-weight:700;color:var(--t1);letter-spacing:.2px;}
+.map-panel-count{font-size:11px;color:var(--t2);}
+
+/* 景點列表 */
+.attr-item{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 16px;border-bottom:1px solid var(--border2);
+  cursor:pointer;transition:background .1s;
+}
+.attr-item:active{background:var(--surface);}
+.attr-item:last-child{border-bottom:none;}
+.attr-dot{
+  width:10px;height:10px;border-radius:50%;
+  border:2px solid #fff;flex-shrink:0;
+  box-shadow:0 1px 4px rgba(0,0,0,.25);
+}
+.attr-name{font-size:13px;font-weight:600;color:var(--t1);flex:1;}
+.attr-city{font-size:11px;color:var(--t2);}
+.attr-arr{color:var(--t3);flex-shrink:0;}
+.attr-arr svg{width:14px;height:14px;}
+
+/* POI 結果 */
+.poi-item{
+  display:flex;align-items:center;gap:12px;padding:11px 16px;
+  border-bottom:1px solid var(--border2);cursor:pointer;transition:background .1s;
+}
+.poi-item:active{background:var(--surface);}
+.poi-item:last-child{border-bottom:none;}
+.poi-ico{
+  width:32px;height:32px;border-radius:8px;background:var(--surface);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.poi-ico svg{width:16px;height:16px;color:var(--blue);}
+.poi-name{font-size:13px;font-weight:600;color:var(--t1);}
+.poi-dist{font-size:11px;color:var(--t2);margin-top:1px;}
+.poi-arr{margin-left:auto;color:var(--t3);}
+.poi-arr svg{width:14px;height:14px;}
+
+/* ═══════════════════════════════════════════════
+   TAB 4 — TRANSLATE
+═══════════════════════════════════════════════ */
+.trans-wrap{padding:20px 16px;}
+.lang-btns{display:flex;gap:6px;margin-bottom:16px;}
+.lang-btn{
+  flex:1;padding:9px;border-radius:10px;border:1px solid var(--border);
+  background:var(--surface);color:var(--t2);font-size:12px;font-weight:600;
+  cursor:pointer;text-align:center;font-family:inherit;transition:all .15s;
+}
+.lang-btn.on{background:var(--blue);border-color:var(--blue);color:#fff;}
+.cam-area{
+  border:1.5px dashed var(--border2);border-radius:14px;
+  padding:24px 16px;text-align:center;cursor:pointer;
+  margin-bottom:14px;background:var(--surface);transition:border-color .15s;
+}
+.cam-area:hover,.cam-area:active{border-color:var(--blue);}
+.cam-area img{width:100%;border-radius:10px;display:none;}
+.cam-placeholder{color:var(--t2);}
+.cam-ico{
+  width:48px;height:48px;border-radius:12px;background:var(--surface2);
+  margin:0 auto 10px;display:flex;align-items:center;justify-content:center;
+}
+.cam-ico svg{width:24px;height:24px;color:var(--t2);}
+.cam-placeholder p{font-size:14px;font-weight:500;color:var(--t2);}
+.cam-placeholder small{font-size:12px;color:var(--t3);}
+.trans-result{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:16px;margin-top:14px;display:none;
+}
+.res-label{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--t3);margin-bottom:8px;}
+.res-text{font-size:18px;font-weight:600;line-height:1.5;color:var(--t1);}
+.res-acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+.ext-tools{margin-top:16px;background:var(--surface);border-radius:14px;border:1px solid var(--border);padding:16px;}
+.ext-tools h4{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;}
+.ext-links{display:flex;flex-wrap:wrap;gap:8px;}
+.ext-link{
+  font-size:13px;font-weight:600;padding:8px 14px;border-radius:9px;
+  text-decoration:none;color:var(--blue);background:var(--blue-bg);
+  border:none;display:inline-block;font-family:inherit;cursor:pointer;
+}
+
+/* ═══════════════════════════════════════════════
+   TAB 5 — PHRASES
+═══════════════════════════════════════════════ */
+.phrase-cats{display:flex;gap:6px;overflow-x:auto;padding:12px 16px 4px;}
+.phrase-cats::-webkit-scrollbar{display:none;}
+.pcat-btn{
+  flex-shrink:0;padding:6px 16px;border-radius:99px;background:var(--surface);
+  border:1px solid var(--border);color:var(--t2);font-size:12px;font-weight:600;
+  cursor:pointer;font-family:inherit;transition:all .15s;
+}
+.pcat-btn.on{background:var(--blue);border-color:var(--blue);color:#fff;}
+.phrase-card{padding:14px 16px;}
+.p-zh{font-size:16px;font-weight:700;letter-spacing:-.2px;color:var(--t1);margin-bottom:4px;}
+.p-en{font-size:13px;color:var(--t2);margin-bottom:3px;}
+.p-it{font-size:15px;font-weight:600;color:var(--blue);margin-bottom:4px;}
+.p-pron{font-size:11px;color:var(--t3);font-style:italic;}
+.p-acts{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+
+/* ═══════════════════════════════════════════════
+   TAB 6 — EVENTS
+═══════════════════════════════════════════════ */
+.ev-filt{display:flex;gap:6px;overflow-x:auto;padding:12px 16px 4px;}
+.ev-filt::-webkit-scrollbar{display:none;}
+.efilt-btn{
+  flex-shrink:0;padding:6px 16px;border-radius:99px;background:var(--surface);
+  border:1px solid var(--border);color:var(--t2);font-size:12px;font-weight:600;
+  cursor:pointer;font-family:inherit;transition:all .15s;
+}
+.efilt-btn.on{background:var(--blue);border-color:var(--blue);color:#fff;}
+.ev-card{padding:16px;}
+.ev-date{font-size:12px;font-weight:600;color:var(--t2);margin-bottom:6px;}
+.ev-city-badge{
+  display:inline-block;font-size:10px;font-weight:700;letter-spacing:.4px;
+  text-transform:uppercase;padding:3px 9px;border-radius:6px;margin-bottom:8px;
+}
+.ev-title{font-size:16px;font-weight:700;letter-spacing:-.2px;color:var(--t1);margin-bottom:6px;}
+.ev-desc{font-size:13px;color:var(--t2);line-height:1.65;margin-bottom:12px;}
+.ev-links{display:flex;flex-wrap:wrap;gap:7px;}
+.ev-link{
+  font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;
+  background:var(--surface2);color:var(--blue);text-decoration:none;
+  border:1px solid var(--border);display:inline-flex;align-items:center;gap:5px;
+}
+.ev-link svg{width:12px;height:12px;}
+.search-section{padding:16px;}
+.search-section h4{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;}
+.search-links{display:flex;flex-wrap:wrap;gap:8px;}
+.search-link{
+  font-size:13px;font-weight:600;padding:9px 14px;border-radius:10px;
+  text-decoration:none;color:var(--blue);background:var(--blue-bg);
+  display:inline-flex;align-items:center;gap:6px;
+}
+.search-link svg{width:14px;height:14px;}
+
+/* ═══════════════════ UTILS ═══════════════════ */
+.loading{display:flex;align-items:center;justify-content:center;padding:28px;gap:8px;color:var(--t3);font-size:13px;}
+.spin{width:16px;height:16px;border:2px solid var(--surface2);border-top-color:var(--blue);border-radius:50%;animation:sp .7s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg)}}
+#toast{
+  position:fixed;bottom:calc(var(--nh) + 12px);left:50%;transform:translateX(-50%) translateY(8px);
+  background:rgba(29,29,31,.92);backdrop-filter:blur(20px);
+  color:#fff;border-radius:10px;padding:10px 18px;
+  font-size:13px;font-weight:500;z-index:9999;
+  opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;white-space:nowrap;
+}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+.leaflet-popup-content-wrapper{border-radius:12px;box-shadow:var(--shadow-md);background:var(--bg);}
+.leaflet-popup-content{font-family:-apple-system,'PingFang TC',sans-serif;font-size:13px;color:var(--t1);}
+.leaflet-popup-tip{background:var(--bg);}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header id="hdr">
+  <div class="brand">
+    <div class="brand-icon">
+      <svg viewBox="0 0 18 18" fill="none"><path d="M9 1L11.5 6.5L17 7.3L13 11.2L14.1 16.7L9 14L3.9 16.7L5 11.2L1 7.3L6.5 6.5Z" fill="#C9A84C"/></svg>
+    </div>
+    <div class="brand-name">Viaggio Italia</div>
+  </div>
+  <div class="hdr-right">
+    <div style="text-align:right;margin-right:4px;">
+      <div id="meta-day" style="font-size:12px;font-weight:600;color:var(--t1);"></div>
+      <div id="meta-sub" style="font-size:10px;color:var(--t2);"></div>
+    </div>
+    <button class="icon-btn" id="burger-btn" onclick="openDrawer()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- ── DRAWER OVERLAY ── -->
+<div id="drawer-overlay" onclick="closeDrawer()"></div>
+
+<!-- ── SIDE DRAWER ── -->
+<div id="drawer">
+  <div class="drawer-header">
+    <div class="di">
+      <svg viewBox="0 0 22 22" fill="none"><path d="M11 1L13.5 7L19.5 7.8L15.5 11.7L16.6 17.7L11 14.8L5.4 17.7L6.5 11.7L2.5 7.8L8.5 7Z" fill="#C9A84C"/></svg>
+    </div>
+    <div>
+      <div class="drawer-app-name">Viaggio Italia</div>
+      <div class="drawer-app-sub">2026 南義行程</div>
+    </div>
+  </div>
+  <div class="drawer-nav">
+    <div class="drawer-section-label">主選單</div>
+    <button class="drawer-item on" id="di-itin" onclick="goTab('itin');closeDrawer()">
+      <div class="di-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <span class="di-label">行程</span>
+    </button>
+    <button class="drawer-item" id="di-exp" onclick="goTab('exp');closeDrawer()">
+      <div class="di-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      </div>
+      <span class="di-label">記帳</span>
+    </button>
+    <button class="drawer-item" id="di-map" onclick="goTab('map');closeDrawer()">
+      <div class="di-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+      </div>
+      <span class="di-label">地圖</span>
+    </button>
+    <button class="drawer-item" id="di-trans" onclick="goTab('trans');closeDrawer()">
+      <div class="di-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+      </div>
+      <span class="di-label">翻譯</span>
+    </button>
+    <button class="drawer-item" id="di-phrase" onclick="goTab('phrase');closeDrawer()">
+      <div class="di-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <span class="di-label">語言</span>
+    </button>
+    <button class="drawer-item" id="di-events" onclick="goTab('events');closeDrawer()">
+      <div class="di-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </div>
+      <span class="di-label">活動</span>
+    </button>
+  </div>
+  <div class="drawer-footer">
+    <div style="font-size:12px;color:var(--t3);text-align:center;padding:4px 0;">
+      深色模式依系統設定自動切換
+    </div>
+  </div>
+</div>
+
+<!-- ══════ PANEL: 行程 ══════ -->
+<div class="panel on" id="p-itin">
+  <div class="itin-header">
+    <div class="itin-title">2026 南義行程</div>
+    <div class="itin-sub">5月25日 — 6月10日 · 16 天</div>
+    <div class="prog-bar"><div class="prog-fill" id="pgfill" style="width:0%"></div></div>
+  </div>
+  <div id="itin-list"></div>
+  <div class="pb"></div>
+</div>
+
+<!-- ══════ PANEL: 記帳 ══════ -->
+<div class="panel" id="p-exp">
+  <!-- 同步狀態 -->
+  <div id="sync-bar" style="margin:12px 16px 0;padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div id="sync-dot" style="width:8px;height:8px;border-radius:50%;background:var(--t3);flex-shrink:0;"></div>
+      <div>
+        <div id="sync-title" style="font-size:13px;font-weight:600;color:var(--t1);">本地模式</div>
+        <div id="sync-sub" style="font-size:11px;color:var(--t2);margin-top:1px;">僅存於此裝置</div>
+      </div>
+    </div>
+    <button class="btn btn-ghost btn-sm" id="sync-setup-btn" onclick="openSyncDrawer()">啟用共享</button>
+  </div>
+  <!-- 同步設定 -->
+  <div id="sync-drawer-exp" style="display:none;margin:10px 16px 0;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+    <div id="sync-connected" style="display:none;padding:16px;">
+      <div style="font-size:13px;font-weight:700;color:var(--t1);margin-bottom:6px;">即時共享已啟用</div>
+      <div style="font-size:12px;color:var(--t2);margin-bottom:12px;">把代碼分享給旅伴，輸入相同代碼即可共享花費。</div>
+      <div style="background:var(--surface2);border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <span style="font-size:18px;font-weight:800;letter-spacing:3px;color:var(--blue);" id="trip-code-display">------</span>
+        <button class="btn btn-ghost btn-sm" onclick="copyTripCode()">複製代碼</button>
+      </div>
+      <button class="btn btn-danger btn-sm" style="width:100%;" onclick="disconnectSync()">中斷共享</button>
+    </div>
+    <div id="sync-setup" style="padding:16px;">
+      <div style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:4px;">啟用即時共享</div>
+      <div style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:14px;">需要一個免費 Firebase Realtime Database URL。</div>
+      <div style="background:var(--blue-bg);border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;color:var(--t1);line-height:2;">
+        <div style="font-weight:700;color:var(--blue);margin-bottom:4px;">三步驟設定（約 3 分鐘）</div>
+        <div>1. 前往 <a href="https://console.firebase.google.com/" target="_blank" style="color:var(--blue);font-weight:600;">console.firebase.google.com</a></div>
+        <div>2. 新增專案 → Realtime Database → 建立（選 Test mode）</div>
+        <div>3. 複製 URL（https://xxx.firebaseio.com）貼入下方</div>
+      </div>
+      <label class="lbl">Firebase 資料庫 URL</label>
+      <input type="text" id="fb-url-inp" placeholder="https://your-project-default-rtdb.firebaseio.com" style="margin-bottom:8px;font-size:13px;"/>
+      <label class="lbl" style="margin-top:6px;">行程代碼（兩人相同）</label>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <input type="text" id="trip-code-inp" placeholder="IT2026" maxlength="10" style="font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;"/>
+        <button class="btn btn-outline btn-sm" onclick="genCode()" style="flex-shrink:0;">隨機</button>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-bottom:6px;" onclick="connectSync()">連線共享</button>
+      <button class="btn btn-outline btn-sm" style="width:100%;" onclick="closeSyncDrawerExp()">取消</button>
+    </div>
+  </div>
+
+  <div class="stats-grid" id="exp-stats"></div>
+
+  <!-- 匯率計算機 -->
+  <div class="sec-label">匯率計算機</div>
+  <div class="card" style="margin-bottom:10px;">
+    <div style="padding:14px 16px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border2);">
+      <span style="font-size:12px;color:var(--t2);font-weight:500;">基準匯率</span>
+      <span style="font-size:13px;color:var(--t2);">1 EUR =</span>
+      <input type="number" id="rateinp" style="width:76px;text-align:center;" placeholder="35" min="1"/>
+      <span style="font-size:13px;color:var(--t2);">NTD</span>
+      <button class="btn btn-ghost btn-sm" onclick="saveRate()" style="margin-left:auto;flex-shrink:0;">套用</button>
+    </div>
+    <div style="padding:14px 16px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <div style="position:relative;flex:1;">
+          <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:700;color:var(--t2);">€</span>
+          <input type="number" id="calc-eur" placeholder="0" min="0" step="0.01" style="padding-left:28px;font-size:17px;font-weight:700;" oninput="calcFromEur()"/>
+        </div>
+        <button onclick="swapCalc()" style="width:34px;height:34px;border-radius:9px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="2.5" stroke-linecap="round"><path d="M7 16V4m0 0L3 8m4-4 4 4"/><path d="M17 8v12m0 0 4-4m-4 4-4-4"/></svg>
+        </button>
+        <div style="position:relative;flex:1;">
+          <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:700;color:var(--t2);">NT$</span>
+          <input type="number" id="calc-twd" placeholder="0" min="0" step="1" style="padding-left:36px;font-size:17px;font-weight:700;" oninput="calcFromTwd()"/>
+        </div>
+      </div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">常用金額</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        <button class="btn btn-outline btn-sm" onclick="quickCalc(5)">€5</button>
+        <button class="btn btn-outline btn-sm" onclick="quickCalc(10)">€10</button>
+        <button class="btn btn-outline btn-sm" onclick="quickCalc(20)">€20</button>
+        <button class="btn btn-outline btn-sm" onclick="quickCalc(50)">€50</button>
+        <button class="btn btn-outline btn-sm" onclick="quickCalc(100)">€100</button>
+        <button class="btn btn-outline btn-sm" onclick="quickCalc(200)">€200</button>
+        <button class="btn btn-outline btn-sm" onclick="quickCalc(500)">€500</button>
+      </div>
+      <div id="calc-hint" style="display:none;margin-top:10px;padding:10px 12px;background:var(--blue-bg);border-radius:9px;font-size:13px;color:var(--blue);font-weight:600;text-align:center;"></div>
+    </div>
+  </div>
+
+  <!-- 新增花費 -->
+  <div class="sec-label">新增花費</div>
+  <div style="padding:0 16px 16px;">
+    <div class="row2" style="margin-bottom:10px;">
+      <div><label class="lbl">金額</label><input type="number" id="eamt" placeholder="0.00" step="0.01" min="0"/></div>
+      <div><label class="lbl">幣別</label>
+        <select id="ecur"><option value="EUR">EUR €</option><option value="TWD">TWD NT$</option></select>
+      </div>
+    </div>
+    <div class="row2" style="margin-bottom:10px;">
+      <div><label class="lbl">類別</label>
+        <select id="ecat">
+          <option value="食">餐飲</option><option value="住">住宿</option>
+          <option value="行">交通</option><option value="票">門票</option>
+          <option value="購">購物</option><option value="車">租車</option><option value="雜">雜費</option>
+        </select>
+      </div>
+      <div><label class="lbl">城市</label>
+        <select id="ecity">
+          <option>Roma</option><option>Napoli</option><option>Pompei</option><option>Capri</option>
+          <option>Amalfi</option><option>Cefalù</option><option>Palermo</option>
+          <option>Agrigento</option><option>Taormina</option><option>Etna</option>
+          <option>Milano</option><option>Venezia</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-bottom:10px;"><input type="text" id="enote" placeholder="備註（如：Pantheon 門票）"/></div>
+    <button class="btn btn-primary" style="width:100%;" onclick="addExp()">新增花費</button>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:0 16px;">
+    <div class="sec-label" style="padding:16px 0 10px;">花費明細</div>
+    <button class="btn btn-danger btn-sm" onclick="clearExp()">清除全部</button>
+  </div>
+  <div class="card" id="exp-list" style="margin-bottom:10px;"></div>
+  <div class="sec-label">類別分析</div>
+  <div class="card" style="padding:14px 16px;margin-bottom:10px;"><div id="cat-bars"></div></div>
+  <div class="pb"></div>
+</div>
+
+<!-- ══════ PANEL: 地圖 ══════ -->
+<div class="panel" id="p-map">
+  <div class="map-ctrls">
+    <div class="hscroll" id="city-btns">
+      <button class="city-btn on" style="color:#ff3b30;border-color:#ff3b30;background:rgba(255,59,48,.08);" onclick="flyTo(41.9028,12.4964,13,this,'Roma')">Roma</button>
+      <button class="city-btn" onclick="flyTo(40.8518,14.2681,13,this,'Napoli')" style="">Napoli</button>
+      <button class="city-btn" onclick="flyTo(40.7490,14.4898,14,this,'Napoli')">Pompei</button>
+      <button class="city-btn" onclick="flyTo(40.5537,14.2228,13,this,'Napoli')">Capri</button>
+      <button class="city-btn" onclick="flyTo(38.0393,14.0228,14,this,'Sicilia')">Cefalù</button>
+      <button class="city-btn" onclick="flyTo(38.1157,13.3615,14,this,'Sicilia')">Palermo</button>
+      <button class="city-btn" onclick="flyTo(37.2908,13.5883,14,this,'Sicilia')">Agrigento</button>
+      <button class="city-btn" onclick="flyTo(37.8521,15.2844,14,this,'Sicilia')">Taormina</button>
+      <button class="city-btn" onclick="flyTo(45.4654,9.1859,14,this,'Milano')">Milano</button>
+      <button class="city-btn" onclick="flyTo(45.4408,12.3155,14,this,'Venezia')">Venezia</button>
+    </div>
+    <div class="hscroll" id="poi-btns">
+      <button class="poi-btn" onclick="srchPOI('restaurant',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>餐廳
+      </button>
+      <button class="poi-btn" onclick="srchPOI('cafe',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/></svg>咖啡
+      </button>
+      <button class="poi-btn" onclick="srchPOI('atm',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>ATM
+      </button>
+      <button class="poi-btn" onclick="srchPOI('pharmacy',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>藥局
+      </button>
+      <button class="poi-btn" onclick="srchPOI('supermarket',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>超市
+      </button>
+      <button class="poi-btn" onclick="srchPOI('toilets',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22V12m0 0c0-4 3-7 3-7H9s3 3 3 7z"/><circle cx="12" cy="5" r="2"/></svg>廁所
+      </button>
+      <button class="poi-btn" onclick="srchPOI('hospital',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>醫院
+      </button>
+    </div>
+  </div>
+  <div id="map-wrap">
+    <div id="lmap"></div>
+    <button id="gps-btn" onclick="locateMe()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/></svg>
+    </button>
+  </div>
+  <div class="map-panel" id="map-panel"></div>
+</div>
+
+<!-- ══════ PANEL: 翻譯 ══════ -->
+<div class="panel" id="p-trans">
+  <div class="trans-wrap">
+    <div class="sec-label" style="padding-left:0;padding-top:4px;">翻譯方向</div>
+    <div class="lang-btns">
+      <button class="lang-btn on" onclick="setLang('it|zh-TW',this)">義文 → 中文</button>
+      <button class="lang-btn" onclick="setLang('en|zh-TW',this)">英文 → 中文</button>
+      <button class="lang-btn" onclick="setLang('zh-TW|it',this)">中文 → 義文</button>
+    </div>
+    <div class="sec-label" style="padding-left:0;">相機翻譯</div>
+    <div class="cam-area" id="cam-area" onclick="document.getElementById('caminp').click()">
+      <div class="cam-placeholder" id="cam-ph">
+        <div class="cam-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+        <p>點此拍照或選擇圖片</p>
+        <small>菜單・路標・告示牌</small>
+      </div>
+      <img id="cam-prev" alt=""/>
+    </div>
+    <input type="file" id="caminp" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)"/>
+    <div id="ocr-sec" style="display:none;margin-bottom:14px;">
+      <button class="btn btn-outline" style="width:100%;margin-bottom:6px;" onclick="runOCR()">辨識圖片文字</button>
+      <div id="ocr-status" style="font-size:12px;color:var(--t2);text-align:center;"></div>
+    </div>
+    <div class="sec-label" style="padding-left:0;margin-top:4px;">文字翻譯</div>
+    <textarea id="tinp" placeholder="輸入義大利文、英文或中文..." rows="3" style="margin-bottom:10px;"></textarea>
+    <button class="btn btn-primary" style="width:100%;margin-bottom:4px;" onclick="doTranslate()">翻譯</button>
+    <div class="trans-result" id="trans-result">
+      <div class="res-label">翻譯結果</div>
+      <div class="res-text" id="res-text"></div>
+      <div class="res-acts">
+        <button class="btn btn-ghost btn-sm" onclick="cpyResult()">複製</button>
+        <button class="btn btn-ghost btn-sm" onclick="spkResult()">朗讀</button>
+        <button class="btn btn-outline btn-sm" onclick="clrTrans()">清除</button>
+      </div>
+    </div>
+    <div class="ext-tools">
+      <h4>線上翻譯工具</h4>
+      <div class="ext-links">
+        <a href="https://translate.google.com/?sl=it&tl=zh-TW" target="_blank" class="ext-link">Google 翻譯</a>
+        <a href="https://www.deepl.com/translator#it/zh/" target="_blank" class="ext-link">DeepL</a>
+        <a href="https://translate.google.com/?sl=it&tl=zh-TW&op=images" target="_blank" class="ext-link">圖片翻譯</a>
+      </div>
+    </div>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- ══════ PANEL: 語言 ══════ -->
+<div class="panel" id="p-phrase">
+  <div style="padding:16px 16px 8px;"><input type="text" id="psrch" placeholder="搜尋短語..." oninput="renderPhrases()"/></div>
+  <div class="phrase-cats" id="phrase-cats">
+    <button class="pcat-btn on" onclick="setCat('全部',this)">全部</button>
+    <button class="pcat-btn" onclick="setCat('問候',this)">問候</button>
+    <button class="pcat-btn" onclick="setCat('餐廳',this)">餐廳</button>
+    <button class="pcat-btn" onclick="setCat('交通',this)">交通</button>
+    <button class="pcat-btn" onclick="setCat('購物',this)">購物</button>
+    <button class="pcat-btn" onclick="setCat('住宿',this)">住宿</button>
+    <button class="pcat-btn" onclick="setCat('緊急',this)">緊急</button>
+    <button class="pcat-btn" onclick="setCat('景點',this)">景點</button>
+  </div>
+  <div id="phrase-list"></div>
+  <div class="pb"></div>
+</div>
+
+<!-- ══════ PANEL: 活動 ══════ -->
+<div class="panel" id="p-events">
+  <div class="ev-filt" id="ev-filt">
+    <button class="efilt-btn on" onclick="setEvFlt('全部',this)">全部</button>
+    <button class="efilt-btn" onclick="setEvFlt('Roma',this)">Roma</button>
+    <button class="efilt-btn" onclick="setEvFlt('Napoli',this)">Napoli</button>
+    <button class="efilt-btn" onclick="setEvFlt('Sicilia',this)">Sicilia</button>
+    <button class="efilt-btn" onclick="setEvFlt('Milano',this)">Milano</button>
+    <button class="efilt-btn" onclick="setEvFlt('Venezia',this)">Venezia</button>
+  </div>
+  <div id="ev-list"></div>
+  <div class="search-section">
+    <h4>搜尋更多活動</h4>
+    <div class="search-links">
+      <a href="https://www.eventbrite.it/" target="_blank" class="search-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>Eventbrite</a>
+      <a href="https://www.thelocal.it/events" target="_blank" class="search-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>The Local</a>
+      <a href="https://www.labiennale.org/" target="_blank" class="search-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>Biennale</a>
+    </div>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- ── BOTTOM NAV ── -->
+<nav id="nav">
+  <button class="nb on" id="nb-itin" onclick="goTab('itin')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>行程</span></button>
+  <button class="nb" id="nb-exp" onclick="goTab('exp')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>記帳</span></button>
+  <button class="nb" id="nb-map" onclick="goTab('map')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span>地圖</span></button>
+  <button class="nb" id="nb-trans" onclick="goTab('trans')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg><span>翻譯</span></button>
+  <button class="nb" id="nb-phrase" onclick="goTab('phrase')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>語言</span></button>
+  <button class="nb" id="nb-events" onclick="goTab('events')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span>活動</span></button>
+</nav>
+<div id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ════════════════ DATA ════════════════ */
+const ITIN=[
+  {day:0,date:'2026-05-25',city:'台灣出發',clr:'#6e6e73',
+   evs:[{t:'23:15',ti:'EVA BR095 TPE→MXP 起飛',n:'Terminal 2 · Coach 2 Seat 17/18/20/21 · Ticket H9KUGI',w:['抵達 5/26 07:35 MXP T1']}]},
+  {day:1,date:'2026-05-26',city:'Roma',clr:'#ff3b30',
+   evs:[
+    {t:'07:35',ti:'抵達 MXP T1',n:'米蘭馬爾彭薩機場',w:[]},
+    {t:'11:15',ti:'Italo 9979 米蘭→羅馬',n:'Coach 3 Seat 5A/5B/6A/6B · 14:30 抵 Roma Termini',w:[]},
+    {t:'15:00',ti:'Check in Termini Bright Flat',n:'Via Alfredo Cappellini 39 · 離 Termini 步行 5 分 · WiFi+AC',w:[]},
+    {t:'16:00',ti:'萬神殿 Pantheon',n:'€5 入場，外觀免費 · Via dei Pastini 120',w:['禁無袖、短褲、短裙、露刺青']},
+    {t:'17:30',ti:'特雷維噴泉 Fontana di Trevi',n:'22:00 後免費（白天 €2）',w:['注意扒手','不可攀爬或進入噴泉']},
+    {t:'18:30',ti:'納沃納廣場 Piazza Navona',n:'全天免費',w:['注意街頭套路']},
+    {t:'19:30',ti:'晚餐 Achille Al Pantheon（已訂）',n:'Codice: 2L2NFKSC0000001YS',w:[]}
+   ]},
+  {day:2,date:'2026-05-27',city:'Roma',clr:'#ff3b30',
+   evs:[
+    {t:'09:00',ti:'聖天使廣場 + 早餐',n:'Prati 區早餐 · 地鐵 A Ottaviano 站步行 10 分',w:[]},
+    {t:'12:00',ti:'梵蒂岡博物館入口（12:30 入場）',n:'Viale Vaticano · 含中文語音導覽 · 約 3–4 小時',w:['12:00 前到，需排隊安檢','禁無袖、短褲、短裙、露刺青','西斯汀教堂禁止拍照']},
+    {t:'16:00',ti:'西班牙廣場 Piazza di Spagna',n:'地鐵 A Spagna 站出口即到',w:['禁止在階梯上飲食，罰款 €250 起']}
+   ]},
+  {day:3,date:'2026-05-28',city:'Roma',clr:'#ff3b30',
+   evs:[
+    {t:'08:00',ti:'出發前往梵蒂岡（08:30 前到廣場）',n:'地鐵 A Ottaviano → 步行 10 分',w:['QR 碼安檢需提前 30 分']},
+    {t:'09:00',ti:'聖彼德大教堂 Basilica',n:'入場 09:00',w:['禁無袖、短褲、短裙、露刺青']},
+    {t:'10:00',ti:'圓頂電梯登頂 Cupola',n:'圓頂入口在教堂右側',w:['注意入口位置！']},
+    {t:'13:20',ti:'前往羅馬競技場',n:'地鐵 A→B Colosseo 站 · 13:35 前買票到位',w:['13:50 入場，提前 15 分報到']},
+    {t:'13:50',ti:'羅馬競技場 全體驗套票（現場購票）',n:'含頂層、地下室、古羅馬廣場、帕拉提諾丘',w:['路線單向，不可回頭','先往頂層入口']}
+   ]},
+  {day:4,date:'2026-05-29',city:'Napoli',clr:'#34c759',
+   evs:[
+    {t:'09:25',ti:'Frecciarossa 9603 Roma→Napoli',n:'Coach 3 Seat 5A/5B/6A/6B · PNR: HWTWQ5 · 10:33 抵',w:[]},
+    {t:'11:00',ti:'Check in NaLusa rooms',n:'Vico Campanile al Consiglio 22 · 地鐵 Toledo 4 分',w:['搭 Uber/Freenow 前往']},
+    {t:'12:00',ti:'龐貝古城 Pompei',n:'Campania ArteCard 可用 · 中央站地下室搭 Circumvesuviana 約 35 分',w:['Circumvesuviana 扒手多，包包背前面']}
+   ]},
+  {day:5,date:'2026-05-30',city:'Capri',clr:'#34c759',
+   evs:[
+    {t:'07:30',ti:'確認藍洞是否開放',n:'查 FB：infogrottazzurra',w:['受天氣影響，必須當天確認！']},
+    {t:'09:00',ti:'Molo Beverello 港口→卡布里島',n:'Hydrofoil 快船約 50 分 · 約 €28/人',w:[]},
+    {t:'11:00',ti:'藍洞 Grotta Azzurra',n:'小艇費 €18 + 入場 €3 ≈ €21/人 · 最佳光線 11:00–13:00',w:['進洞需躺下（高度 < 1m）']}
+   ]},
+  {day:6,date:'2026-05-31',city:'Amalfi Coast',clr:'#34c759',
+   evs:[
+    {t:'全天',ti:'索倫多→阿瑪菲→波西塔諾 一日團',n:'Worldtours · NTD 1,838/人 · 已訂',w:['最晚取消：5/30！','帶足水、帽子、防曬']}
+   ]},
+  {day:7,date:'2026-06-01',city:'Cefalù',clr:'#ff9500',
+   evs:[
+    {t:'04:30',ti:'拿坡里機場接送',n:'乘車編號：464725730',w:[]},
+    {t:'07:00',ti:'EasyJet EJU4101 NAP→PMO',n:'Booking: KC1TM56 · 08:00 抵達',w:['Bag drop 05:00–06:20']},
+    {t:'09:00',ti:'民宿機場接送 PMO→Cefalù',n:'EUR 300 現金（來回）',w:[]},
+    {t:'10:30',ti:'Check in Terrazza Incanto',n:'33 Via del Giubileo Magno, Cefalù',w:[]},
+    {t:'11:30',ti:'取車 Europcar Cefalù',n:'Via Maestro Pintorno 11 · 預定號碼 1199884873',w:['先拍車身四周存證','ZTL 區域禁止進入']}
+   ]},
+  {day:8,date:'2026-06-02',city:'Agrigento',clr:'#ff9500',
+   evs:[
+    {t:'08:00',ti:'切法盧→A19→阿格里真托（約 165km）',n:'約 2 小時',w:['中午氣溫 35°C+，帶足水']},
+    {t:'10:00',ti:'神廟谷 Valle dei Templi',n:'€13/人 · UNESCO 世界遺產 · 約 3–4 小時',w:['建議提前網路購票']},
+    {t:'15:00',ti:'返回切法盧',n:'A19→A20 約 2 小時',w:[]}
+   ]},
+  {day:9,date:'2026-06-03',city:'Taormina + Etna',clr:'#ff9500',
+   evs:[
+    {t:'07:30',ti:'切法盧→A20/A18→陶爾米納（約 110km）',n:'約 1.5 小時',w:['ZTL 禁止進城！停 Parcheggio Lumbi']},
+    {t:'09:00',ti:'陶爾米納老城 + 希臘劇場',n:'Teatro Antico 門票 €10/人',w:[]},
+    {t:'14:00',ti:'埃特納火山 Funivia dell\'Etna',n:'約 €30/人',w:['山頂氣溫可能 15°C 以下，帶外套！']},
+    {t:'17:00',ti:'返回切法盧',n:'A18→A20 約 1.5 小時',w:[]}
+   ]},
+  {day:10,date:'2026-06-04',city:'Palermo',clr:'#ff9500',
+   evs:[
+    {t:'08:30',ti:'切法盧→A20→巴勒莫（約 75km）',n:'約 45 分',w:['ZTL 注意！停外圍停車場']},
+    {t:'09:30',ti:'巴勒莫大教堂 + 諾曼宮',n:'Cattedrale di Palermo',w:[]},
+    {t:'11:00',ti:'Ballaro 市場',n:'必吃：Arancina、Pannelle',w:['人潮複雜，注意隨身財物']},
+    {t:'16:00',ti:'返回切法盧',n:'約 45 分',w:[]}
+   ]},
+  {day:11,date:'2026-06-05',city:'Milano',clr:'#5ac8fa',
+   evs:[
+    {t:'11:30',ti:'還車 Europcar Cefalù',n:'Via Maestro Pintorno 11',w:[]},
+    {t:'15:10',ti:'EasyJet EJU3506 PMO→MXP T2',n:'Booking: KC1MM5K · 16:50 抵達',w:['Bag drop 13:10–14:30']},
+    {t:'18:20',ti:'Terravision 巴士 MXP T2→米蘭中央站',n:'T2 入境大廳前停靠站',w:[]},
+    {t:'19:50',ti:'Check in Luxury Apt Porta Venezia',n:'Via Antonio Stoppani 2',w:[]}
+   ]},
+  {day:12,date:'2026-06-06',city:'Milano',clr:'#5ac8fa',
+   evs:[
+    {t:'11:15',ti:'抵達最後的晚餐售票處',n:'Santa Maria delle Grazie · 地鐵 M1 Cadorna 步行 10 分',w:['出示護照取票','每場僅 15 分鐘，禁止拍照']},
+    {t:'11:45',ti:'最後的晚餐 Cenacolo Vinciano',n:'達文西真跡 · 每場限 30 人',w:[]},
+    {t:'15:00',ti:'米蘭大教堂 Duomo 登頂（電梯）',n:'最後入場 18:00',w:['廣場注意鴿子陷阱']},
+    {t:'17:00',ti:'Galleria Vittorio Emanuele II',n:'1867 年老拱廊',w:[]}
+   ]},
+  {day:13,date:'2026-06-07',city:'Venezia',clr:'#bf5af2',
+   evs:[
+    {t:'07:35',ti:'Italo 8973 米蘭→威尼斯',n:'Coach 4 Seat 27/28/29/30 · Ticket: LD2JNP · 10:03 抵',w:[]},
+    {t:'10:10',ti:'購 Vaporetto 日票 → 聖馬可廣場',n:'Santa Lucia 站外購票 €25/人',w:['入城稅 €5/人 需 6/3 前線上繳 cda.ve.it/en','廣場可能積水，穿防水鞋']},
+    {t:'11:00',ti:'聖馬可廣場→嘆息橋→里阿托橋',n:'步行可達，約 20 分',w:[]},
+    {t:'17:00',ti:'出發返回車站',n:'Vaporetto 約 35 分',w:['17:00 前出發！']},
+    {t:'18:18',ti:'Frecciarossa 9754 威尼斯→米蘭',n:'Coach 4 Seat 7A/7B/7C/7D · PNR: MHV84N · 20:45 抵',w:[]}
+   ]},
+  {day:14,date:'2026-06-08',city:'Milano',clr:'#5ac8fa',
+   evs:[
+    {t:'10:00',ti:'Via Monte Napoleone 精品街',n:'米蘭最高端購物街',w:[]},
+    {t:'14:00',ti:'Corso Buenos Aires',n:'平價品牌購物',w:[]},
+    {t:'18:00',ti:'Aperitivo Happy Hour',n:'€8–12 一杯含免費小食，米蘭特色',w:[]}
+   ]},
+  {day:15,date:'2026-06-09',city:'返台',clr:'#6e6e73',
+   evs:[
+    {t:'06:30',ti:'Terravision 米蘭中央站→MXP T1',n:'Via G.B. Sammartini 1 · 約 1 小時',w:['06:30 準時搭乘！']},
+    {t:'11:15',ti:'EVA BR095 MXP T1→TPE T2',n:'6/10 06:05am 抵台',w:[]}
+   ]}
+];
+
+const PHRASES=[
+  {c:'問候',zh:'你好',en:'Hello',it:'Ciao',p:'chow'},
+  {c:'問候',zh:'早安',en:'Good morning',it:'Buongiorno',p:'bwon-JOR-no'},
+  {c:'問候',zh:'晚安',en:'Good evening',it:'Buonasera',p:'bwona-SE-ra'},
+  {c:'問候',zh:'謝謝',en:'Thank you',it:'Grazie',p:'GRAT-sye'},
+  {c:'問候',zh:'非常謝謝',en:'Thank you very much',it:'Grazie mille',p:'GRAT-sye MIL-le'},
+  {c:'問候',zh:'不客氣',en:'You\'re welcome',it:'Prego',p:'PRE-go'},
+  {c:'問候',zh:'對不起 / 借過',en:'Excuse me',it:'Scusi',p:'SKOO-zi'},
+  {c:'問候',zh:'再見',en:'Goodbye',it:'Arrivederci',p:'ar-ri-ve-DER-chi'},
+  {c:'問候',zh:'你說英文嗎？',en:'Do you speak English?',it:'Parla inglese?',p:'PAR-la in-GLE-ze'},
+  {c:'問候',zh:'請說慢一點',en:'Please speak slowly',it:'Parli più lentamente',p:'PAR-li pyu len-ta-MEN-te'},
+  {c:'問候',zh:'我聽不懂',en:'I don\'t understand',it:'Non capisco',p:'non ka-PIS-ko'},
+  {c:'餐廳',zh:'兩人座位，謝謝',en:'A table for two, please',it:'Un tavolo per due',p:'un TA-vo-lo per DU-e'},
+  {c:'餐廳',zh:'菜單，謝謝',en:'Menu please',it:'Il menù, per favore',p:'il me-NU per fa-VO-re'},
+  {c:'餐廳',zh:'我要點餐',en:'I\'d like to order',it:'Vorrei ordinare',p:'vor-RAY or-di-NA-re'},
+  {c:'餐廳',zh:'這個是什麼？',en:'What is this?',it:'Cos\'è questo?',p:'KOS-e KWES-to'},
+  {c:'餐廳',zh:'好吃！',en:'Delicious!',it:'Delizioso!',p:'de-li-TSYO-so'},
+  {c:'餐廳',zh:'帳單，謝謝',en:'The bill please',it:'Il conto, per favore',p:'il KON-to per fa-VO-re'},
+  {c:'餐廳',zh:'礦泉水',en:'Still water',it:'Acqua naturale',p:'AK-kwa na-tu-RA-le'},
+  {c:'餐廳',zh:'一杯咖啡',en:'An espresso',it:'Un caffè',p:'un kaf-FE'},
+  {c:'餐廳',zh:'我不吃肉',en:'I don\'t eat meat',it:'Non mangio carne',p:'non MAN-jo KAR-ne'},
+  {c:'交通',zh:'地鐵在哪裡？',en:'Where is the metro?',it:'Dov\'è la metropolitana?',p:'do-VE la me-tro-po-li-TA-na'},
+  {c:'交通',zh:'去…怎麼走？',en:'How do I get to...?',it:'Come arrivo a...?',p:'KO-me ar-RI-vo a'},
+  {c:'交通',zh:'火車站',en:'Train station',it:'La stazione',p:'la sta-TSYO-ne'},
+  {c:'交通',zh:'叫計程車',en:'I need a taxi',it:'Ho bisogno di un taxi',p:'o bi-ZO-nyo di un TAK-si'},
+  {c:'交通',zh:'左轉',en:'Turn left',it:'Giri a sinistra',p:'JI-ri a si-NIS-tra'},
+  {c:'交通',zh:'右轉',en:'Turn right',it:'Giri a destra',p:'JI-ri a DES-tra'},
+  {c:'交通',zh:'直走',en:'Go straight',it:'Vada dritto',p:'VA-da DRIT-to'},
+  {c:'購物',zh:'多少錢？',en:'How much is this?',it:'Quanto costa?',p:'KWAN-to KOS-ta'},
+  {c:'購物',zh:'太貴了',en:'It\'s too expensive',it:'È troppo caro',p:'e TROP-po KA-ro'},
+  {c:'購物',zh:'可以便宜嗎？',en:'Can you give me a discount?',it:'Può farmi uno sconto?',p:'pwo FAR-mi U-no SKON-to'},
+  {c:'購物',zh:'我只是看看',en:'I\'m just looking',it:'Sto solo guardando',p:'sto SO-lo gwar-DAN-do'},
+  {c:'購物',zh:'可以刷卡嗎？',en:'Can I pay by card?',it:'Posso pagare con carta?',p:'POS-so pa-GA-re kon KAR-ta'},
+  {c:'購物',zh:'我要這個',en:'I\'ll take this',it:'Prendo questo',p:'PREN-do KWES-to'},
+  {c:'住宿',zh:'我有訂房',en:'I have a reservation',it:'Ho una prenotazione',p:'o U-na pre-no-ta-TSYO-ne'},
+  {c:'住宿',zh:'辦理入住',en:'Check-in please',it:'Check-in, per favore',p:'chek-in'},
+  {c:'住宿',zh:'退房',en:'Check-out',it:'Check-out',p:'chek-aut'},
+  {c:'住宿',zh:'WiFi 密碼？',en:'What\'s the WiFi password?',it:'Qual è la password del WiFi?',p:'kwal e la password del wi-fi'},
+  {c:'住宿',zh:'空調壞了',en:'The AC doesn\'t work',it:'L\'aria condizionata non funziona',p:'la-rya kon-di-tsyo-NA-ta'},
+  {c:'緊急',zh:'救命！',en:'Help!',it:'Aiuto!',p:'a-YU-to'},
+  {c:'緊急',zh:'叫救護車',en:'Call an ambulance',it:'Chiamate un\'ambulanza',p:'kya-MA-te'},
+  {c:'緊急',zh:'叫警察',en:'Call the police',it:'Chiamate la polizia',p:'kya-MA-te la po-li-TSYA'},
+  {c:'緊急',zh:'我需要醫生',en:'I need a doctor',it:'Ho bisogno di un medico',p:'o bi-ZO-nyo'},
+  {c:'緊急',zh:'我迷路了',en:'I\'m lost',it:'Mi sono perso/a',p:'mi SO-no PER-so'},
+  {c:'緊急',zh:'護照不見了',en:'My passport is lost',it:'Ho perso il passaporto',p:'o PER-so il pas-sa-POR-to'},
+  {c:'緊急',zh:'台灣駐義辦事處',en:'Taiwan Rep. Office in Italy',it:'+39 06 9826 2800',p:'緊急電話'},
+  {c:'緊急',zh:'義大利緊急號碼',en:'Emergency 118 / Police 112',it:'118 急救 / 112 警察',p:'撥打電話'},
+  {c:'景點',zh:'幾點開門？',en:'What time does it open?',it:'A che ora apre?',p:'a ke O-ra A-pre'},
+  {c:'景點',zh:'幾點關門？',en:'What time does it close?',it:'A che ora chiude?',p:'a ke O-ra KYU-de'},
+  {c:'景點',zh:'票價多少？',en:'How much is the ticket?',it:'Quanto costa il biglietto?',p:'KWAN-to KOS-ta il bi-LYET-to'},
+  {c:'景點',zh:'可以拍照嗎？',en:'Can I take photos?',it:'Posso fare foto?',p:'POS-so FA-re FO-to'},
+  {c:'景點',zh:'廁所在哪？',en:'Where\'s the toilet?',it:'Dov\'è il bagno?',p:'do-VE il BA-nyo'},
+];
+
+const EVENTS=[
+  {d:'2026-05-27',city:'Roma',reg:'Roma',clr:'#ff3b30',ti:'Villa Borghese 戶外音樂會',desc:'公園系列免費戶外音樂演出，週末舉辦。',links:[{l:'羅馬官方活動',u:'https://www.060608.it/en/events.html'},{l:'Google 搜尋',u:'https://www.google.com/search?q=Villa+Borghese+concerti+estate+2026'}]},
+  {d:'2026-05-28',city:'Roma',reg:'Roma',clr:'#ff3b30',ti:'MAXXI 國家當代藝術館特展',desc:'羅馬國家當代藝術博物館特展。',links:[{l:'官網',u:'https://www.maxxi.art/en/visits/'},{l:'Google 搜尋',u:'https://www.google.com/search?q=MAXXI+Roma+mostre+2026'}]},
+  {d:'2026-05-30',city:'Napoli',reg:'Napoli',clr:'#34c759',ti:'龐貝特展「城市的一天」',desc:'以 3D 與 AR 重現龐貝日常生活。',links:[{l:'官網',u:'https://pompeiisites.org/en/'},{l:'Google 搜尋',u:'https://www.google.com/search?q=Pompeii+mostra+2026'}]},
+  {d:'2026-05-31',city:'Napoli',reg:'Napoli',clr:'#34c759',ti:'Maggio della Musica 音樂節',desc:'南義最重要的古典音樂節，拿坡里市區多處演出。',links:[{l:'搜尋',u:'https://www.google.com/search?q=Napoli+musica+maggio+2026'}]},
+  {d:'2026-06-01',city:'Cefalù',reg:'Sicilia',clr:'#ff9500',ti:'切法盧燈節 Luminaria di San Salvatore',desc:'西西里傳統燈節，街道掛滿彩燈，有遊行和音樂表演。',links:[{l:'搜尋',u:'https://www.google.com/search?q=Cefalù+luminaria+2026'}]},
+  {d:'2026-06-02',city:'Agrigento',reg:'Sicilia',clr:'#ff9500',ti:'神廟谷民俗節',desc:'阿格里真托著名民俗節，神廟谷傳統舞蹈和音樂表演。',links:[{l:'官網',u:'https://www.mandorloinfiore.net/'}]},
+  {d:'2026-06-03',city:'Taormina',reg:'Sicilia',clr:'#ff9500',ti:'陶爾米納藝術節 Taormina Arte',desc:'在古希臘劇場舉辦的音樂、電影、舞蹈等表演。',links:[{l:'官網',u:'https://www.taorminaarte.com/'}]},
+  {d:'2026-06-06',city:'Milano',reg:'Milano',clr:'#5ac8fa',ti:'布雷拉藝術夜 Brera Art Night',desc:'布雷拉藝術區多家畫廊夜間開放。',links:[{l:'官網',u:'https://pinacotecabrera.org/'}]},
+  {d:'2026-06-07',city:'Venezia',reg:'Venezia',clr:'#bf5af2',ti:'威尼斯建築雙年展 2026',desc:'2026 年建築雙年展，全球建築師作品在威尼斯展出。',links:[{l:'官網',u:'https://www.labiennale.org/'}]},
+  {d:'2026-06-07',city:'Venezia',reg:'Venezia',clr:'#bf5af2',ti:'Vogalonga 傳統划船賽',desc:'每年一度傳統划船大賽，數百艘木船在水道競賽。',links:[{l:'官網',u:'https://www.vogalonga.com/'}]},
+  {d:'2026-06-08',city:'Milano',reg:'Milano',clr:'#5ac8fa',ti:'Naviglio Grande 骨董夜市',desc:'每月最後一個週日，Naviglio Grande 沿岸大型骨董夜市。',links:[{l:'詳情',u:'https://www.navigliogrande.mi.it/mercatone-dellanticariato/'}]},
+];
+
+/* ════════════════ STATE ════════════════ */
+const S={
+  tab:'itin',
+  exps:JSON.parse(localStorage.getItem('vi_e')||'[]'),
+  rate:parseFloat(localStorage.getItem('vi_r')||'35'),
+  lang:'it|zh-TW',pcat:'全部',eflt:'全部',
+  map:null,mapOk:false,poiMk:[],
+};
+
+/* ════════════════ DRAWER ════════════════ */
+function openDrawer(){
+  document.getElementById('drawer').classList.add('on');
+  document.getElementById('drawer-overlay').classList.add('on');
+}
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('on');
+  document.getElementById('drawer-overlay').classList.remove('on');
+}
+
+/* ════════════════ INIT ════════════════ */
+window.addEventListener('DOMContentLoaded',()=>{
+  updHdr();setInterval(updHdr,60000);
+  renderItin();renderExps();renderPhrases();renderEvents();
+  document.getElementById('rateinp').value=S.rate;
+  if(FB.url&&FB.code){FB.connected=true;updateSyncUI(true);startPolling();}
+});
+
+function updHdr(){
+  const now=new Date();
+  document.getElementById('meta-day').textContent=
+    now.toLocaleDateString('zh-TW',{month:'numeric',day:'numeric',weekday:'short'});
+  const ts=new Date('2026-05-25'),te=new Date('2026-06-10');
+  if(now>=ts&&now<=te){
+    const d=Math.ceil((now-ts)/86400000);
+    document.getElementById('meta-sub').textContent='旅途第 '+d+' 天';
+  }else if(now<ts){
+    const left=Math.ceil((ts-now)/86400000);
+    document.getElementById('meta-sub').textContent='出發倒數 '+left+' 天';
+  }else{
+    document.getElementById('meta-sub').textContent='美好的回憶';
+  }
+  const pct=Math.min(100,Math.max(0,(now-ts)/(te-ts)*100));
+  document.getElementById('pgfill').style.width=pct.toFixed(1)+'%';
+}
+
+/* ════════════════ NAV ════════════════ */
+function goTab(t){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.drawer-item').forEach(b=>b.classList.remove('on'));
+  document.getElementById('p-'+t).classList.add('on');
+  document.getElementById('nb-'+t).classList.add('on');
+  document.getElementById('di-'+t)?.classList.add('on');
+  S.tab=t;
+  if(t==='map'&&!S.mapOk)initMap();
+}
+
+/* ════════════════ ITINERARY ════════════════ */
+const CITY_GROUPS=[
+  {name:'出發',           dates:'5/25',        clr:'#8e8e93',days:[0]},
+  {name:'Roma & Vaticano',dates:'5/26 – 5/29', clr:'#ff3b30',days:[1,2,3]},
+  {name:'Napoli · Capri · Amalfi',dates:'5/29 – 6/1',clr:'#34c759',days:[4,5,6]},
+  {name:'Sicilia',        dates:'6/1 – 6/5',   clr:'#ff9500',days:[7,8,9,10]},
+  {name:'Milano & Venezia',dates:'6/5 – 6/9',  clr:'#5ac8fa',days:[11,12,13,14]},
+  {name:'返台',           dates:'6/9',         clr:'#8e8e93',days:[15]},
+];
+
+function renderItin(){
+  const todayStr=new Date().toDateString();
+  let html='';
+  CITY_GROUPS.forEach(group=>{
+    const mapDayNum=group.days[0];
+    html+=`<div class="cs">
+      <div class="cs-hdr">
+        <div class="cs-bar" style="background:${group.clr};min-height:40px;"></div>
+        <div class="cs-info">
+          <div class="cs-name">${group.name}</div>
+          <div class="cs-meta">${group.dates}</div>
+        </div>
+      </div>`;
+
+    group.days.forEach(dn=>{
+      const day=ITIN[dn]; if(!day)return;
+      const dObj=new Date(day.date+'T00:00:00');
+      const isToday=dObj.toDateString()===todayStr;
+      const lbl=dn===0?'出發':'D'+dn;
+      const dStr=dObj.toLocaleDateString('zh-TW',{month:'numeric',day:'numeric',weekday:'short'});
+      html+=`<div class="ds">
+        <div class="ds-label">
+          <div style="display:flex;align-items:center;">
+            <span class="ds-date">${dStr}</span>
+            ${isToday?`<span class="ds-today">今天</span>`:''}
+          </div>
+          <span class="ds-badge" style="background:${group.clr}18;color:${group.clr};">${lbl}</span>
+        </div>
+        ${day.evs.map(ev=>`
+          <div class="ev-row">
+            <div class="ev-time" style="color:${group.clr};">${ev.t||''}</div>
+            <div class="ev-body">
+              <div class="ev-title">${ev.ti}</div>
+              ${ev.n?`<div class="ev-note">${ev.n}</div>`:''}
+              ${ev.w.length?`<div class="ev-warns">${ev.w.map(w=>`
+                <div class="warn-chip">
+                  <div class="warn-chip-dot"></div>
+                  <span>${w}</span>
+                </div>`).join('')}</div>`:''}
+            </div>
+          </div>`).join('')}
+      </div>`;
+    });
+
+    html+=`<div class="cs-map-row">
+      <button class="cs-map-btn" onclick="mapDay(${mapDayNum})">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+        在地圖查看 ${group.name}
+      </button>
+    </div>
+    </div>`;
+  });
+  document.getElementById('itin-list').innerHTML=html;
+}
+function mapDay(n){
+  const cm={0:'Roma',1:'Roma',2:'Roma',3:'Roma',4:'Napoli',5:'Napoli',6:'Napoli',
+    7:'Cefalù',8:'Agrigento',9:'Taormina',10:'Palermo',11:'Milano',12:'Milano',
+    13:'Venezia',14:'Milano',15:'Milano'};
+  const cc={'Roma':[41.9028,12.4964],'Napoli':[40.8518,14.2681],'Cefalù':[38.0393,14.0228],
+    'Agrigento':[37.3113,13.5765],'Taormina':[37.8521,15.2844],'Palermo':[38.1157,13.3615],
+    'Milano':[45.4654,9.1859],'Venezia':[45.4408,12.3155]};
+  const city=cm[n]||'Roma',c=cc[city];
+  goTab('map');closeDrawer();
+  setTimeout(()=>{if(c&&S.map)S.map.setView(c,14);},300);
+}
+
+/* ════════════════ EXPENSE ════════════════ */
+const CCLR={食:'#ff9500',住:'#ff3b30',行:'#0071e3',票:'#bf5af2',購:'#34c759',車:'#5ac8fa',雜:'#aeaeb2'};
+const CNME={食:'餐飲',住:'住宿',行:'交通',票:'門票',購:'購物',車:'租車',雜:'雜費'};
+
+function addExp(){
+  const amt=parseFloat(document.getElementById('eamt').value);
+  if(!amt||amt<=0){toast('請輸入金額');return;}
+  const cur=document.getElementById('ecur').value;
+  const eur=cur==='EUR'?amt:amt/S.rate;
+  S.exps.unshift({id:Date.now(),amt,cur,eur,twd:Math.round(eur*S.rate),
+    cat:document.getElementById('ecat').value,
+    city:document.getElementById('ecity').value,
+    note:document.getElementById('enote').value||'花費',
+    date:new Date().toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'})});
+  saveExps();
+  document.getElementById('eamt').value='';document.getElementById('enote').value='';
+  renderExps();toast('已新增花費');
+}
+function delExp(id){S.exps=S.exps.filter(e=>e.id!==id);saveExps();renderExps();}
+function clearExp(){if(!confirm('確定清除所有記錄？'))return;S.exps=[];saveExps();renderExps();}
+function saveExps(){
+  localStorage.setItem('vi_e',JSON.stringify(S.exps));
+  if(FB.connected)pushFB();
+}
+function saveRate(){
+  const r=parseFloat(document.getElementById('rateinp').value);
+  if(r>0){S.rate=r;localStorage.setItem('vi_r',r);renderExps();toast('匯率已更新：1 EUR = '+r+' NTD');}
+}
+function calcFromEur(){
+  const eur=parseFloat(document.getElementById('calc-eur').value);
+  const hint=document.getElementById('calc-hint');
+  if(!eur||isNaN(eur)){document.getElementById('calc-twd').value='';hint.style.display='none';return;}
+  const twd=Math.round(eur*S.rate);
+  document.getElementById('calc-twd').value=twd;
+  hint.style.display='block';
+  hint.textContent=`€${eur.toLocaleString()} = NT$ ${twd.toLocaleString()}　（匯率 ${S.rate}）`;
+}
+function calcFromTwd(){
+  const twd=parseFloat(document.getElementById('calc-twd').value);
+  const hint=document.getElementById('calc-hint');
+  if(!twd||isNaN(twd)){document.getElementById('calc-eur').value='';hint.style.display='none';return;}
+  const eur=(twd/S.rate).toFixed(2);
+  document.getElementById('calc-eur').value=eur;
+  hint.style.display='block';
+  hint.textContent=`NT$ ${twd.toLocaleString()} = €${parseFloat(eur).toLocaleString()}　（匯率 ${S.rate}）`;
+}
+function quickCalc(eur){document.getElementById('calc-eur').value=eur;calcFromEur();}
+function swapCalc(){
+  const e=document.getElementById('calc-eur').value;
+  const t=document.getElementById('calc-twd').value;
+  document.getElementById('calc-eur').value=t?(t/S.rate).toFixed(2):'';
+  document.getElementById('calc-twd').value=e?Math.round(e*S.rate):'';
+  calcFromEur();
+}
+function renderExps(){
+  const tot=S.exps.reduce((s,e)=>s+e.eur,0);
+  const days=new Set(S.exps.map(e=>e.date)).size||1;
+  document.getElementById('exp-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-val">€${tot.toFixed(2)}</div><div class="stat-label">總花費（歐元）</div></div>
+    <div class="stat-card"><div class="stat-val" style="font-size:18px;">NT$${Math.round(tot*S.rate).toLocaleString()}</div><div class="stat-label">總花費（台幣）</div></div>
+    <div class="stat-card"><div class="stat-val" style="font-size:20px;">${S.exps.length}</div><div class="stat-label">記帳筆數</div></div>
+    <div class="stat-card"><div class="stat-val" style="font-size:18px;">€${(tot/days).toFixed(0)}</div><div class="stat-label">每日平均</div></div>`;
+  const listEl=document.getElementById('exp-list');
+  if(!S.exps.length){listEl.innerHTML='<div class="loading">尚無花費記錄</div>';}
+  else{listEl.innerHTML=S.exps.map(e=>`
+    <div style="border-bottom:1px solid var(--border2);">
+      <div class="exp-item-row">
+        <div class="exp-cat-dot" style="background:${CCLR[e.cat]||'#aaa'}"></div>
+        <div class="exp-info">
+          <div class="exp-name">${e.note}</div>
+          <div class="exp-meta">${e.date} · ${e.city} · ${CNME[e.cat]||e.cat}</div>
+        </div>
+        <div style="text-align:right;margin-right:4px;">
+          <div class="exp-eur">${e.cur==='EUR'?'€':'NT$'}${e.amt}</div>
+          <div class="exp-twd">${e.cur==='EUR'?'NT$'+e.twd:'€'+e.eur.toFixed(1)}</div>
+        </div>
+        <button class="del-btn" onclick="delExp(${e.id})">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>`).join('')+'<div style="height:1px"></div>';}
+  const ct={};S.exps.forEach(e=>{ct[e.cat]=(ct[e.cat]||0)+e.eur;});
+  const mx=Math.max(.01,...Object.values(ct));
+  document.getElementById('cat-bars').innerHTML=Object.entries(ct).sort((a,b)=>b[1]-a[1]).map(([c,v])=>`
+    <div class="bar-row">
+      <div class="bar-label"><span>${CNME[c]||c}</span><span>€${v.toFixed(1)}</span></div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${(v/mx*100).toFixed(0)}%;background:${CCLR[c]}"></div></div>
+    </div>`).join('')||'<div style="font-size:13px;color:var(--t3);padding:8px 0;">尚無資料</div>';
+}
+
+/* ════════════════ FIREBASE SYNC ════════════════ */
+const FB={
+  url:localStorage.getItem('vi_fb_url')||'',
+  code:localStorage.getItem('vi_trip_code')||'',
+  pollTimer:null,lastHash:'',connected:false
+};
+function openSyncDrawer(){
+  document.getElementById('sync-drawer-exp').style.display='block';
+  if(FB.connected){
+    document.getElementById('sync-connected').style.display='block';
+    document.getElementById('sync-setup').style.display='none';
+    document.getElementById('trip-code-display').textContent=FB.code;
+  }else{
+    document.getElementById('sync-connected').style.display='none';
+    document.getElementById('sync-setup').style.display='block';
+    if(FB.url)document.getElementById('fb-url-inp').value=FB.url;
+    if(FB.code)document.getElementById('trip-code-inp').value=FB.code;
+  }
+}
+function closeSyncDrawerExp(){document.getElementById('sync-drawer-exp').style.display='none';}
+function genCode(){
+  const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let r='';for(let i=0;i<6;i++)r+=c[Math.floor(Math.random()*c.length)];
+  document.getElementById('trip-code-inp').value=r;
+}
+async function connectSync(){
+  const url=document.getElementById('fb-url-inp').value.trim().replace(/\/+$/,'');
+  const code=document.getElementById('trip-code-inp').value.trim().toUpperCase();
+  if(!url||!code){toast('請填入資料庫 URL 和行程代碼');return;}
+  if(!url.includes('firebaseio.com')){toast('URL 需包含 firebaseio.com');return;}
+  const btn=document.querySelector('#sync-setup .btn-primary');
+  btn.textContent='連線中...';btn.disabled=true;
+  try{
+    const r=await fetch(`${url}/vi_ping.json`,{method:'PUT',body:JSON.stringify({t:Date.now()})});
+    if(!r.ok)throw new Error();
+  }catch{btn.textContent='連線共享';btn.disabled=false;toast('無法連線，請確認 URL 並確保 Test mode');return;}
+  FB.url=url;FB.code=code;FB.connected=true;
+  localStorage.setItem('vi_fb_url',url);localStorage.setItem('vi_trip_code',code);
+  btn.textContent='連線共享';btn.disabled=false;
+  await pushFB();updateSyncUI(true);startPolling();
+  document.getElementById('sync-connected').style.display='block';
+  document.getElementById('sync-setup').style.display='none';
+  document.getElementById('trip-code-display').textContent=code;
+  toast('共享已啟用！代碼：'+code);
+}
+function disconnectSync(){
+  if(!confirm('確定中斷共享？本機資料保留。'))return;
+  stopPolling();FB.url='';FB.code='';FB.connected=false;
+  localStorage.removeItem('vi_fb_url');localStorage.removeItem('vi_trip_code');
+  updateSyncUI(false);closeSyncDrawerExp();toast('已中斷共享');
+}
+function updateSyncUI(on){
+  const dot=document.getElementById('sync-dot');
+  const title=document.getElementById('sync-title');
+  const sub=document.getElementById('sync-sub');
+  const btn=document.getElementById('sync-setup-btn');
+  if(on){
+    dot.style.cssText='width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(52,199,89,.2);flex-shrink:0;';
+    title.textContent='即時共享模式';sub.textContent='代碼：'+FB.code+' · 每 5 秒同步';btn.textContent='設定';
+  }else{
+    dot.style.cssText='width:8px;height:8px;border-radius:50%;background:var(--t3);flex-shrink:0;';
+    title.textContent='本地模式';sub.textContent='僅存於此裝置';btn.textContent='啟用共享';
+  }
+}
+async function pushFB(){
+  if(!FB.connected)return;
+  try{await fetch(`${FB.url}/trips/${FB.code}/expenses.json`,{
+    method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(S.exps)
+  });}catch{}
+}
+async function fetchFB(){
+  if(!FB.connected)return null;
+  try{
+    const r=await fetch(`${FB.url}/trips/${FB.code}/expenses.json`);
+    if(!r.ok)return null;
+    const d=await r.json();
+    return Array.isArray(d)?d:(d?Object.values(d):[]);
+  }catch{return null;}
+}
+function startPolling(){
+  stopPolling();
+  FB.pollTimer=setInterval(async()=>{
+    const remote=await fetchFB();if(remote===null)return;
+    const h=JSON.stringify(remote);
+    if(h!==FB.lastHash){FB.lastHash=h;S.exps=remote;localStorage.setItem('vi_e',JSON.stringify(S.exps));renderExps();}
+  },5000);
+}
+function stopPolling(){if(FB.pollTimer){clearInterval(FB.pollTimer);FB.pollTimer=null;}}
+function copyTripCode(){navigator.clipboard.writeText(FB.code).then(()=>toast('代碼已複製：'+FB.code));}
+
+/* ════════════════ MAP ════════════════ */
+const ATTRACTIONS=[
+  // Roma
+  {n:'萬神殿 Pantheon',          la:41.8986,lo:12.4769,clr:'#ff3b30',city:'Roma'},
+  {n:'特雷維噴泉 Fontana di Trevi',la:41.9009,lo:12.4833,clr:'#ff3b30',city:'Roma'},
+  {n:'納沃納廣場',                 la:41.8992,lo:12.4730,clr:'#ff3b30',city:'Roma'},
+  {n:'聖天使廣場',                 la:41.9031,lo:12.4663,clr:'#ff3b30',city:'Roma'},
+  {n:'梵蒂岡博物館',               la:41.9065,lo:12.4536,clr:'#ff3b30',city:'Roma'},
+  {n:'聖彼德大教堂',               la:41.9022,lo:12.4539,clr:'#ff3b30',city:'Roma'},
+  {n:'西班牙廣場',                 la:41.9058,lo:12.4824,clr:'#ff3b30',city:'Roma'},
+  {n:'羅馬競技場 Colosseo',         la:41.8902,lo:12.4922,clr:'#ff3b30',city:'Roma'},
+  {n:'住宿 Termini Flat',          la:41.9009,lo:12.5006,clr:'#ff3b30',city:'Roma'},
+  // Napoli
+  {n:'住宿 NaLusa rooms',          la:40.8400,lo:14.2491,clr:'#34c759',city:'Napoli'},
+  {n:'龐貝古城 Pompei',             la:40.7490,lo:14.4898,clr:'#34c759',city:'Napoli'},
+  {n:'卡布里島 Capri',              la:40.5537,lo:14.2228,clr:'#34c759',city:'Napoli'},
+  {n:'藍洞 Grotta Azzurra',         la:40.5626,lo:14.1963,clr:'#34c759',city:'Napoli'},
+  {n:'阿瑪菲 Amalfi',              la:40.6340,lo:14.6025,clr:'#34c759',city:'Napoli'},
+  {n:'波西塔諾 Positano',           la:40.6281,lo:14.4849,clr:'#34c759',city:'Napoli'},
+  // Sicilia
+  {n:'住宿 Cefalù',                la:38.0393,lo:14.0228,clr:'#ff9500',city:'Sicilia'},
+  {n:'神廟谷 Valle dei Templi',    la:37.2908,lo:13.5883,clr:'#ff9500',city:'Sicilia'},
+  {n:'陶爾米納 Taormina',           la:37.8521,lo:15.2844,clr:'#ff9500',city:'Sicilia'},
+  {n:'埃特納火山 Etna',             la:37.7510,lo:14.9934,clr:'#ff9500',city:'Sicilia'},
+  {n:'巴勒莫 Palermo',             la:38.1157,lo:13.3615,clr:'#ff9500',city:'Sicilia'},
+  {n:'Ballaro 市場',               la:38.1117,lo:13.3501,clr:'#ff9500',city:'Sicilia'},
+  // Milano
+  {n:'住宿 Porta Venezia',         la:45.4727,lo:9.2044,clr:'#5ac8fa',city:'Milano'},
+  {n:'最後的晚餐 Cenacolo',          la:45.4657,lo:9.1706,clr:'#5ac8fa',city:'Milano'},
+  {n:'米蘭大教堂 Duomo',            la:45.4641,lo:9.1919,clr:'#5ac8fa',city:'Milano'},
+  {n:'Galleria Vittorio Emanuele', la:45.4654,lo:9.1895,clr:'#5ac8fa',city:'Milano'},
+  // Venezia
+  {n:'聖馬可廣場 San Marco',        la:45.4342,lo:12.3388,clr:'#bf5af2',city:'Venezia'},
+  {n:'里阿托橋 Ponte di Rialto',    la:45.4382,lo:12.3358,clr:'#bf5af2',city:'Venezia'},
+  {n:'嘆息橋 Ponte dei Sospiri',    la:45.4337,lo:12.3406,clr:'#bf5af2',city:'Venezia'},
+];
+
+function makeMarkerIcon(color){
+  return L.divIcon({
+    html:`<div style="position:relative;width:20px;height:20px;display:flex;align-items:center;justify-content:center;">
+      <div style="width:14px;height:14px;border-radius:50%;background:${color};border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.45);"></div>
+    </div>`,
+    className:'',iconSize:[20,20],iconAnchor:[10,10]
+  });
+}
+
+const markerRefs=[];
+
+function initMap(){
+  S.map=L.map('lmap',{zoomControl:true}).setView([41.9028,12.4964],13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(S.map);
+
+  ATTRACTIONS.forEach((a,i)=>{
+    const mk=L.marker([a.la,a.lo],{icon:makeMarkerIcon(a.clr)})
+      .addTo(S.map)
+      .bindPopup(`<div style="font-size:13px;font-weight:700;color:#1d1d1f;margin-bottom:3px;">${a.n}</div><div style="display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;background:${a.clr}20;color:${a.clr};">${a.city}</div>`);
+    markerRefs.push({...a,marker:mk});
+  });
+
+  // 圖例
+  const legend=L.control({position:'bottomleft'});
+  legend.onAdd=function(){
+    const d=L.DomUtil.create('div');
+    d.style.cssText='background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-radius:10px;padding:9px 11px;font-family:-apple-system,sans-serif;font-size:11px;box-shadow:0 2px 14px rgba(0,0,0,.15);';
+    d.innerHTML=[{c:'#ff3b30',n:'Roma'},{c:'#34c759',n:'Napoli'},{c:'#ff9500',n:'Sicilia'},{c:'#5ac8fa',n:'Milano'},{c:'#bf5af2',n:'Venezia'}]
+      .map(x=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><div style="width:10px;height:10px;border-radius:50%;background:${x.c};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3);flex-shrink:0;"></div><span style="font-weight:600;color:#1d1d1f;">${x.n}</span></div>`).join('');
+    return d;
+  };
+  legend.addTo(S.map);
+  S.mapOk=true;
+  setTimeout(()=>{S.map.invalidateSize();showCityAttractions('Roma');},100);
+}
+
+function showCityAttractions(cityFilter){
+  const panel=document.getElementById('map-panel');
+  const list=cityFilter==='全部'?ATTRACTIONS:ATTRACTIONS.filter(a=>a.city===cityFilter);
+  const arrSvg=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>`;
+  panel.innerHTML=`
+    <div class="map-panel-header">
+      <span class="map-panel-title">${cityFilter==='全部'?'所有景點':cityFilter+' 景點'}</span>
+      <span class="map-panel-count">${list.length} 個地點</span>
+    </div>
+    ${list.map(a=>`<div class="attr-item" onclick="flyToAttr(${a.la},${a.lo})">
+      <div class="attr-dot" style="background:${a.clr};"></div>
+      <span class="attr-name">${a.n}</span>
+      <span class="attr-city">${a.city}</span>
+      <div class="attr-arr">${arrSvg}</div>
+    </div>`).join('')}`;
+}
+
+function flyToAttr(la,lo){
+  S.map.flyTo([la,lo],17,{duration:.8});
+  const ref=markerRefs.find(m=>m.la===la&&m.lo===lo);
+  if(ref)setTimeout(()=>ref.marker.openPopup(),900);
+}
+
+function flyTo(la,lo,z,btn,cityFilter){
+  if(!S.mapOk){goTab('map');setTimeout(()=>flyTo(la,lo,z,btn,cityFilter),400);return;}
+  S.map.flyTo([la,lo],z,{duration:1});
+  document.querySelectorAll('.city-btn').forEach(b=>{b.style.background='';b.style.borderColor='';b.style.color='';b.classList.remove('on');});
+  const CCLR2={Roma:'#ff3b30',Napoli:'#34c759',Sicilia:'#ff9500',Milano:'#5ac8fa',Venezia:'#bf5af2'};
+  const clr=cityFilter?CCLR2[cityFilter]:null;
+  if(clr){btn.style.background=clr+'15';btn.style.borderColor=clr;btn.style.color=clr;}
+  else{btn.classList.add('on');}
+  if(cityFilter){showCityAttractions(cityFilter);document.querySelectorAll('.poi-btn').forEach(b=>b.classList.remove('on'));}
+}
+function locateMe(){
+  if(!navigator.geolocation){toast('不支援定位');return;}toast('定位中...');
+  navigator.geolocation.getCurrentPosition(p=>{
+    S.map.flyTo([p.coords.latitude,p.coords.longitude],16);
+    L.circleMarker([p.coords.latitude,p.coords.longitude],
+      {radius:8,fillColor:'var(--blue)',fillOpacity:1,color:'#fff',weight:3})
+      .addTo(S.map).bindPopup('你在這裡').openPopup();
+    toast('已定位');
+  },()=>toast('無法取得位置'));
+}
+async function srchPOI(type,btn){
+  document.querySelectorAll('.poi-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+  const c=S.map.getCenter();
+  const panel=document.getElementById('map-panel');
+  panel.innerHTML='<div class="loading"><div class="spin"></div> 搜尋周邊中...</div>';
+  S.poiMk.forEach(m=>S.map.removeLayer(m));S.poiMk=[];
+  try{
+    const f=type==='supermarket'?'[shop=supermarket]':type==='toilets'?'[amenity=toilets]':`[amenity=${type}]`;
+    const q=`[out:json][timeout:15];node(around:800,${c.lat},${c.lng})${f};out body 12;`;
+    const data=await(await fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q))).json();
+    const items=data.elements||[];
+    if(!items.length){panel.innerHTML='<div class="loading" style="color:var(--t3);">附近無結果</div>';return;}
+    const arrSvg=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>`;
+    panel.innerHTML=`
+      <div class="map-panel-header">
+        <span class="map-panel-title">周邊搜尋結果</span>
+        <span class="map-panel-count">${Math.min(items.length,10)} 個地點</span>
+      </div>
+      ${items.slice(0,10).map(it=>{
+        const nm=it.tags?.name||it.tags?.['name:it']||'未命名';
+        const dist=Math.round(gdist(c.lat,c.lng,it.lat,it.lon));
+        const gm=`https://www.google.com/maps/search/?api=1&query=${it.lat},${it.lon}`;
+        return `<div class="attr-item" onclick="window.open('${gm}','_blank')">
+          <div class="attr-dot" style="background:var(--green);"></div>
+          <span class="attr-name">${nm}</span>
+          <span class="attr-city">約 ${dist}m</span>
+          <div class="attr-arr">${arrSvg}</div>
+        </div>`;
+      }).join('')}`;
+    items.slice(0,10).forEach(it=>{
+      const mk=L.circleMarker([it.lat,it.lon],{radius:6,fillColor:'#34c759',fillOpacity:.9,color:'#fff',weight:2})
+        .addTo(S.map).bindPopup(`<strong>${it.tags?.name||'未命名'}</strong>`);
+      S.poiMk.push(mk);
+    });
+  }catch{panel.innerHTML='<div class="loading" style="color:var(--t3);">搜尋失敗，請確認網路</div>';}
+}
+function gdist(la1,lo1,la2,lo2){
+  const R=6371000,d1=(la2-la1)*Math.PI/180,d2=(lo2-lo1)*Math.PI/180;
+  const a=Math.sin(d1/2)**2+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(d2/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+/* ════════════════ TRANSLATE ════════════════ */
+function setLang(lp,btn){S.lang=lp;document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');}
+function handlePhoto(inp){
+  const f=inp.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=e=>{
+    const img=document.getElementById('cam-prev');
+    img.src=e.target.result;img.style.display='block';
+    document.getElementById('cam-ph').style.display='none';
+    document.getElementById('ocr-sec').style.display='block';
+  };rd.readAsDataURL(f);
+}
+async function runOCR(){
+  const img=document.getElementById('cam-prev');
+  if(!img.src){toast('請先拍照');return;}
+  const st=document.getElementById('ocr-status');st.textContent='載入 OCR...';
+  if(!window.Tesseract){
+    await new Promise((res,rej)=>{
+      const sc=document.createElement('script');
+      sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+      sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);
+    });
+  }
+  st.textContent='辨識中...';
+  try{
+    const tl=S.lang.split('|')[0]==='it'?'ita':S.lang.split('|')[0]==='en'?'eng':'chi_tra';
+    const r=await Tesseract.recognize(img.src,tl,{
+      logger:m=>{if(m.status==='recognizing text')st.textContent=`辨識中 ${Math.round(m.progress*100)}%`;}
+    });
+    const txt=r.data.text.trim();
+    document.getElementById('tinp').value=txt;
+    st.textContent='辨識完成';if(txt)doTranslate();
+  }catch{st.textContent='辨識失敗，請手動輸入';}
+}
+async function doTranslate(){
+  const txt=document.getElementById('tinp').value.trim();
+  if(!txt){toast('請輸入文字');return;}
+  const out=document.getElementById('res-text');
+  const res=document.getElementById('trans-result');
+  res.style.display='block';out.textContent='翻譯中...';
+  try{
+    const [fr,to]=S.lang.split('|');
+    const d=await(await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(txt)}&langpair=${fr}|${to}`)).json();
+    out.textContent=d.responseData?.translatedText||'翻譯失敗，請稍後再試';
+  }catch{out.textContent='網路錯誤，請確認連線';}
+}
+function cpyResult(){navigator.clipboard.writeText(document.getElementById('res-text').textContent).then(()=>toast('已複製'));}
+function spkResult(){
+  const to=S.lang.split('|')[1];
+  const lng=to.includes('zh')?'zh-TW':to==='it'?'it-IT':'en-US';
+  const u=new SpeechSynthesisUtterance(document.getElementById('res-text').textContent);
+  u.lang=lng;speechSynthesis.speak(u);
+}
+function clrTrans(){
+  document.getElementById('tinp').value='';
+  document.getElementById('trans-result').style.display='none';
+  document.getElementById('cam-prev').style.display='none';
+  document.getElementById('cam-ph').style.display='block';
+  document.getElementById('ocr-sec').style.display='none';
+  document.getElementById('ocr-status').textContent='';
+}
+
+/* ════════════════ PHRASES ════════════════ */
+function setCat(c,btn){S.pcat=c;document.querySelectorAll('.pcat-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderPhrases();}
+function renderPhrases(){
+  const q=(document.getElementById('psrch')?.value||'').toLowerCase();
+  const list=PHRASES.filter(p=>(S.pcat==='全部'||p.c===S.pcat)&&
+    (!q||p.zh.includes(q)||p.en.toLowerCase().includes(q)||p.it.toLowerCase().includes(q)));
+  document.getElementById('phrase-list').innerHTML=list.map(p=>`
+    <div class="card" style="margin-bottom:8px;"><div class="phrase-card">
+      <div class="p-zh">${p.zh}</div>
+      <div class="p-en">${p.en}</div>
+      <div class="p-it">${p.it}</div>
+      <div class="p-pron">發音：${p.p}</div>
+      <div class="p-acts">
+        <button class="btn btn-ghost btn-sm" onclick="spk('${esc(p.it)}','it-IT')">朗讀義文</button>
+        <button class="btn btn-outline btn-sm" onclick="spk('${esc(p.en)}','en-US')">朗讀英文</button>
+        <button class="btn btn-outline btn-sm" onclick="cpy('${esc(p.it)}')">複製</button>
+      </div>
+    </div></div>`).join('')||
+    '<div class="loading" style="color:var(--t3);">找不到相符短語</div>';
+}
+function esc(t){return encodeURIComponent(t);}
+function spk(et,lang){const u=new SpeechSynthesisUtterance(decodeURIComponent(et));u.lang=lang;speechSynthesis.cancel();speechSynthesis.speak(u);}
+function cpy(et){navigator.clipboard.writeText(decodeURIComponent(et)).then(()=>toast('已複製'));}
+
+/* ════════════════ EVENTS ════════════════ */
+function setEvFlt(f,btn){S.eflt=f;document.querySelectorAll('.efilt-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderEvents();}
+function renderEvents(){
+  const list=EVENTS.filter(e=>S.eflt==='全部'||e.reg===S.eflt);
+  document.getElementById('ev-list').innerHTML=list.map(ev=>{
+    const ds=new Date(ev.d+'T00:00:00').toLocaleDateString('zh-TW',{month:'numeric',day:'numeric',weekday:'short'});
+    return `<div class="card" style="margin-bottom:10px;"><div class="ev-card">
+      <div class="ev-date">${ds}</div>
+      <div class="ev-city-badge" style="background:${ev.clr}18;color:${ev.clr}">${ev.city}</div>
+      <div class="ev-title">${ev.ti}</div>
+      <div class="ev-desc">${ev.desc}</div>
+      <div class="ev-links">
+        ${ev.links.map(l=>`<a href="${l.u}" target="_blank" class="ev-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          ${l.l}</a>`).join('')}
+        <a href="https://www.google.com/search?q=${encodeURIComponent(ev.ti+' '+ev.city+' 2026')}" target="_blank" class="ev-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>搜尋</a>
+      </div>
+    </div></div>`;
+  }).join('')||'<div class="loading" style="color:var(--t3);">此城市暫無活動</div>';
+}
+
+/* ════════════════ TOAST ════════════════ */
+let _tt;
+function toast(m){
+  const el=document.getElementById('toast');
+  el.textContent=m;el.classList.add('on');
+  clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('on'),2200);
+}
+</script>
+</body>
+</html>
