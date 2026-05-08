@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Viaggio Italia — SwiftUI 架構設計</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{
+  --green:#009246;--red:#CE2B37;--gold:#C9A84C;--blue:#2C5F8A;--dark:#1A1A2E;
+  --soft:#F8F4EF;--card:#fff;--mid:#4A4A6A;--light:#8A8AAA;
+  --r:16px;--shadow:0 6px 24px rgba(0,0,0,.09);
+  /* Xcode dark */
+  --xc-bg:#1E2329;--xc-kw:#CF8EFF;--xc-type:#67CEFC;
+  --xc-str:#FC7E4A;--xc-cmt:#7B8B99;--xc-num:#D9C97C;--xc-text:#E8E8E8;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--soft);color:var(--dark);}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#1A1A2E 0%,#2C5F8A 55%,#009246 100%);
+  padding:56px 32px 72px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 80% 20%,rgba(201,168,76,.18) 0%,transparent 55%);}
+.hero h1{font-family:'Playfair Display',serif;font-size:48px;color:#fff;font-weight:900;line-height:1.1;position:relative;}
+.hero h1 em{color:var(--gold);font-style:italic;}
+.hero p{color:rgba(255,255,255,.7);font-size:15px;margin-top:12px;position:relative;}
+.badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
+  color:#fff;font-size:11px;font-weight:600;padding:5px 14px;border-radius:99px;margin-top:16px;
+  letter-spacing:1.2px;text-transform:uppercase;position:relative;}
+
+/* WRAP */
+.wrap{max-width:1060px;margin:0 auto;padding:0 28px 80px;}
+.slabel{font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;margin-top:52px;}
+.stitle{font-family:'Playfair Display',serif;font-size:30px;margin-bottom:24px;}
+.stitle span{color:var(--blue);}
+
+/* CODE */
+.code-block{background:var(--xc-bg);border-radius:var(--r);padding:28px;
+  font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.9;
+  overflow-x:auto;box-shadow:var(--shadow);margin-bottom:16px;
+  border:1px solid rgba(255,255,255,.06);}
+.code-block .filename{color:rgba(255,255,255,.35);font-size:11px;margin-bottom:16px;
+  padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.08);font-style:italic;}
+.kw{color:var(--xc-kw);}
+.ty{color:var(--xc-type);}
+.st{color:var(--xc-str);}
+.cm{color:var(--xc-cmt);}
+.nm{color:var(--xc-num);}
+.tx{color:var(--xc-text);}
+.fn{color:#62D4AF;}
+.prop{color:#7EC8E3;}
+.op{color:rgba(255,255,255,.5);}
+
+/* CARD */
+.card{background:var(--card);border-radius:var(--r);padding:28px;
+  box-shadow:var(--shadow);margin-bottom:16px;border:1px solid rgba(0,0,0,.05);}
+.card h3{font-family:'Playfair Display',serif;font-size:20px;margin-bottom:14px;
+  display:flex;align-items:center;gap:10px;}
+.card p{font-size:14px;color:var(--mid);line-height:1.7;}
+
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+@media(max-width:700px){.grid2,.grid3{grid-template-columns:1fr;}}
+
+/* FRAMEWORK TABLE */
+.fw-table{width:100%;border-collapse:collapse;}
+.fw-table th{background:var(--dark);color:#fff;font-size:12px;font-weight:600;
+  letter-spacing:1px;text-transform:uppercase;padding:12px 16px;text-align:left;}
+.fw-table td{padding:12px 16px;font-size:13px;color:var(--mid);
+  border-bottom:1px solid #F0EDE8;vertical-align:top;}
+.fw-table tr:last-child td{border-bottom:none;}
+.fw-table td:first-child{font-weight:700;color:var(--dark);}
+.fw-tag{display:inline-block;font-size:11px;font-weight:600;padding:3px 8px;
+  border-radius:99px;margin:2px;}
+.t-green{background:#E8F7EE;color:#007A3D;}
+.t-blue{background:#E3EDF7;color:#1E4E78;}
+.t-purple{background:#F0EAF9;color:#5C3DAA;}
+.t-gold{background:#FDF3DC;color:#9A7A2A;}
+.t-red{background:#FDE8EA;color:#A0222C;}
+.t-teal{background:#E0F7F5;color:#1A9988;}
+
+/* VIEW TREE */
+.tree{font-family:'JetBrains Mono',monospace;font-size:13px;
+  background:var(--xc-bg);border-radius:var(--r);padding:24px 28px;
+  color:var(--xc-text);line-height:2.1;overflow-x:auto;}
+.tree-root{color:#67CEFC;font-weight:700;}
+.tree-tab{color:#62D4AF;}
+.tree-view{color:#CF8EFF;}
+.tree-sub{color:#7EC8E3;}
+.tree-leaf{color:rgba(255,255,255,.55);}
+.tree-indent{color:rgba(255,255,255,.2);}
+
+/* SCREEN SPEC */
+.screen-card{background:var(--card);border-radius:var(--r);
+  box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px;}
+.screen-header{padding:16px 22px;color:#fff;display:flex;align-items:center;gap:10px;}
+.screen-body{padding:20px 22px;}
+.screen-prop{display:flex;align-items:flex-start;gap:8px;
+  padding:8px 0;border-bottom:1px solid #F4F2EE;font-size:13px;}
+.screen-prop:last-child{border-bottom:none;}
+.screen-label{font-weight:700;color:var(--dark);min-width:110px;flex-shrink:0;}
+.screen-val{color:var(--mid);line-height:1.6;}
+
+/* FOLDER TREE */
+.folder{font-family:'JetBrains Mono',monospace;font-size:12.5px;
+  background:#161B22;border-radius:var(--r);padding:24px;
+  color:#E8E8E8;line-height:2;}
+.f-dir{color:#67CEFC;}
+.f-swift{color:#62D4AF;}
+.f-res{color:#D9C97C;}
+.f-comment{color:#7B8B99;}
+
+/* VM CARD */
+.vm-card{background:var(--card);border-radius:var(--r);
+  box-shadow:var(--shadow);overflow:hidden;margin-bottom:14px;}
+.vm-header{background:linear-gradient(90deg,var(--dark),#2C5F8A);
+  color:#fff;padding:14px 22px;font-weight:700;font-size:15px;
+  display:flex;align-items:center;gap:8px;}
+.vm-body{padding:18px 22px;}
+.vm-section-title{font-size:11px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--gold);margin-bottom:8px;margin-top:14px;}
+.vm-section-title:first-child{margin-top:0;}
+.prop-list{list-style:none;}
+.prop-list li{font-family:'JetBrains Mono',monospace;font-size:12.5px;
+  padding:5px 0;border-bottom:1px solid #F4F2EE;color:var(--mid);}
+.prop-list li:last-child{border-bottom:none;}
+.prop-list .prop-kw{color:var(--xc-kw);}
+.prop-list .prop-ty{color:var(--xc-type);}
+.prop-list .prop-nm{color:#E8E8E8;}
+
+footer{text-align:center;padding:36px 20px;color:var(--light);
+  font-size:12px;border-top:1px solid #EDE9E3;}
+footer strong{color:var(--gold);}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Viaggio Italia<br/><em>SwiftUI 架構</em></h1>
+  <p>完整 App 程式架構設計文件 · iOS / iPadOS</p>
+  <span class="badge">📱 Developer Spec · 開發規格書</span>
+</div>
+
+<div class="wrap">
+
+<!-- ══════════════════════
+     1. 資料模型
+══════════════════════ -->
+<div class="slabel">Data Models · 資料模型</div>
+<div class="stitle">Swift <span>Struct 定義</span></div>
+
+<div class="code-block">
+<div class="filename">// Models/TripItinerary.swift</div>
+<span class="kw">import</span> <span class="ty">Foundation</span><br/>
+<span class="kw">import</span> <span class="ty">CoreLocation</span><br/><br/>
+<span class="cm">// ── 行程主體 ──────────────────────────────────────</span><br/>
+<span class="kw">struct</span> <span class="ty">TripItinerary</span><span class="tx">: </span><span class="ty">Identifiable</span><span class="tx">, </span><span class="ty">Codable</span> <span class="op">{</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">id</span><span class="tx">: </span><span class="ty">UUID</span> <span class="op">=</span> <span class="ty">UUID</span><span class="op">()</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">title</span><span class="tx">: </span><span class="ty">String</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// "2026 南義之旅"</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">startDate</span><span class="tx">: </span><span class="ty">Date</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">endDate</span><span class="tx">: </span><span class="ty">Date</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">days</span><span class="tx">: [</span><span class="ty">DaySchedule</span><span class="tx">]</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">travelers</span><span class="tx">: </span><span class="ty">Int</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 2</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">baseCurrency</span><span class="tx">: </span><span class="ty">String</span>&nbsp;&nbsp;&nbsp;<span class="cm">// "EUR"</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">homeCurrency</span><span class="tx">: </span><span class="ty">String</span>&nbsp;&nbsp;&nbsp;<span class="cm">// "TWD"</span><br/>
+<span class="op">}</span><br/><br/>
+<span class="cm">// ── 每日行程 ──────────────────────────────────────</span><br/>
+<span class="kw">struct</span> <span class="ty">DaySchedule</span><span class="tx">: </span><span class="ty">Identifiable</span><span class="tx">, </span><span class="ty">Codable</span> <span class="op">{</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">id</span><span class="tx">: </span><span class="ty">UUID</span> <span class="op">=</span> <span class="ty">UUID</span><span class="op">()</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">date</span><span class="tx">: </span><span class="ty">Date</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">city</span><span class="tx">: </span><span class="ty">String</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// "Roma"</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">emoji</span><span class="tx">: </span><span class="ty">String</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// "🏛️"</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">attractions</span><span class="tx">: [</span><span class="ty">Attraction</span><span class="tx">]</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">accommodation</span><span class="tx">: </span><span class="ty">Accommodation</span><span class="tx">?</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">transport</span><span class="tx">: [</span><span class="ty">TransportSegment</span><span class="tx">]</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">notes</span><span class="tx">: </span><span class="ty">String</span><br/>
+<span class="op">}</span><br/><br/>
+<span class="cm">// ── 景點 ──────────────────────────────────────────</span><br/>
+<span class="kw">struct</span> <span class="ty">Attraction</span><span class="tx">: </span><span class="ty">Identifiable</span><span class="tx">, </span><span class="ty">Codable</span> <span class="op">{</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">id</span><span class="tx">: </span><span class="ty">UUID</span> <span class="op">=</span> <span class="ty">UUID</span><span class="op">()</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">name</span><span class="tx">: </span><span class="ty">String</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">nameLocal</span><span class="tx">: </span><span class="ty">String</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 義大利文名稱</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">emoji</span><span class="tx">: </span><span class="ty">String</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">coordinate</span><span class="tx">: </span><span class="ty">GeoCoordinate</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">address</span><span class="tx">: </span><span class="ty">String</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">visitTime</span><span class="tx">: </span><span class="ty">Date</span><span class="tx">?</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">stayDuration</span><span class="tx">: </span><span class="ty">TimeInterval</span>&nbsp;<span class="cm">// 建議停留時間（秒）</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">openingHours</span><span class="tx">: </span><span class="ty">String</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">ticketPrice</span><span class="tx">: </span><span class="ty">Double</span><span class="tx">?</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// EUR，nil = 免費</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">bookingCode</span><span class="tx">: </span><span class="ty">String</span><span class="tx">?</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">bookingURL</span><span class="tx">: </span><span class="ty">URL</span><span class="tx">?</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">dressCode</span><span class="tx">: </span><span class="ty">DressCode</span><span class="tx">?</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">visitNotes</span><span class="tx">: [</span><span class="ty">VisitNote</span><span class="tx">]</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">nearbyPOI</span><span class="tx">: [</span><span class="ty">POI</span><span class="tx">]</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">checkInLeadTime</span><span class="tx">: </span><span class="ty">Int</span><span class="tx">?</span>&nbsp;&nbsp;&nbsp;<span class="cm">// 提前幾分鐘到（如 30）</span><br/>
+<span class="op">}</span>
+</div>
+
+<div class="code-block">
+<div class="filename">// Models/SupportingTypes.swift</div>
+<span class="cm">// ── 周邊標的 ──────────────────────────────────────</span><br/>
+<span class="kw">struct</span> <span class="ty">POI</span><span class="tx">: </span><span class="ty">Identifiable</span><span class="tx">, </span><span class="ty">Codable</span> <span class="op">{</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">id</span><span class="tx">: </span><span class="ty">UUID</span> <span class="op">=</span> <span class="ty">UUID</span><span class="op">()</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">type</span><span class="tx">: </span><span class="ty">POIType</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// .restaurant, .cafe, .atm...</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">name</span><span class="tx">: </span><span class="ty">String</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">distance</span><span class="tx">: </span><span class="ty">Double</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 公尺</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">rating</span><span class="tx">: </span><span class="ty">Double</span><span class="tx">?</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 0–5</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">coordinate</span><span class="tx">: </span><span class="ty">GeoCoordinate</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">googleMapsURL</span><span class="tx">: </span><span class="ty">URL</span><span class="tx">?</span><br/>
+<span class="op">}</span><br/>
+<span class="kw">enum</span> <span class="ty">POIType</span><span class="tx">: </span><span class="ty">String</span><span class="tx">, </span><span class="ty">Codable</span><span class="tx">, </span><span class="ty">CaseIterable</span> <span class="op">{</span><br/>
+&nbsp;&nbsp;<span class="kw">case</span> <span class="tx">restaurant, cafe, atm, pharmacy, supermarket, toilet, souvenir, hotel</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">icon</span><span class="tx">: </span><span class="ty">String</span> <span class="op">{</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">switch</span> <span class="kw">self</span> <span class="op">{</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">case</span> <span class="tx">.restaurant: </span><span class="kw">return</span> <span class="st">"🍝"</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">case</span> <span class="tx">.cafe:       </span><span class="kw">return</span> <span class="st">"☕"</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">case</span> <span class="tx">.atm:        </span><span class="kw">return</span> <span class="st">"🏧"</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">case</span> <span class="tx">.pharmacy:   </span><span class="kw">return</span> <span class="st">"💊"</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">case</span> <span class="tx">.toilet:     </span><span class="kw">return</span> <span class="st">"🚻"</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">default</span><span class="tx">:         </span><span class="kw">return</span> <span class="st">"📍"</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="op">}</span><br/>
+&nbsp;&nbsp;<span class="op">}</span><br/>
+<span class="op">}</span><br/><br/>
+<span class="cm">// ── 花費 ──────────────────────────────────────────</span><br/>
+<span class="kw">struct</span> <span class="ty">Expense</span><span class="tx">: </span><span class="ty">Identifiable</span><span class="tx">, </span><span class="ty">Codable</span> <span class="op">{</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">id</span><span class="tx">: </span><span class="ty">UUID</span> <span class="op">=</span> <span class="ty">UUID</span><span class="op">()</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">title</span><span class="tx">: </span><span class="ty">String</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">category</span><span class="tx">: </span><span class="ty">ExpenseCategory</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">amount</span><span class="tx">: </span><span class="ty">Double</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 以 EUR 為主</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">currency</span><span class="tx">: </span><span class="ty">String</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// "EUR" / "TWD"</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">amountTWD</span><span class="tx">: </span><span class="ty">Double</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 換算台幣</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">date</span><span class="tx">: </span><span class="ty">Date</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">city</span><span class="tx">: </span><span class="ty">String</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">note</span><span class="tx">: </span><span class="ty">String</span><br/>
+<span class="op">}</span><br/>
+<span class="kw">enum</span> <span class="ty">ExpenseCategory</span><span class="tx">: </span><span class="ty">String</span><span class="tx">, </span><span class="ty">Codable</span><span class="tx">, </span><span class="ty">CaseIterable</span> <span class="op">{</span><br/>
+&nbsp;&nbsp;<span class="kw">case</span> <span class="tx">flight, train, accommodation, food, ticket, shopping, transport, car, misc</span><br/>
+<span class="op">}</span><br/><br/>
+<span class="cm">// ── 語言速查 ──────────────────────────────────────</span><br/>
+<span class="kw">struct</span> <span class="ty">Phrasebook</span><span class="tx">: </span><span class="ty">Identifiable</span><span class="tx">, </span><span class="ty">Codable</span> <span class="op">{</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">id</span><span class="tx">: </span><span class="ty">UUID</span> <span class="op">=</span> <span class="ty">UUID</span><span class="op">()</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">situation</span><span class="tx">: </span><span class="ty">PhraseSituation</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">chinese</span><span class="tx">: </span><span class="ty">String</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">english</span><span class="tx">: </span><span class="ty">String</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">italian</span><span class="tx">: </span><span class="ty">String</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">pronunciation</span><span class="tx">: </span><span class="ty">String</span>&nbsp;&nbsp;&nbsp;<span class="cm">// 音標</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">isFavorite</span><span class="tx">: </span><span class="ty">Bool</span> <span class="op">=</span> <span class="kw">false</span><br/>
+<span class="op">}</span><br/>
+<span class="kw">enum</span> <span class="ty">PhraseSituation</span><span class="tx">: </span><span class="ty">String</span><span class="tx">, </span><span class="ty">Codable</span><span class="tx">, </span><span class="ty">CaseIterable</span> <span class="op">{</span><br/>
+&nbsp;&nbsp;<span class="kw">case</span> <span class="tx">accommodation, dining, transport, shopping, emergency, greeting, museum</span><br/>
+<span class="op">}</span><br/><br/>
+<span class="cm">// ── 近期活動 ──────────────────────────────────────</span><br/>
+<span class="kw">struct</span> <span class="ty">LocalEvent</span><span class="tx">: </span><span class="ty">Identifiable</span><span class="tx">, </span><span class="ty">Codable</span> <span class="op">{</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">id</span><span class="tx">: </span><span class="ty">UUID</span> <span class="op">=</span> <span class="ty">UUID</span><span class="op">()</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">title</span><span class="tx">: </span><span class="ty">String</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">date</span><span class="tx">: </span><span class="ty">Date</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">city</span><span class="tx">: </span><span class="ty">String</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">category</span><span class="tx">: </span><span class="ty">String</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// "festival", "concert"...</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">ticketURL</span><span class="tx">: </span><span class="ty">URL</span><span class="tx">?</span><br/>
+&nbsp;&nbsp;<span class="kw">var</span> <span class="prop">isFree</span><span class="tx">: </span><span class="ty">Bool</span><br/>
+<span class="op">}</span>
+</div>
+
+<!-- ══════════════════════
+     2. 架構樹狀圖
+══════════════════════ -->
+<div class="slabel">Architecture · App 架構</div>
+<div class="stitle">View <span>層級樹狀圖</span></div>
+<div class="tree">
+<span class="tree-root">ViaggioItaliaApp</span><br/>
+<span class="tree-indent">└── </span><span class="tree-view">ContentView</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;└── </span><span class="tree-tab">TabView (5 tabs)</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 🏠 </span><span class="tree-sub">NavigationStack</span><span class="tree-leaf"> [Tab 1: 首頁]</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── </span><span class="tree-view">HomeView</span><span class="tree-leaf"> (今日行程 Timeline)</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── </span><span class="tree-view">DayDetailView</span><span class="tree-leaf"> (每日景點清單)</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── </span><span class="tree-view">AttractionDetailView</span><span class="tree-leaf"> (景點詳情+注意事項)</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── </span><span class="tree-view">NearbyView</span><span class="tree-leaf"> (周邊標的)</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── </span><span class="tree-view">TransportDetailView</span><span class="tree-leaf"> (交通詳情)</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 🗺️ </span><span class="tree-sub">NavigationStack</span><span class="tree-leaf"> [Tab 2: 地圖]</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── </span><span class="tree-view">MapView</span><span class="tree-leaf"> (MapKit + 行程 Pins)</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── </span><span class="tree-view">NearbySheetView</span><span class="tree-leaf"> (底部 Sheet — 周邊 POI)</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── </span><span class="tree-view">RoutePreviewView</span><span class="tree-leaf"> (路線預覽)</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── </span><span class="tree-view">EventsView</span><span class="tree-leaf"> (近期活動)</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 📷 </span><span class="tree-sub">NavigationStack</span><span class="tree-leaf"> [Tab 3: 翻譯]</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── </span><span class="tree-view">CameraTranslationView</span><span class="tree-leaf"> (AR 相機翻譯)</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── </span><span class="tree-view">TranslationHistoryView</span><span class="tree-leaf"> (翻譯記錄+收藏)</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 💬 </span><span class="tree-sub">NavigationStack</span><span class="tree-leaf"> [Tab 4: 語言]</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── </span><span class="tree-view">PhrasebookView</span><span class="tree-leaf"> (情境語言速查)</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── </span><span class="tree-view">PhraseDetailView</span><span class="tree-leaf"> (三語對照+語音)</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── </span><span class="tree-view">FavoritePhrasesView</span><span class="tree-leaf"> (收藏語句)</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── 💶 </span><span class="tree-sub">NavigationStack</span><span class="tree-leaf"> [Tab 5: 記帳]</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── </span><span class="tree-view">ExpenseView</span><span class="tree-leaf"> (記帳主頁 + Swift Charts)</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── </span><span class="tree-view">ExpenseAddView</span><span class="tree-leaf"> (新增花費)</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── </span><span class="tree-view">ExpenseListView</span><span class="tree-leaf"> (明細清單)</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── </span><span class="tree-view">BudgetSummaryView</span><span class="tree-leaf"> (預算分析)</span><br/>
+<span class="tree-indent">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── </span><span class="tree-view">BudgetSettingsView</span><span class="tree-leaf"> (每日預算設定)</span>
+</div>
+
+<!-- ══════════════════════
+     3. Framework 表
+══════════════════════ -->
+<div class="slabel">Frameworks · 技術框架</div>
+<div class="stitle">Apple Framework <span>對應表</span></div>
+<div class="card" style="padding:0;overflow:hidden;">
+<table class="fw-table">
+<thead><tr><th>功能</th><th>Framework</th><th>用途說明</th><th>離線？</th></tr></thead>
+<tbody>
+<tr><td>相機 OCR</td><td><span class="fw-tag t-purple">Vision</span><span class="fw-tag t-purple">AVFoundation</span></td><td>即時畫面擷取 → 文字辨識（VNRecognizeTextRequest）</td><td><span class="fw-tag t-green">✓ 完全離線</span></td></tr>
+<tr><td>翻譯</td><td><span class="fw-tag t-blue">Translation</span></td><td>iOS 17+ 系統翻譯 API，義大利 ↔ 中文</td><td><span class="fw-tag t-gold">下載後離線</span></td></tr>
+<tr><td>地圖</td><td><span class="fw-tag t-blue">MapKit</span></td><td>地圖顯示、路線規劃（MKDirections）、POI 搜尋</td><td><span class="fw-tag t-gold">部分離線</span></td></tr>
+<tr><td>定位</td><td><span class="fw-tag t-blue">CoreLocation</span></td><td>即時 GPS 定位、地理圍欄通知</td><td><span class="fw-tag t-green">✓ 完全離線</span></td></tr>
+<tr><td>本地儲存</td><td><span class="fw-tag t-green">SwiftData</span></td><td>行程資料、花費記錄本地持久化（iOS 17+）</td><td><span class="fw-tag t-green">✓ 完全離線</span></td></tr>
+<tr><td>雲端同步</td><td><span class="fw-tag t-purple">CloudKit</span></td><td>iCloud 同步行程、旅伴共享花費</td><td><span class="fw-tag t-red">需網路</span></td></tr>
+<tr><td>花費圖表</td><td><span class="fw-tag t-green">Swift Charts</span></td><td>圓餅圖（類別）、長條圖（每日）、折線圖（累計）</td><td><span class="fw-tag t-green">✓ 完全離線</span></td></tr>
+<tr><td>語音朗讀</td><td><span class="fw-tag t-teal">AVSpeechSynthesizer</span></td><td>義大利文語音朗讀（語言設定 it-IT）</td><td><span class="fw-tag t-green">✓ 完全離線</span></td></tr>
+<tr><td>推播通知</td><td><span class="fw-tag t-purple">UserNotifications</span></td><td>景點提前提醒、預算超支警示</td><td><span class="fw-tag t-green">✓ 本地通知</span></td></tr>
+<tr><td>相機預覽</td><td><span class="fw-tag t-purple">AVFoundation</span></td><td>即時相機 session、AR overlay layer</td><td><span class="fw-tag t-green">✓ 完全離線</span></td></tr>
+<tr><td>匯率查詢</td><td><span class="fw-tag t-red">URLSession</span></td><td>Open Exchange Rates API（背景更新，快取本地）</td><td><span class="fw-tag t-red">需網路</span></td></tr>
+<tr><td>Siri 捷徑</td><td><span class="fw-tag t-teal">AppIntents</span></td><td>「今天要去哪？」「幫我記一筆 20 歐」</td><td><span class="fw-tag t-green">✓ 離線觸發</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ══════════════════════
+     4. 畫面規格
+══════════════════════ -->
+<div class="slabel">Screen Specs · 畫面規格</div>
+<div class="stitle">各畫面 <span>詳細設計</span></div>
+
+<div class="screen-card">
+<div class="screen-header" style="background:linear-gradient(90deg,#1A1A2E,#2C5F8A);">
+  <span style="font-size:20px;">🏠</span><strong>HomeView — 今日行程 Timeline</strong>
+</div>
+<div class="screen-body">
+  <div class="screen-prop"><span class="screen-label">UI 元素</span><span class="screen-val">ScrollView + LazyVStack（Timeline 時間軸）、今日天氣卡片、下一個景點倒計時 Banner、快捷功能按鈕列</span></div>
+  <div class="screen-prop"><span class="screen-label">框架</span><span class="screen-val">SwiftUI、SwiftData（讀取行程）、CoreLocation（目前位置）</span></div>
+  <div class="screen-prop"><span class="screen-label">ViewModel</span><span class="screen-val">ItineraryViewModel</span></div>
+  <div class="screen-prop"><span class="screen-label">特色功能</span><span class="screen-val">已過時間點變暗（opacity 0.4）、目前景點高亮、點擊進入 DayDetailView</span></div>
+</div>
+</div>
+
+<div class="screen-card">
+<div class="screen-header" style="background:linear-gradient(90deg,#CE2B37,#9A1A22);">
+  <span style="font-size:20px;">📷</span><strong>CameraTranslationView — AR 相機翻譯</strong>
+</div>
+<div class="screen-body">
+  <div class="screen-prop"><span class="screen-label">UI 元素</span><span class="screen-val">AVCaptureVideoPreviewLayer 全螢幕相機、翻譯結果 Overlay（CATextLayer）、凍結畫面按鈕、翻譯歷史 Sheet</span></div>
+  <div class="screen-prop"><span class="screen-label">框架</span><span class="screen-val">Vision（VNRecognizeTextRequest）、AVFoundation（AVCaptureSession）、Translation framework</span></div>
+  <div class="screen-prop"><span class="screen-label">核心邏輯</span><span class="screen-val">每 0.5 秒截取一幀 → Vision OCR → 取得文字邊框 → Translation API → 疊加翻譯文字在原位</span></div>
+  <div class="screen-prop"><span class="screen-label">特色功能</span><span class="screen-val">支援「凍結模式」（拍下來慢慢看）、收藏片語、離線模式（系統翻譯語言包需預先下載）</span></div>
+</div>
+</div>
+
+<div class="screen-card">
+<div class="screen-header" style="background:linear-gradient(90deg,#C9A84C,#9A7A2A);">
+  <span style="font-size:20px;">💶</span><strong>ExpenseView — 記帳主頁</strong>
+</div>
+<div class="screen-body">
+  <div class="screen-prop"><span class="screen-label">UI 元素</span><span class="screen-val">月份總覽 Header、Swift Charts 圓餅圖（類別佔比）、每日長條圖、最近記錄 List、新增花費 FAB 按鈕</span></div>
+  <div class="screen-prop"><span class="screen-label">框架</span><span class="screen-val">Swift Charts、SwiftData（Expense 查詢）、URLSession（匯率 API）</span></div>
+  <div class="screen-prop"><span class="screen-label">特色功能</span><span class="screen-val">EUR / TWD 切換顯示、預算超支警示（紅色 Banner）、匯率顯示（1 EUR = 35 NTD）</span></div>
+  <div class="screen-prop"><span class="screen-label">圖表</span><span class="screen-val">SectorMark（圓餅）+ BarMark（長條）+ LineMark（累計折線）</span></div>
+</div>
+</div>
+
+<div class="screen-card">
+<div class="screen-header" style="background:linear-gradient(90deg,#2C5F8A,#1A4060);">
+  <span style="font-size:20px;">🗺️</span><strong>MapView — 即時地圖</strong>
+</div>
+<div class="screen-body">
+  <div class="screen-prop"><span class="screen-label">UI 元素</span><span class="screen-val">Map（MapKit）全螢幕、行程景點 Annotation（自訂圖釘）、路線 MKPolyline、底部可拖曳 Sheet（周邊 POI 清單）</span></div>
+  <div class="screen-prop"><span class="screen-label">框架</span><span class="screen-val">MapKit（iOS 17 新 API）、CoreLocation、MKLocalSearch（周邊搜尋）</span></div>
+  <div class="screen-prop"><span class="screen-label">特色功能</span><span class="screen-val">城市離線地圖下載（.mapTileOverlay）、大眾運輸/步行/開車三種路線模式切換</span></div>
+</div>
+</div>
+
+<!-- ══════════════════════
+     5. 專案結構
+══════════════════════ -->
+<div class="slabel">Project Structure · 專案結構</div>
+<div class="stitle">Xcode <span>資料夾架構</span></div>
+<div class="folder">
+<span class="f-dir">📁 ViaggioItalia/</span><br/>
+<span class="f-dir">├── 📁 App/</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;├── ViaggioItaliaApp.swift</span><span class="f-comment"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// @main entry</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;└── ContentView.swift</span><span class="f-comment"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// TabView root</span><br/>
+<span class="f-dir">├── 📁 Models/</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;├── TripItinerary.swift</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;├── DaySchedule.swift</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;├── Attraction.swift</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;├── POI.swift</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;├── Expense.swift</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;├── Phrasebook.swift</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;└── LocalEvent.swift</span><br/>
+<span class="f-dir">├── 📁 Views/</span><br/>
+<span class="f-dir">&nbsp;&nbsp;&nbsp;├── 📁 Home/</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── HomeView.swift</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── DayDetailView.swift</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── AttractionDetailView.swift</span><br/>
+<span class="f-dir">&nbsp;&nbsp;&nbsp;├── 📁 Map/</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── MapView.swift</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── NearbyView.swift</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── EventsView.swift</span><br/>
+<span class="f-dir">&nbsp;&nbsp;&nbsp;├── 📁 Camera/</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── CameraTranslationView.swift</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── TranslationHistoryView.swift</span><br/>
+<span class="f-dir">&nbsp;&nbsp;&nbsp;├── 📁 Phrasebook/</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── PhrasebookView.swift</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── PhraseDetailView.swift</span><br/>
+<span class="f-dir">&nbsp;&nbsp;&nbsp;└── 📁 Expense/</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── ExpenseView.swift</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── ExpenseAddView.swift</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── BudgetSummaryView.swift</span><br/>
+<span class="f-dir">├── 📁 ViewModels/</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;├── ItineraryViewModel.swift</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;├── MapViewModel.swift</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;├── CameraViewModel.swift</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;├── PhrasebookViewModel.swift</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;└── ExpenseViewModel.swift</span><br/>
+<span class="f-dir">├── 📁 Services/</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;├── LocationService.swift</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;├── TranslationService.swift</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;├── OCRService.swift</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;├── ExchangeRateService.swift</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;├── NotificationService.swift</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;└── CloudSyncService.swift</span><br/>
+<span class="f-dir">├── 📁 Resources/</span><br/>
+<span class="f-res">&nbsp;&nbsp;&nbsp;├── itinerary_2026.json</span><span class="f-comment"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 行程資料</span><br/>
+<span class="f-res">&nbsp;&nbsp;&nbsp;├── phrasebook_it.json</span><span class="f-comment"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 義文短語</span><br/>
+<span class="f-res">&nbsp;&nbsp;&nbsp;├── poi_database.json</span><span class="f-comment"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 周邊 POI 快取</span><br/>
+<span class="f-res">&nbsp;&nbsp;&nbsp;└── Assets.xcassets</span><br/>
+<span class="f-dir">└── 📁 Extensions/</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;├── Color+Italia.swift</span><span class="f-comment"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 品牌色</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;├── Double+Currency.swift</span><span class="f-comment"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 金額格式化</span><br/>
+<span class="f-swift">&nbsp;&nbsp;&nbsp;└── Date+DayLabel.swift</span><span class="f-comment"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 旅行天數計算</span>
+</div>
+
+<!-- ══════════════════════
+     6. ViewModel 設計
+══════════════════════ -->
+<div class="slabel">ViewModels · 狀態管理</div>
+<div class="stitle">ViewModel <span>設計規格</span></div>
+
+<div class="vm-card">
+  <div class="vm-header">📋 ItineraryViewModel</div>
+  <div class="vm-body">
+    <div class="vm-section-title">@Published 屬性</div>
+    <ul class="prop-list">
+      <li><span class="prop-kw">@Published var </span><span class="prop-nm">currentDay</span><span class="prop-kw">: </span><span class="prop-ty">DaySchedule?</span></li>
+      <li><span class="prop-kw">@Published var </span><span class="prop-nm">upcomingAttraction</span><span class="prop-kw">: </span><span class="prop-ty">Attraction?</span></li>
+      <li><span class="prop-kw">@Published var </span><span class="prop-nm">allDays</span><span class="prop-kw">: [</span><span class="prop-ty">DaySchedule</span><span class="prop-kw">]</span></li>
+      <li><span class="prop-kw">@Published var </span><span class="prop-nm">minutesUntilNext</span><span class="prop-kw">: </span><span class="prop-ty">Int</span></li>
+    </ul>
+    <div class="vm-section-title">主要方法</div>
+    <ul class="prop-list">
+      <li><span class="prop-kw">func </span><span class="prop-nm">loadItinerary</span>() <span class="prop-kw">async</span></li>
+      <li><span class="prop-kw">func </span><span class="prop-nm">scheduleNotifications</span>(for: <span class="prop-ty">Attraction</span>)</li>
+      <li><span class="prop-kw">func </span><span class="prop-nm">markAttractionVisited</span>(<span class="prop-nm">id</span>: <span class="prop-ty">UUID</span>)</li>
+    </ul>
+  </div>
+</div>
+
+<div class="vm-card">
+  <div class="vm-header">💶 ExpenseViewModel</div>
+  <div class="vm-body">
+    <div class="vm-section-title">@Published 屬性</div>
+    <ul class="prop-list">
+      <li><span class="prop-kw">@Published var </span><span class="prop-nm">expenses</span><span class="prop-kw">: [</span><span class="prop-ty">Expense</span><span class="prop-kw">]</span></li>
+      <li><span class="prop-kw">@Published var </span><span class="prop-nm">totalEUR</span><span class="prop-kw">: </span><span class="prop-ty">Double</span></li>
+      <li><span class="prop-kw">@Published var </span><span class="prop-nm">totalTWD</span><span class="prop-kw">: </span><span class="prop-ty">Double</span></li>
+      <li><span class="prop-kw">@Published var </span><span class="prop-nm">eurToTWD</span><span class="prop-kw">: </span><span class="prop-ty">Double</span> = 35.0</li>
+      <li><span class="prop-kw">@Published var </span><span class="prop-nm">dailyBudget</span><span class="prop-kw">: </span><span class="prop-ty">Double</span> = 150.0 <span class="prop-kw">// EUR</span></li>
+      <li><span class="prop-kw">@Published var </span><span class="prop-nm">categoryBreakdown</span><span class="prop-kw">: [</span><span class="prop-ty">ExpenseCategory</span>: <span class="prop-ty">Double</span><span class="prop-kw">]</span></li>
+    </ul>
+    <div class="vm-section-title">主要方法</div>
+    <ul class="prop-list">
+      <li><span class="prop-kw">func </span><span class="prop-nm">addExpense</span>(<span class="prop-nm">_</span>: <span class="prop-ty">Expense</span>)</li>
+      <li><span class="prop-kw">func </span><span class="prop-nm">fetchExchangeRate</span>() <span class="prop-kw">async</span></li>
+      <li><span class="prop-kw">func </span><span class="prop-nm">expensesFor</span>(date: <span class="prop-ty">Date</span>) <span class="prop-kw">-></span> [<span class="prop-ty">Expense</span>]</li>
+      <li><span class="prop-kw">func </span><span class="prop-nm">isBudgetExceeded</span>(on: <span class="prop-ty">Date</span>) <span class="prop-kw">-> </span><span class="prop-ty">Bool</span></li>
+    </ul>
+  </div>
+</div>
+
+<div class="vm-card">
+  <div class="vm-header">📷 CameraViewModel</div>
+  <div class="vm-body">
+    <div class="vm-section-title">@Published 屬性</div>
+    <ul class="prop-list">
+      <li><span class="prop-kw">@Published var </span><span class="prop-nm">recognizedTexts</span><span class="prop-kw">: [(</span><span class="prop-ty">String</span>, <span class="prop-ty">CGRect</span><span class="prop-kw">)]</span></li>
+      <li><span class="prop-kw">@Published var </span><span class="prop-nm">translatedTexts</span><span class="prop-kw">: [(</span><span class="prop-ty">String</span>, <span class="prop-ty">CGRect</span><span class="prop-kw">)]</span></li>
+      <li><span class="prop-kw">@Published var </span><span class="prop-nm">isFrozen</span><span class="prop-kw">: </span><span class="prop-ty">Bool</span> = false</li>
+      <li><span class="prop-kw">@Published var </span><span class="prop-nm">isTranslating</span><span class="prop-kw">: </span><span class="prop-ty">Bool</span> = false</li>
+    </ul>
+    <div class="vm-section-title">主要方法</div>
+    <ul class="prop-list">
+      <li><span class="prop-kw">func </span><span class="prop-nm">startSession</span>()</li>
+      <li><span class="prop-kw">func </span><span class="prop-nm">processFrame</span>(<span class="prop-nm">_</span>: <span class="prop-ty">CMSampleBuffer</span>)</li>
+      <li><span class="prop-kw">func </span><span class="prop-nm">translateRecognized</span>() <span class="prop-kw">async</span></li>
+      <li><span class="prop-kw">func </span><span class="prop-nm">saveToHistory</span>(<span class="prop-nm">text</span>: <span class="prop-ty">String</span>)</li>
+    </ul>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+<footer><strong>Viaggio Italia · SwiftUI 架構文件</strong><br/>iOS 17+ · SwiftUI · SwiftData · 2026</footer>
+</body>
+</html>
