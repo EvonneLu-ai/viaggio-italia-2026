@@ -1627,12 +1627,12 @@ function goTab(t){
 
 /* ════════════════ ITINERARY ════════════════ */
 const CITY_GROUPS=[
-  {name:'出發',           dates:'5/25',        clr:'#8e8e93',days:[0]},
-  {name:'Roma & Vaticano',dates:'5/26 – 5/29', clr:'#ff3b30',days:[1,2,3]},
-  {name:'Napoli · Capri · Amalfi',dates:'5/29 – 6/1',clr:'#34c759',days:[4,5,6]},
-  {name:'Sicilia',        dates:'6/1 – 6/5',   clr:'#ff9500',days:[7,8,9,10]},
-  {name:'Milano & Venezia',dates:'6/5 – 6/9',  clr:'#5ac8fa',days:[11,12,13,14]},
-  {name:'返台',           dates:'6/9',         clr:'#8e8e93',days:[15]},
+  {name:'出發',              dates:'5/25',        clr:'#8e8e93', days:[0],           mapCoords:null},
+  {name:'Roma & Vaticano',   dates:'5/26 – 5/29', clr:'#ff3b30', days:[1,2,3],       mapCoords:[41.9028,12.4964]},
+  {name:'Napoli · Capri · Amalfi', dates:'5/29 – 6/1', clr:'#34c759', days:[4,5,6], mapCoords:[40.8518,14.2681]},
+  {name:'Sicilia',           dates:'6/1 – 6/5',   clr:'#ff9500', days:[7,8,9,10],   mapCoords:[38.0393,14.0228]},
+  {name:'Milano & Venezia',  dates:'6/5 – 6/9',   clr:'#5ac8fa', days:[11,12,13,14],mapCoords:[45.4654,9.1859]},
+  {name:'返台',              dates:'6/9',          clr:'#8e8e93', days:[15],          mapCoords:null},
 ];
 
 function renderItin(){
@@ -1685,12 +1685,12 @@ function renderItin(){
       </div>`;
     });
 
-    html+=`<div class="cs-map-row">
-      <button class="cs-map-btn" onclick="mapDay(${mapDayNum})">
+    html+=`${group.mapCoords ? `<div class="cs-map-row">
+      <button class="cs-map-btn" onclick="flyToGroup(${group.mapCoords[0]},${group.mapCoords[1]},'${group.name}')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
         在地圖查看 ${group.name}
       </button>
-    </div>
+    </div>` : ''}
     </div>`;
   });
   document.getElementById('itin-list').innerHTML=html;
@@ -1699,16 +1699,22 @@ function renderItin(){
 function togDs(n){
   document.getElementById('ds-'+n)?.classList.toggle('collapsed');
 }
+function flyToGroup(la,lo,name){
+  goTab('map');closeDrawer();
+  const delay=S.mapOk?150:600;
+  setTimeout(()=>{
+    if(S.map){S.map.flyTo([la,lo],13,{duration:1});toast('地圖已跳至 '+name);}
+  },delay);
+}
 function mapDay(n){
-  const cm={0:'Roma',1:'Roma',2:'Roma',3:'Roma',4:'Napoli',5:'Napoli',6:'Napoli',
+  const cm={1:'Roma',2:'Roma',3:'Roma',4:'Napoli',5:'Napoli',6:'Napoli',
     7:'Cefalù',8:'Agrigento',9:'Taormina',10:'Palermo',11:'Milano',12:'Milano',
-    13:'Venezia',14:'Milano',15:'Milano'};
+    13:'Venezia',14:'Milano'};
   const cc={'Roma':[41.9028,12.4964],'Napoli':[40.8518,14.2681],'Cefalù':[38.0393,14.0228],
     'Agrigento':[37.3113,13.5765],'Taormina':[37.8521,15.2844],'Palermo':[38.1157,13.3615],
     'Milano':[45.4654,9.1859],'Venezia':[45.4408,12.3155]};
-  const city=cm[n]||'Roma',c=cc[city];
-  goTab('map');closeDrawer();
-  setTimeout(()=>{if(c&&S.map)S.map.setView(c,14);},300);
+  const city=cm[n]; if(!city)return;
+  flyToGroup(cc[city][0],cc[city][1],city);
 }
 
 /* ════════════════ EXPENSE ════════════════ */
