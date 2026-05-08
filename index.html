@@ -829,12 +829,18 @@ textarea{resize:vertical;}
   <!-- 匯率計算機 -->
   <div class="sec-label">匯率計算機</div>
   <div class="card" style="margin-bottom:10px;">
-    <div style="padding:14px 16px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border2);">
-      <span style="font-size:12px;color:var(--t2);font-weight:500;">基準匯率</span>
-      <span style="font-size:13px;color:var(--t2);">1 EUR =</span>
-      <input type="number" id="rateinp" style="width:76px;text-align:center;" placeholder="35" min="1"/>
-      <span style="font-size:13px;color:var(--t2);">NTD</span>
-      <button class="btn btn-ghost btn-sm" onclick="saveRate()" style="margin-left:auto;flex-shrink:0;">套用</button>
+    <div style="padding:14px 16px 10px;border-bottom:1px solid var(--border2);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-size:12px;color:var(--t2);font-weight:500;white-space:nowrap;">1 EUR =</span>
+        <input type="number" id="rateinp" style="width:80px;text-align:center;font-weight:700;" placeholder="35" min="1"/>
+        <span style="font-size:12px;color:var(--t2);">NTD</span>
+        <button class="btn btn-ghost btn-sm" onclick="saveRate()" style="flex-shrink:0;">套用</button>
+        <button id="fetch-rate-btn" onclick="fetchYahooRate()" class="btn btn-ghost btn-sm" style="flex-shrink:0;display:flex;align-items:center;gap:4px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          即時匯率
+        </button>
+      </div>
+      <div id="rate-source" style="font-size:11px;color:var(--t3);line-height:1.5;"></div>
     </div>
     <div style="padding:14px 16px;">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
@@ -1744,7 +1750,51 @@ function saveExps(){
 }
 function saveRate(){
   const r=parseFloat(document.getElementById('rateinp').value);
-  if(r>0){S.rate=r;localStorage.setItem('vi_r',r);renderExps();toast('匯率已更新：1 EUR = '+r+' NTD');}
+  if(r>0){S.rate=r;localStorage.setItem('vi_r',r);renderExps();calcFromEur();toast('匯率已更新：1 EUR = '+r+' NTD');}
+}
+
+async function fetchYahooRate(){
+  const btn=document.getElementById('fetch-rate-btn');
+  const src=document.getElementById('rate-source');
+  if(btn){btn.innerHTML='查詢中…';btn.disabled=true;}
+  if(src)src.textContent='';
+  let rate=null,source='';
+
+  // 方法1：Yahoo Finance via CORS proxy
+  try{
+    const url='https://query1.finance.yahoo.com/v8/finance/chart/EURTWD=X?interval=1d&range=1d';
+    const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const r=await fetch(proxy,{signal:AbortSignal.timeout(8000)});
+    const outer=await r.json();
+    const data=JSON.parse(outer.contents);
+    const p=data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+    if(p&&p>1){rate=p;source='Yahoo Finance';}
+  }catch{}
+
+  // 方法2：Frankfurter（ECB 歐洲央行，備用）
+  if(!rate){
+    try{
+      const r=await fetch('https://api.frankfurter.app/latest?from=EUR&to=TWD',{signal:AbortSignal.timeout(6000)});
+      const d=await r.json();
+      if(d?.rates?.TWD){rate=d.rates.TWD;source='Frankfurter (ECB)';}
+    }catch{}
+  }
+
+  const iconSvg=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>`;
+  if(btn){btn.innerHTML=iconSvg+' 即時匯率';btn.disabled=false;}
+
+  if(rate){
+    rate=Math.round(rate*100)/100;
+    S.rate=rate;localStorage.setItem('vi_r',rate);
+    document.getElementById('rateinp').value=rate;
+    renderExps();calcFromEur();
+    const now=new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
+    if(src)src.innerHTML=`<span style="color:var(--green);">已更新</span> &nbsp;1 EUR = <strong>${rate}</strong> NTD&nbsp;·&nbsp;${source}&nbsp;·&nbsp;${now}`;
+    toast(`即時匯率 1 EUR = ${rate} NTD`);
+  }else{
+    if(src)src.innerHTML=`<span style="color:var(--red);">無法取得，請確認網路或手動輸入</span>`;
+    toast('無法取得即時匯率');
+  }
 }
 function calcFromEur(){
   const eur=parseFloat(document.getElementById('calc-eur').value);
