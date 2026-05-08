@@ -1416,12 +1416,17 @@ function showCityAttractions(cityFilter){
       <span class="map-panel-title">${cityFilter==='全部'?'所有景點':cityFilter+' 景點'}</span>
       <span class="map-panel-count">${list.length} 個地點</span>
     </div>
-    ${list.map(a=>`<div class="attr-item" onclick="flyToAttr(${a.la},${a.lo})">
-      <div class="attr-dot" style="background:${a.clr};"></div>
-      <span class="attr-name">${a.n}</span>
-      <span class="attr-city">${a.city}</span>
-      <div class="attr-arr">${arrSvg}</div>
-    </div>`).join('')}`;
+    ${list.map(a=>{
+      const navSvg=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>`;
+      const arrSvg=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>`;
+      const safeName=a.n.replace(/'/g,"\\'");
+      return `<div class="attr-item">
+        <div class="attr-dot" style="background:${a.clr};"></div>
+        <span class="attr-name" onclick="flyToAttr(${a.la},${a.lo})">${a.n}</span>
+        <button onclick="navigateTo(${a.la},${a.lo},'${safeName}')" style="display:flex;align-items:center;gap:4px;padding:5px 9px;border-radius:8px;background:var(--blue-bg);color:var(--blue);border:none;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit;">${navSvg}導航</button>
+        <div class="attr-arr" onclick="flyToAttr(${a.la},${a.lo})">${arrSvg}</div>
+      </div>`;
+    }).join('')}`;
 }
 
 function flyToAttr(la,lo){
@@ -1430,6 +1435,96 @@ function flyToAttr(la,lo){
   if(ref)setTimeout(()=>ref.marker.openPopup(),900);
 }
 
+/* ── 路線導航 ── */
+let routeLayer=null, userMarker=null;
+
+function navigateTo(la,lo,name){
+  if(!navigator.geolocation){toast('瀏覽器不支援定位');return;}
+  toast('取得目前位置…');
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const {latitude:ulat,longitude:ulon}=pos.coords;
+
+    // 顯示目前位置
+    if(userMarker)S.map.removeLayer(userMarker);
+    userMarker=L.circleMarker([ulat,ulon],{
+      radius:9,fillColor:'#0071e3',fillOpacity:1,color:'#fff',weight:3
+    }).addTo(S.map).bindPopup('<div style="font-weight:700;font-size:13px;">你在這裡</div>').openPopup();
+
+    // 清除舊路線
+    if(routeLayer){S.map.removeLayer(routeLayer);routeLayer=null;}
+
+    toast('計算路線中…');
+    try{
+      // 使用 OSRM 免費路線 API（步行）
+      const url=`https://router.project-osrm.org/route/v1/foot/${ulon},${ulat};${lo},${la}?overview=full&geometries=geojson`;
+      const resp=await fetch(url);
+      const data=await resp.json();
+
+      if(data.code==='Ok'&&data.routes?.length){
+        const route=data.routes[0];
+        const coords=route.geometry.coordinates.map(c=>[c[1],c[0]]);
+
+        // 畫路線
+        routeLayer=L.polyline(coords,{
+          color:'#0071e3',weight:5,opacity:.85,
+          dashArray:null,lineCap:'round',lineJoin:'round'
+        }).addTo(S.map);
+
+        // 虛線外框讓路線更明顯
+        L.polyline(coords,{color:'#fff',weight:8,opacity:.4}).addTo(S.map);
+        routeLayer=L.polyline(coords,{color:'#0071e3',weight:5,opacity:.9}).addTo(S.map);
+
+        // 自動縮放到路線範圍
+        S.map.fitBounds(routeLayer.getBounds(),{padding:[30,30]});
+
+        const km=(route.distance/1000).toFixed(1);
+        const min=Math.round(route.duration/60);
+
+        // 更新底部面板顯示路線資訊
+        const panel=document.getElementById('map-panel');
+        const gmUrl=`https://www.google.com/maps/dir/?api=1&destination=${la},${lo}&travelmode=walking`;
+        const amUrl=`maps://?daddr=${la},${lo}`;
+        panel.innerHTML=`
+          <div class="map-panel-header">
+            <span class="map-panel-title">前往 ${name}</span>
+            <span class="map-panel-count">步行路線</span>
+          </div>
+          <div style="padding:14px 16px;">
+            <div style="display:flex;gap:12px;margin-bottom:14px;">
+              <div style="flex:1;background:var(--blue-bg);border-radius:10px;padding:12px;text-align:center;">
+                <div style="font-size:20px;font-weight:800;color:var(--blue);">${km} km</div>
+                <div style="font-size:11px;color:var(--t2);margin-top:2px;">距離</div>
+              </div>
+              <div style="flex:1;background:var(--blue-bg);border-radius:10px;padding:12px;text-align:center;">
+                <div style="font-size:20px;font-weight:800;color:var(--blue);">${min} 分</div>
+                <div style="font-size:11px;color:var(--t2);margin-top:2px;">步行時間</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <a href="${gmUrl}" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border-radius:10px;background:var(--blue);color:#fff;font-size:13px;font-weight:700;text-decoration:none;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                Google Maps 導航
+              </a>
+              <button onclick="clearRoute()" style="padding:11px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--t2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">清除</button>
+            </div>
+          </div>`;
+      } else {
+        toast('找不到步行路線，請改用 Google Maps');
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${la},${lo}&travelmode=walking`,'_blank');
+      }
+    }catch{
+      toast('路線計算失敗，開啟 Google Maps');
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${la},${lo}&travelmode=walking`,'_blank');
+    }
+  },()=>toast('無法取得目前位置'));
+}
+
+function clearRoute(){
+  if(routeLayer){S.map.removeLayer(routeLayer);routeLayer=null;}
+  if(userMarker){S.map.removeLayer(userMarker);userMarker=null;}
+  showCityAttractions('Roma');
+  toast('已清除路線');
+}
 function flyTo(la,lo,z,btn,cityFilter){
   if(!S.mapOk){goTab('map');setTimeout(()=>flyTo(la,lo,z,btn,cityFilter),400);return;}
   S.map.flyTo([la,lo],z,{duration:1});
