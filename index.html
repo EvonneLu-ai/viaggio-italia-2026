@@ -527,7 +527,7 @@ textarea{resize:vertical;}
     </div>
     <div>
       <div class="drawer-app-name">Viaggio Italia</div>
-      <div class="drawer-app-sub">2026 南義行程</div>
+      <div class="drawer-app-sub">2026 義大利</div>
     </div>
   </div>
   <div class="drawer-nav">
@@ -578,11 +578,38 @@ textarea{resize:vertical;}
 
 <!-- ══════ PANEL: 行程 ══════ -->
 <div class="panel on" id="p-itin">
-  <div class="itin-header">
-    <div class="itin-title">2026 南義行程</div>
-    <div class="itin-sub">5月25日 — 6月10日 · 16 天</div>
-    <div class="prog-bar"><div class="prog-fill" id="pgfill" style="width:0%"></div></div>
+
+  <!-- Hero Banner -->
+  <div style="position:relative;width:100%;height:230px;overflow:hidden;flex-shrink:0;">
+    <img src="./hero.jpg" alt="Positano"
+      style="width:100%;height:100%;object-fit:cover;object-position:center 45%;display:block;"/>
+    <!-- 漸層遮罩：底部融入背景 -->
+    <div style="position:absolute;inset:0;
+      background:linear-gradient(
+        to bottom,
+        rgba(0,0,0,0) 0%,
+        rgba(0,0,0,0.08) 50%,
+        var(--bg) 100%
+      );"></div>
+    <!-- 文字疊在照片上 -->
+    <div style="position:absolute;bottom:18px;left:20px;right:20px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+        color:rgba(255,255,255,0.85);margin-bottom:4px;text-shadow:0 1px 6px rgba(0,0,0,.4);">
+        5/25 — 6/10 · 16 天
+      </div>
+      <div style="font-size:26px;font-weight:900;letter-spacing:-.5px;color:#fff;
+        text-shadow:0 2px 12px rgba(0,0,0,.35);">
+        2026 義大利
+      </div>
+    </div>
   </div>
+
+  <!-- 進度條 -->
+  <div style="padding:12px 20px 4px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+    <div class="prog-bar" style="flex:1;"><div class="prog-fill" id="pgfill" style="width:0%"></div></div>
+    <div style="font-size:11px;color:var(--t3);white-space:nowrap;" id="prog-label"></div>
+  </div>
+
   <div id="itin-list"></div>
   <div class="pb"></div>
 </div>
@@ -1151,6 +1178,12 @@ function updHdr(){
   }
   const pct=Math.min(100,Math.max(0,(now-ts)/(te-ts)*100));
   document.getElementById('pgfill').style.width=pct.toFixed(1)+'%';
+  const progLabel=document.getElementById('prog-label');
+  if(progLabel){
+    if(now>=ts&&now<=te){const d=Math.ceil((now-ts)/86400000);progLabel.textContent='第 '+d+' 天';}
+    else if(now<ts){const left=Math.ceil((ts-now)/86400000);progLabel.textContent='倒數 '+left+' 天';}
+    else{progLabel.textContent='旅程結束';}
+  }
 }
 
 /* ════════════════ NAV ════════════════ */
