@@ -215,6 +215,7 @@ textarea{resize:vertical;}
   display:flex;align-items:center;justify-content:space-between;
   padding:12px 0 10px;
   border-top:1px solid var(--border);
+  cursor:pointer;user-select:none;
 }
 .ds-date{font-size:13px;font-weight:700;color:var(--t1);}
 .ds-badge{
@@ -222,6 +223,14 @@ textarea{resize:vertical;}
   padding:3px 9px;border-radius:99px;
 }
 .ds-today{background:var(--blue);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;margin-left:6px;}
+.ds-arr{
+  width:20px;height:20px;border-radius:5px;background:var(--surface2);
+  display:flex;align-items:center;justify-content:center;
+  margin-left:8px;flex-shrink:0;transition:transform .2s;
+}
+.ds-arr svg{width:11px;height:11px;color:var(--t2);}
+.ds.collapsed .ds-arr{transform:rotate(-90deg);}
+.ds.collapsed .ds-events{display:none;}
 
 /* ── Event row ── */
 .ev-row{
@@ -231,7 +240,7 @@ textarea{resize:vertical;}
 }
 .ev-row:last-of-type{border-bottom:none;}
 .ev-time{
-  font-size:11px;font-weight:700;
+  font-size:11px;font-weight:700;color:var(--t1);
   min-width:40px;padding-top:2px;
   flex-shrink:0;letter-spacing:.2px;
   font-variant-numeric:tabular-nums;
@@ -1165,6 +1174,7 @@ const CITY_GROUPS=[
 function renderItin(){
   const todayStr=new Date().toDateString();
   let html='';
+  const arrSvg=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
   CITY_GROUPS.forEach(group=>{
     const mapDayNum=group.days[0];
     html+=`<div class="cs">
@@ -1180,29 +1190,34 @@ function renderItin(){
       const day=ITIN[dn]; if(!day)return;
       const dObj=new Date(day.date+'T00:00:00');
       const isToday=dObj.toDateString()===todayStr;
+      // 預設：今天展開，其他折疊
+      const collapsed=isToday?'':' collapsed';
       const lbl=dn===0?'出發':'D'+dn;
       const dStr=dObj.toLocaleDateString('zh-TW',{month:'numeric',day:'numeric',weekday:'short'});
-      html+=`<div class="ds">
-        <div class="ds-label">
-          <div style="display:flex;align-items:center;">
+      html+=`<div class="ds${collapsed}" id="ds-${dn}">
+        <div class="ds-label" onclick="togDs(${dn})">
+          <div style="display:flex;align-items:center;flex:1;min-width:0;">
             <span class="ds-date">${dStr}</span>
             ${isToday?`<span class="ds-today">今天</span>`:''}
           </div>
           <span class="ds-badge" style="background:${group.clr}18;color:${group.clr};">${lbl}</span>
+          <div class="ds-arr">${arrSvg}</div>
         </div>
-        ${day.evs.map(ev=>`
-          <div class="ev-row">
-            <div class="ev-time" style="color:${group.clr};">${ev.t||''}</div>
-            <div class="ev-body">
-              <div class="ev-title">${ev.ti}</div>
-              ${ev.n?`<div class="ev-note">${ev.n}</div>`:''}
-              ${ev.w.length?`<div class="ev-warns">${ev.w.map(w=>`
-                <div class="warn-chip">
-                  <div class="warn-chip-dot"></div>
-                  <span>${w}</span>
-                </div>`).join('')}</div>`:''}
-            </div>
-          </div>`).join('')}
+        <div class="ds-events">
+          ${day.evs.map(ev=>`
+            <div class="ev-row">
+              <div class="ev-time">${ev.t||''}</div>
+              <div class="ev-body">
+                <div class="ev-title">${ev.ti}</div>
+                ${ev.n?`<div class="ev-note">${ev.n}</div>`:''}
+                ${ev.w.length?`<div class="ev-warns">${ev.w.map(w=>`
+                  <div class="warn-chip">
+                    <div class="warn-chip-dot"></div>
+                    <span>${w}</span>
+                  </div>`).join('')}</div>`:''}
+              </div>
+            </div>`).join('')}
+        </div>
       </div>`;
     });
 
@@ -1215,6 +1230,10 @@ function renderItin(){
     </div>`;
   });
   document.getElementById('itin-list').innerHTML=html;
+}
+
+function togDs(n){
+  document.getElementById('ds-'+n)?.classList.toggle('collapsed');
 }
 function mapDay(n){
   const cm={0:'Roma',1:'Roma',2:'Roma',3:'Roma',4:'Napoli',5:'Napoli',6:'Napoli',
