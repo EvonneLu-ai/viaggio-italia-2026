@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- 白色背景 -->
+  <rect width="512" height="512" rx="112" fill="#ffffff"/>
+  <!-- 義大利旗色頂部條 -->
+  <rect x="0" y="0" width="172" height="512" rx="0" fill="#009246" opacity="0.9"/>
+  <rect x="172" y="0" width="168" height="512" fill="#ffffff" opacity="0.9"/>
+  <rect x="340" y="0" width="172" height="512" rx="0" fill="#CE2B37" opacity="0.9"/>
+  <!-- 圓角遮罩 -->
+  <rect width="512" height="512" rx="112" fill="none"/>
+  <!-- 中央地圖 pin 圖示 -->
+  <circle cx="256" cy="220" r="56" fill="white" opacity="0.95"/>
+  <circle cx="256" cy="220" r="30" fill="#0071e3"/>
+  <!-- pin 尾部 -->
+  <polygon points="256,320 220,240 292,240" fill="white" opacity="0.95"/>
+  <!-- 星星裝飾 -->
+  <text x="256" y="440" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="48" font-weight="800" fill="white" opacity="0.9">VI</text>
+</svg>
