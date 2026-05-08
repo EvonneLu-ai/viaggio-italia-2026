@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Viaggio"/>
+<meta name="theme-color" content="#0071e3"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon.svg"/>
 <title>Viaggio Italia 2026</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -1886,6 +1890,25 @@ function toast(m){
   const el=document.getElementById('toast');
   el.textContent=m;el.classList.add('on');
   clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('on'),2200);
+}
+
+/* ════════════════ SERVICE WORKER ════════════════ */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg=>{
+        // 有新版本時提示用戶
+        reg.addEventListener('updatefound',()=>{
+          const nw=reg.installing;
+          nw.addEventListener('statechange',()=>{
+            if(nw.state==='installed'&&navigator.serviceWorker.controller){
+              toast('App 已更新，重新整理後生效');
+            }
+          });
+        });
+      })
+      .catch(()=>{}); // 靜默失敗
+  });
 }
 </script>
 </body>
