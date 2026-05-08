@@ -751,14 +751,86 @@ textarea{resize:vertical;}
 <div class="panel" id="p-trans">
   <div style="padding:20px 16px 0;">
     <div style="font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--t1);margin-bottom:4px;">翻譯工具</div>
-    <div style="font-size:14px;color:var(--t2);margin-bottom:20px;">建議使用以下原生工具，效果更佳</div>
+    <div style="font-size:14px;color:var(--t2);margin-bottom:20px;">5 種翻譯方式，在義大利暢行無阻</div>
 
-    <!-- 相機翻譯 -->
-    <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">相機翻譯</div>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:22px;">
+    <!-- ① 語音翻譯 -->
+    <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">① 語音翻譯</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:6px;">
+      <div style="padding:14px 14px 10px;display:flex;gap:8px;">
+        <button class="lang-btn on" id="vl-zhi" onclick="setVoiceLang('zh',this)">中文說</button>
+        <button class="lang-btn" id="vl-ita" onclick="setVoiceLang('it',this)">義文說</button>
+      </div>
+      <div style="padding:0 14px 14px;">
+        <button id="voice-btn" onclick="toggleVoice()"
+          style="width:100%;padding:14px;border-radius:12px;background:var(--blue);border:none;color:#fff;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit;transition:background .2s;">
+          <svg id="mic-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          <span id="voice-btn-label">按住說話</span>
+        </button>
+        <div id="voice-result" style="display:none;margin-top:10px;">
+          <div style="background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--t3);margin-bottom:4px;">辨識</div>
+            <div id="voice-input-text" style="font-size:14px;color:var(--t1);"></div>
+          </div>
+          <div style="background:var(--blue-bg);border-radius:10px;padding:10px 12px;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--blue);margin-bottom:4px;">翻譯</div>
+            <div id="voice-output-text" style="font-size:16px;font-weight:600;color:var(--blue);"></div>
+          </div>
+          <div style="display:flex;gap:7px;margin-top:8px;">
+            <button onclick="speakVoiceResult()" class="btn btn-ghost btn-sm">再次朗讀</button>
+            <button onclick="cpyVoiceResult()" class="btn btn-outline btn-sm">複製</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--t3);padding:0 2px 18px;line-height:1.5;">說中文自動翻成義大利文朗讀，說義大利文自動翻成中文 · 需網路</div>
 
-      <a href="googletranslate://" onclick="if(!this.href)return;setTimeout(()=>window.open('https://translate.google.com/?sl=it&tl=zh-TW&op=images','_blank'),500);"
-        style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:14px;text-decoration:none;color:var(--t1);">
+    <!-- ② 對話模式 -->
+    <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">② 對話模式</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:6px;">
+      <div id="conv-log" style="max-height:160px;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;min-height:60px;">
+        <div style="text-align:center;font-size:12px;color:var(--t3);padding:8px 0;">按下按鈕開始對話</div>
+      </div>
+      <div style="padding:10px 12px;display:flex;gap:8px;border-top:1px solid var(--border2);">
+        <button onclick="startConv('zh-TW','it-IT','我（中文）')"
+          style="flex:1;padding:11px 8px;border-radius:10px;background:var(--blue);border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+          我說（中文）
+        </button>
+        <button onclick="startConv('it-IT','zh-TW','對方（義文）')"
+          style="flex:1;padding:11px 8px;border-radius:10px;background:#ff9500;border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+          對方說（義文）
+        </button>
+        <button onclick="clearConv()" style="padding:11px 12px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);color:var(--t2);font-size:13px;cursor:pointer;font-family:inherit;">清除</button>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--t3);padding:0 2px 18px;line-height:1.5;">輪流按鈕說話，像現場口譯一樣 · 點餐、問路、購物都好用</div>
+
+    <!-- ③ iOS 翻譯 App -->
+    <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">③ iOS 內建翻譯</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:6px;">
+      <a href="translate://" onclick="setTimeout(()=>window.open('https://apps.apple.com/tw/app/translate/id1514844618','_blank'),800);"
+        style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:13px;text-decoration:none;color:var(--t1);">
+        <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#5AC8FA,#007AFF);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:700;">Apple 翻譯 App</div>
+          <div style="font-size:12px;color:var(--t2);margin-top:2px;">iPhone 內建，支援離線下載、對話模式</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+      <div style="background:var(--blue-bg);border-radius:11px;padding:11px 13px;font-size:12px;color:var(--blue);line-height:1.6;">
+        <strong>iOS 16+ Live Text：</strong>打開相機 → 對準義大利文 → 點右下角「Live Text」→「翻譯」，不需任何 App，即時翻譯！
+      </div>
+    </div>
+    <div style="height:18px;"></div>
+
+    <!-- ④ 相機翻譯 App -->
+    <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">④ 相機翻譯</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;">
+      <a href="googletranslate://" onclick="setTimeout(()=>window.open('https://translate.google.com/?sl=it&tl=zh-TW&op=images','_blank'),500);"
+        style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:13px;text-decoration:none;color:var(--t1);">
         <div style="width:44px;height:44px;border-radius:12px;background:#4285F4;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         </div>
@@ -768,63 +840,16 @@ textarea{resize:vertical;}
         </div>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
       </a>
-
-      <a href="https://translate.google.com/?sl=it&tl=zh-TW&op=images" target="_blank"
-        style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:14px;text-decoration:none;color:var(--t1);">
-        <div style="width:44px;height:44px;border-radius:12px;background:#34A853;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
-        </div>
-        <div style="flex:1;">
-          <div style="font-size:15px;font-weight:700;">Google 翻譯圖片</div>
-          <div style="font-size:12px;color:var(--t2);margin-top:2px;">拍照上傳，翻譯菜單、路標、告示牌</div>
-        </div>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </a>
-
-      <div style="background:var(--blue-bg);border-radius:12px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <div style="font-size:12px;color:var(--blue);line-height:1.6;">
-          <strong>iOS 16+ 小技巧：</strong>打開相機對準義大利文，點擊畫面右下角的「Live Text」圖示，再點「翻譯」即可即時翻譯，完全不需要 App！
-        </div>
-      </div>
     </div>
 
-    <!-- 文字翻譯 -->
-    <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">文字翻譯</div>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:22px;">
-
-      <a href="https://translate.google.com/?sl=it&tl=zh-TW" target="_blank"
-        style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:14px;text-decoration:none;color:var(--t1);">
-        <div style="width:44px;height:44px;border-radius:12px;background:#4285F4;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
-        </div>
-        <div style="flex:1;">
-          <div style="font-size:15px;font-weight:700;">Google 翻譯</div>
-          <div style="font-size:12px;color:var(--t2);margin-top:2px;">義文 → 中文，支援語音輸入</div>
-        </div>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </a>
-
-      <a href="https://www.deepl.com/translator#it/zh/" target="_blank"
-        style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:14px;text-decoration:none;color:var(--t1);">
-        <div style="width:44px;height:44px;border-radius:12px;background:#0F2B46;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 2a10 10 0 0 1 0 20"/><path d="M12 2a10 10 0 0 0 0 20"/><path d="M2 12h20"/><path d="M12 2c-2.76 3.63-4 7.27-4 10s1.24 6.37 4 10"/><path d="M12 2c2.76 3.63 4 7.27 4 10s-1.24 6.37-4 10"/></svg>
-        </div>
-        <div style="flex:1;">
-          <div style="font-size:15px;font-weight:700;">DeepL</div>
-          <div style="font-size:12px;color:var(--t2);margin-top:2px;">翻譯品質更自然，適合長段文字</div>
-        </div>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </a>
-    </div>
-
-    <!-- 快速翻譯 -->
-    <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">快速翻譯（離線可用）</div>
+    <!-- ⑤ 文字翻譯 -->
+    <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">⑤ 文字輸入翻譯</div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:22px;">
       <div style="display:flex;gap:6px;padding:12px 12px 8px;">
         <button class="lang-btn on" onclick="setLang('it|zh-TW',this)">義 → 中</button>
         <button class="lang-btn" onclick="setLang('en|zh-TW',this)">英 → 中</button>
         <button class="lang-btn" onclick="setLang('zh-TW|it',this)">中 → 義</button>
+        <a href="https://www.deepl.com/translator#it/zh/" target="_blank" class="lang-btn" style="text-decoration:none;text-align:center;">DeepL</a>
       </div>
       <div style="padding:0 12px 12px;">
         <textarea id="tinp" placeholder="輸入文字…" rows="3" style="margin-bottom:8px;border-radius:10px;"></textarea>
@@ -843,7 +868,6 @@ textarea{resize:vertical;}
   </div>
   <div class="pb"></div>
 </div>
-
 <!-- ══════ PANEL: 語言 ══════ -->
 <div class="panel" id="p-phrase">
   <div style="padding:16px 16px 8px;"><input type="text" id="psrch" placeholder="搜尋短語..." oninput="renderPhrases()"/></div>
@@ -1637,7 +1661,99 @@ function gdist(la1,lo1,la2,lo2){
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
-/* ════════════════ TRANSLATE ════════════════ */
+/* ════════════════ VOICE TRANSLATE ════════════════ */
+let voiceLang='zh', voiceListening=false, voiceRec=null, voiceLastResult='';
+
+function setVoiceLang(lang,btn){
+  voiceLang=lang;
+  document.querySelectorAll('#vl-zhi,#vl-ita').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+function toggleVoice(){
+  if(voiceListening){stopVoice();return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){toast('此瀏覽器不支援語音辨識，請用 Chrome 或 Safari');return;}
+  voiceRec=new SR();
+  voiceRec.lang=voiceLang==='zh'?'zh-TW':'it-IT';
+  voiceRec.continuous=false;voiceRec.interimResults=false;
+  voiceRec.onstart=()=>{
+    voiceListening=true;
+    document.getElementById('voice-btn').style.background='var(--red)';
+    document.getElementById('voice-btn-label').textContent='聆聽中… 點擊停止';
+  };
+  voiceRec.onresult=async e=>{
+    const text=e.results[0][0].transcript;
+    voiceLastResult='';
+    document.getElementById('voice-input-text').textContent=text;
+    document.getElementById('voice-result').style.display='block';
+    document.getElementById('voice-output-text').textContent='翻譯中…';
+    const [fr,to]=voiceLang==='zh'?['zh-TW','it']:['it','zh-TW'];
+    const toLng=voiceLang==='zh'?'it-IT':'zh-TW';
+    try{
+      const d=await(await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${fr}|${to}`)).json();
+      const translated=d.responseData?.translatedText||'翻譯失敗';
+      document.getElementById('voice-output-text').textContent=translated;
+      voiceLastResult=translated;
+      const u=new SpeechSynthesisUtterance(translated);u.lang=toLng;speechSynthesis.speak(u);
+    }catch{document.getElementById('voice-output-text').textContent='翻譯失敗，請確認網路';}
+    stopVoice();
+  };
+  voiceRec.onerror=e=>{toast('語音辨識錯誤：'+e.error);stopVoice();};
+  voiceRec.onend=()=>stopVoice();
+  voiceRec.start();
+}
+function stopVoice(){
+  voiceListening=false;
+  if(voiceRec)try{voiceRec.stop();}catch{}
+  document.getElementById('voice-btn').style.background='var(--blue)';
+  document.getElementById('voice-btn-label').textContent='按住說話';
+}
+function speakVoiceResult(){
+  if(!voiceLastResult)return;
+  const lang=voiceLang==='zh'?'it-IT':'zh-TW';
+  const u=new SpeechSynthesisUtterance(voiceLastResult);u.lang=lang;speechSynthesis.speak(u);
+}
+function cpyVoiceResult(){
+  if(voiceLastResult)navigator.clipboard.writeText(voiceLastResult).then(()=>toast('已複製'));
+}
+
+/* ════════════════ CONVERSATION MODE ════════════════ */
+let convRec=null;
+function startConv(fromLang,toLang,speaker){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){toast('此瀏覽器不支援語音辨識');return;}
+  if(convRec)try{convRec.stop();}catch{}
+  toast(speaker+' — 請說話…');
+  convRec=new SR();convRec.lang=fromLang;convRec.continuous=false;convRec.interimResults=false;
+  const isMe=fromLang.startsWith('zh');
+  convRec.onresult=async e=>{
+    const text=e.results[0][0].transcript;
+    addConvBubble(text,speaker,isMe?'var(--blue)':'#ff9500',isMe);
+    const fr=fromLang.split('-')[0]==='zh'?'zh-TW':fromLang.split('-')[0];
+    const to=toLang.split('-')[0]==='zh'?'zh-TW':toLang.split('-')[0];
+    try{
+      const d=await(await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${fr}|${to}`)).json();
+      const trans=d.responseData?.translatedText||'翻譯失敗';
+      addConvBubble(trans,isMe?'義文翻譯':'中文翻譯',isMe?'#ff9500':'var(--blue)',!isMe);
+      const u=new SpeechSynthesisUtterance(trans);u.lang=toLang;speechSynthesis.speak(u);
+    }catch{}
+  };
+  convRec.start();
+}
+function addConvBubble(text,speaker,color,alignRight){
+  const log=document.getElementById('conv-log');
+  // 清除「按下按鈕」提示
+  if(log.children.length===1&&log.children[0].textContent.includes('按下按鈕'))log.innerHTML='';
+  const div=document.createElement('div');
+  div.style.cssText=`display:flex;flex-direction:column;align-items:${alignRight?'flex-end':'flex-start'};`;
+  div.innerHTML=`<div style="font-size:10px;font-weight:700;color:${color};margin-bottom:3px;letter-spacing:.3px;">${speaker}</div>
+    <div style="max-width:85%;padding:9px 12px;border-radius:12px;background:${color}18;border:1px solid ${color}33;font-size:14px;font-weight:500;color:var(--t1);line-height:1.5;">${text}</div>`;
+  log.appendChild(div);log.scrollTop=log.scrollHeight;
+}
+function clearConv(){
+  document.getElementById('conv-log').innerHTML='<div style="text-align:center;font-size:12px;color:var(--t3);padding:8px 0;">按下按鈕開始對話</div>';
+}
 function setLang(lp,btn){S.lang=lp;document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');}
 function handlePhoto(inp){
   const f=inp.files[0];if(!f)return;
