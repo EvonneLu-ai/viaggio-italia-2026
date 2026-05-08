@@ -225,6 +225,7 @@ textarea{resize:vertical;}
 .ds-badge{
   font-size:10px;font-weight:800;letter-spacing:.5px;
   padding:3px 9px;border-radius:99px;
+  background:var(--surface2);color:var(--t2);
 }
 .ds-today{background:var(--blue);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;margin-left:6px;}
 .ds-arr{
@@ -1663,7 +1664,7 @@ function renderItin(){
             <span class="ds-date">${dStr}</span>
             ${isToday?`<span class="ds-today">今天</span>`:''}
           </div>
-          <span class="ds-badge" style="background:${group.clr}18;color:${group.clr};">${lbl}</span>
+          <span class="ds-badge">${lbl}</span>
           <div class="ds-arr">${arrSvg}</div>
         </div>
         <div class="ds-events">
