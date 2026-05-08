@@ -749,45 +749,95 @@ textarea{resize:vertical;}
 
 <!-- ══════ PANEL: 翻譯 ══════ -->
 <div class="panel" id="p-trans">
-  <div class="trans-wrap">
-    <div class="sec-label" style="padding-left:0;padding-top:4px;">翻譯方向</div>
-    <div class="lang-btns">
-      <button class="lang-btn on" onclick="setLang('it|zh-TW',this)">義文 → 中文</button>
-      <button class="lang-btn" onclick="setLang('en|zh-TW',this)">英文 → 中文</button>
-      <button class="lang-btn" onclick="setLang('zh-TW|it',this)">中文 → 義文</button>
-    </div>
-    <div class="sec-label" style="padding-left:0;">相機翻譯</div>
-    <div class="cam-area" id="cam-area" onclick="document.getElementById('caminp').click()">
-      <div class="cam-placeholder" id="cam-ph">
-        <div class="cam-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
-        <p>點此拍照或選擇圖片</p>
-        <small>菜單・路標・告示牌</small>
+  <div style="padding:20px 16px 0;">
+    <div style="font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--t1);margin-bottom:4px;">翻譯工具</div>
+    <div style="font-size:14px;color:var(--t2);margin-bottom:20px;">建議使用以下原生工具，效果更佳</div>
+
+    <!-- 相機翻譯 -->
+    <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">相機翻譯</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:22px;">
+
+      <a href="googletranslate://" onclick="if(!this.href)return;setTimeout(()=>window.open('https://translate.google.com/?sl=it&tl=zh-TW&op=images','_blank'),500);"
+        style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:14px;text-decoration:none;color:var(--t1);">
+        <div style="width:44px;height:44px;border-radius:12px;background:#4285F4;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:700;">Google 翻譯相機</div>
+          <div style="font-size:12px;color:var(--t2);margin-top:2px;">AR 即時翻譯，對準文字自動顯示中文</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+
+      <a href="https://translate.google.com/?sl=it&tl=zh-TW&op=images" target="_blank"
+        style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:14px;text-decoration:none;color:var(--t1);">
+        <div style="width:44px;height:44px;border-radius:12px;background:#34A853;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:700;">Google 翻譯圖片</div>
+          <div style="font-size:12px;color:var(--t2);margin-top:2px;">拍照上傳，翻譯菜單、路標、告示牌</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+
+      <div style="background:var(--blue-bg);border-radius:12px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div style="font-size:12px;color:var(--blue);line-height:1.6;">
+          <strong>iOS 16+ 小技巧：</strong>打開相機對準義大利文，點擊畫面右下角的「Live Text」圖示，再點「翻譯」即可即時翻譯，完全不需要 App！
+        </div>
       </div>
-      <img id="cam-prev" alt=""/>
     </div>
-    <input type="file" id="caminp" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)"/>
-    <div id="ocr-sec" style="display:none;margin-bottom:14px;">
-      <button class="btn btn-outline" style="width:100%;margin-bottom:6px;" onclick="runOCR()">辨識圖片文字</button>
-      <div id="ocr-status" style="font-size:12px;color:var(--t2);text-align:center;"></div>
+
+    <!-- 文字翻譯 -->
+    <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">文字翻譯</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:22px;">
+
+      <a href="https://translate.google.com/?sl=it&tl=zh-TW" target="_blank"
+        style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:14px;text-decoration:none;color:var(--t1);">
+        <div style="width:44px;height:44px;border-radius:12px;background:#4285F4;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:700;">Google 翻譯</div>
+          <div style="font-size:12px;color:var(--t2);margin-top:2px;">義文 → 中文，支援語音輸入</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+
+      <a href="https://www.deepl.com/translator#it/zh/" target="_blank"
+        style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:14px;text-decoration:none;color:var(--t1);">
+        <div style="width:44px;height:44px;border-radius:12px;background:#0F2B46;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 2a10 10 0 0 1 0 20"/><path d="M12 2a10 10 0 0 0 0 20"/><path d="M2 12h20"/><path d="M12 2c-2.76 3.63-4 7.27-4 10s1.24 6.37 4 10"/><path d="M12 2c2.76 3.63 4 7.27 4 10s-1.24 6.37-4 10"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:700;">DeepL</div>
+          <div style="font-size:12px;color:var(--t2);margin-top:2px;">翻譯品質更自然，適合長段文字</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
     </div>
-    <div class="sec-label" style="padding-left:0;margin-top:4px;">文字翻譯</div>
-    <textarea id="tinp" placeholder="輸入義大利文、英文或中文..." rows="3" style="margin-bottom:10px;"></textarea>
-    <button class="btn btn-primary" style="width:100%;margin-bottom:4px;" onclick="doTranslate()">翻譯</button>
-    <div class="trans-result" id="trans-result">
-      <div class="res-label">翻譯結果</div>
-      <div class="res-text" id="res-text"></div>
-      <div class="res-acts">
-        <button class="btn btn-ghost btn-sm" onclick="cpyResult()">複製</button>
-        <button class="btn btn-ghost btn-sm" onclick="spkResult()">朗讀</button>
-        <button class="btn btn-outline btn-sm" onclick="clrTrans()">清除</button>
+
+    <!-- 快速翻譯 -->
+    <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">快速翻譯（離線可用）</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:22px;">
+      <div style="display:flex;gap:6px;padding:12px 12px 8px;">
+        <button class="lang-btn on" onclick="setLang('it|zh-TW',this)">義 → 中</button>
+        <button class="lang-btn" onclick="setLang('en|zh-TW',this)">英 → 中</button>
+        <button class="lang-btn" onclick="setLang('zh-TW|it',this)">中 → 義</button>
       </div>
-    </div>
-    <div class="ext-tools">
-      <h4>線上翻譯工具</h4>
-      <div class="ext-links">
-        <a href="https://translate.google.com/?sl=it&tl=zh-TW" target="_blank" class="ext-link">Google 翻譯</a>
-        <a href="https://www.deepl.com/translator#it/zh/" target="_blank" class="ext-link">DeepL</a>
-        <a href="https://translate.google.com/?sl=it&tl=zh-TW&op=images" target="_blank" class="ext-link">圖片翻譯</a>
+      <div style="padding:0 12px 12px;">
+        <textarea id="tinp" placeholder="輸入文字…" rows="3" style="margin-bottom:8px;border-radius:10px;"></textarea>
+        <button class="btn btn-primary" style="width:100%;" onclick="doTranslate()">翻譯</button>
+      </div>
+      <div class="trans-result" id="trans-result" style="margin:0 12px 12px;border-radius:10px;">
+        <div class="res-label">翻譯結果</div>
+        <div class="res-text" id="res-text"></div>
+        <div class="res-acts">
+          <button class="btn btn-ghost btn-sm" onclick="cpyResult()">複製</button>
+          <button class="btn btn-ghost btn-sm" onclick="spkResult()">朗讀</button>
+          <button class="btn btn-outline btn-sm" onclick="clrTrans()">清除</button>
+        </div>
       </div>
     </div>
   </div>
