@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>2026 南義行程 — 每日路線規劃</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+:root{
+  --green:#009246;--red:#CE2B37;--gold:#C9A84C;--blue:#2C5F8A;--dark:#1A1A2E;
+  --teal:#2ABFAA;--purple:#7C5CBF;--orange:#E07A3B;
+  --soft:#F8F4EF;--card:#fff;--mid:#4A4A6A;--light:#8A8AAA;
+  --r:16px;--shadow:0 6px 24px rgba(0,0,0,.09);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--soft);color:var(--dark);}
+
+.hero{background:linear-gradient(135deg,#1A1A2E 0%,#009246 45%,#CE2B37 100%);
+  padding:56px 32px 72px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 80%,rgba(201,168,76,.2) 0%,transparent 60%);}
+.hero h1{font-family:'Playfair Display',serif;font-size:48px;color:#fff;font-weight:900;line-height:1.1;position:relative;}
+.hero h1 em{color:var(--gold);font-style:italic;}
+.hero p{color:rgba(255,255,255,.7);font-size:15px;margin-top:12px;position:relative;}
+.legend-bar{display:flex;justify-content:center;flex-wrap:wrap;gap:12px;margin-top:18px;position:relative;}
+.leg{display:flex;align-items:center;gap:6px;font-size:12px;color:#fff;font-weight:500;}
+.leg-line{width:28px;height:3px;border-radius:2px;}
+
+.wrap{max-width:1060px;margin:0 auto;padding:0 28px 80px;}
+.slabel{font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;margin-top:52px;}
+.stitle{font-family:'Playfair Display',serif;font-size:30px;margin-bottom:8px;}
+.stitle span{color:var(--blue);}
+.city-intro{font-size:14px;color:var(--mid);line-height:1.7;margin-bottom:28px;}
+
+/* CITY SEPARATOR */
+.city-sep{display:flex;align-items:center;gap:16px;margin:44px 0 24px;padding:16px 24px;
+  border-radius:var(--r);color:#fff;}
+.city-sep h2{font-family:'Playfair Display',serif;font-size:22px;}
+.city-sep .dt{margin-left:auto;font-size:12px;opacity:.8;font-weight:600;}
+
+/* DAY CARD */
+.day-card{background:var(--card);border-radius:var(--r);
+  box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden;}
+.day-header{display:flex;align-items:center;gap:12px;
+  padding:14px 22px;color:#fff;}
+.day-num{width:38px;height:38px;border-radius:50%;
+  background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.4);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:14px;flex-shrink:0;}
+.day-title{font-weight:700;font-size:15px;}
+.day-date{font-size:11px;opacity:.7;margin-top:2px;}
+
+/* SVG MAP AREA */
+.map-area{padding:16px 22px 0;background:#F8F4EF;}
+.map-label{font-size:11px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--mid);margin-bottom:10px;}
+
+/* TIMELINE */
+.timeline{padding:18px 22px;display:flex;flex-direction:column;gap:0;}
+.tl-item{display:flex;gap:14px;padding-bottom:18px;position:relative;}
+.tl-item:last-child{padding-bottom:0;}
+.tl-item:last-child .tl-line{display:none;}
+.tl-dot-wrap{display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:20px;}
+.tl-dot{width:14px;height:14px;border-radius:50%;border:2.5px solid;flex-shrink:0;}
+.tl-line{width:2px;flex:1;margin-top:4px;border-radius:2px;}
+.tl-time{font-size:11px;font-weight:700;color:var(--light);min-width:48px;flex-shrink:0;padding-top:0;}
+.tl-content{flex:1;}
+.tl-title{font-weight:700;font-size:14px;color:var(--dark);margin-bottom:4px;}
+.tl-desc{font-size:12.5px;color:var(--mid);line-height:1.65;}
+.tl-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;}
+.chip{font-size:11px;font-weight:600;padding:3px 8px;border-radius:99px;border:1px solid;}
+.chip.walk{background:#E8F7EE;color:#007A3D;border-color:#90D4A8;}
+.chip.metro{background:#E3EDF7;color:#1E4E78;border-color:#AAC8E8;}
+.chip.taxi{background:#FDF3DC;color:#9A7A2A;border-color:#E8D49A;}
+.chip.train{background:#E8F7EE;color:#007A3D;border-color:#90D4A8;}
+.chip.boat{background:#E0F7F5;color:#1A9988;border-color:#90D8D0;}
+.chip.car{background:#FDF3DC;color:#9A7A2A;border-color:#E8D49A;}
+.chip.bus{background:#F0EAF9;color:#5C3DAA;border-color:#C8A8E8;}
+.chip.warn{background:#FDE8EA;color:#A0222C;border-color:#F0A0A8;}
+.chip.tip{background:#FEF0E7;color:#B85A1A;border-color:#F5C8A0;}
+
+/* GOOGLE MAPS */
+.gmaps-row{display:flex;flex-wrap:wrap;gap:6px;padding:14px 22px;
+  background:#F0EDE8;border-top:1px solid #E8E4DE;}
+.gmaps-label{font-size:11px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:var(--mid);width:100%;margin-bottom:4px;}
+.gm-chip{font-size:11px;font-weight:600;padding:4px 10px;border-radius:8px;
+  background:#fff;border:1px solid #DDD8CF;color:var(--dark);}
+
+/* DRIVE SECTION */
+.drive-info{padding:14px 22px;background:#FFFBF0;border-top:1px solid #F0E8CC;
+  display:flex;flex-wrap:wrap;gap:16px;align-items:center;}
+.drive-stat{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;}
+.drive-stat span{font-size:11px;color:var(--mid);font-weight:400;}
+
+/* SICILY SVG MAP */
+.sicily-map-wrap{padding:20px 22px 0;background:#F0EDE8;}
+
+footer{text-align:center;padding:36px 20px;color:var(--light);font-size:12px;border-top:1px solid #EDE9E3;}
+footer strong{color:var(--gold);}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>每日路線<br/><em>規劃指南</em></h1>
+  <p>步行 · 地鐵 · 自駕 · 大眾運輸完整規劃</p>
+  <div class="legend-bar">
+    <div class="leg"><div class="leg-line" style="background:#009246"></div>🚶步行</div>
+    <div class="leg"><div class="leg-line" style="background:#2C5F8A"></div>🚇地鐵/火車</div>
+    <div class="leg"><div class="leg-line" style="background:#C9A84C;border-top:2px dashed #C9A84C;height:0"></div>🚗自駕</div>
+    <div class="leg"><div class="leg-line" style="background:#2ABFAA"></div>⛴船</div>
+    <div class="leg"><div class="leg-line" style="background:#CE2B37"></div>🚕計程車</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ══════════════════ 羅馬 ══════════════════ -->
+<div class="city-sep" style="background:linear-gradient(90deg,#9A1A22,#CE2B37);">
+  <span style="font-size:32px;">🏛️</span>
+  <div><h2>羅馬 ＆ 梵蒂岡</h2><p style="font-size:13px;opacity:.8;">步行為主 · 地鐵 A/B 線輔助</p></div>
+  <div class="dt">5/26 – 5/29</div>
+</div>
+<div class="city-intro">
+  住宿：<strong>Termini Station - Bright Flat</strong>（Roma Termini 步行5分）<br/>
+  地鐵 B 線（Termini）→ 轉 A 線可達西班牙廣場、梵蒂岡周邊。步行距離：Termini ↔ 競技場約 25 分、Termini ↔ 萬神殿約 35 分。
+</div>
+
+<!-- D1 -->
+<div class="day-card">
+  <div class="day-header" style="background:linear-gradient(90deg,#9A1A22,#CE2B37);">
+    <div class="day-num">D1</div>
+    <div><div class="day-title">🗺️ 萬神殿 → 特雷維噴泉 → 納沃納廣場</div><div class="day-date">5/26（二）下午抵達後散策</div></div>
+  </div>
+  <!-- SVG route map -->
+  <div class="map-area">
+    <div class="map-label">📍 路線示意圖（步行路線）</div>
+    <svg viewBox="0 0 500 120" style="width:100%;height:auto;max-height:120px;">
+      <!-- Termini -->
+      <circle cx="40" cy="60" r="16" fill="#1A1A2E"/>
+      <text x="40" y="63" text-anchor="middle" fill="white" font-size="9" font-weight="bold">住宿</text>
+      <!-- arrow -->
+      <line x1="58" y1="60" x2="120" y2="60" stroke="#CE2B37" stroke-width="2.5" stroke-dasharray="5,3"/>
+      <polygon points="120,55 130,60 120,65" fill="#CE2B37"/>
+      <!-- Pantheon -->
+      <circle cx="150" cy="60" r="22" fill="#CE2B37"/>
+      <text x="150" y="57" text-anchor="middle" fill="white" font-size="8.5" font-weight="bold">萬神殿</text>
+      <text x="150" y="68" text-anchor="middle" fill="white" font-size="7">~35分步行</text>
+      <!-- walk -->
+      <line x1="174" y1="60" x2="226" y2="60" stroke="#009246" stroke-width="2.5"/>
+      <polygon points="226,55 236,60 226,65" fill="#009246"/>
+      <text x="200" y="52" text-anchor="middle" fill="#009246" font-size="8">🚶10分</text>
+      <!-- Trevi -->
+      <circle cx="256" cy="60" r="22" fill="#CE2B37"/>
+      <text x="256" y="57" text-anchor="middle" fill="white" font-size="8.5" font-weight="bold">特雷維</text>
+      <text x="256" y="68" text-anchor="middle" fill="white" font-size="7">噴泉</text>
+      <!-- walk -->
+      <line x1="280" y1="60" x2="332" y2="60" stroke="#009246" stroke-width="2.5"/>
+      <polygon points="332,55 342,60 332,65" fill="#009246"/>
+      <text x="306" y="52" text-anchor="middle" fill="#009246" font-size="8">🚶15分</text>
+      <!-- Navona -->
+      <circle cx="362" cy="60" r="22" fill="#CE2B37"/>
+      <text x="362" y="57" text-anchor="middle" fill="white" font-size="8.5" font-weight="bold">納沃納</text>
+      <text x="362" y="68" text-anchor="middle" fill="white" font-size="7">廣場</text>
+      <!-- dinner -->
+      <line x1="386" y1="60" x2="438" y2="60" stroke="#C9A84C" stroke-width="2"/>
+      <polygon points="438,55 448,60 438,65" fill="#C9A84C"/>
+      <text x="412" y="52" text-anchor="middle" fill="#C9A84C" font-size="8">回萬神殿</text>
+      <circle cx="462" cy="60" r="16" fill="#C9A84C"/>
+      <text x="462" y="57" text-anchor="middle" fill="white" font-size="8">晚餐</text>
+      <text x="462" y="67" text-anchor="middle" fill="white" font-size="7">已訂</text>
+    </svg>
+  </div>
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:#1A1A2E;background:#1A1A2E;"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">14:30</div>
+      <div class="tl-content"><div class="tl-title">抵達 Roma Termini → Check in</div>
+        <div class="tl-desc">Italo 9979 抵達，步行5分鐘至住宿（Via Alfredo Cappellini 39）</div>
+        <div class="tl-chips"><span class="chip walk">🚶 5 分鐘步行</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--red);background:var(--red);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">16:00</div>
+      <div class="tl-content"><div class="tl-title">萬神殿 Pantheon</div>
+        <div class="tl-desc">從住宿步行約 35 分，或搭 Tram 8 至 Largo di Torre Argentina 站（8 分）。建議 Google Maps 搜尋「Pantheon Rome」。</div>
+        <div class="tl-chips"><span class="chip walk">🚶 35 分 / 或 Tram 8</span><span class="chip tip">🎟 €5 入場 / 外觀免費</span><span class="chip tip">⏱ 停留 45 分</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--red);background:var(--red);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">17:15</div>
+      <div class="tl-content"><div class="tl-title">特雷維噴泉 Fontana di Trevi</div>
+        <div class="tl-desc">從萬神殿步行約 10 分鐘，沿 Via del Corso 方向走。22:00 後免費！可先標記位置，晚飯後再來拍夜景。</div>
+        <div class="tl-chips"><span class="chip walk">🚶 10 分鐘</span><span class="chip tip">💡 22:00後免費</span><span class="chip tip">⏱ 停留 30 分</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--red);background:var(--red);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">18:00</div>
+      <div class="tl-content"><div class="tl-title">納沃納廣場 Piazza Navona</div>
+        <div class="tl-desc">從特雷維步行約 15 分鐘，沿 Via delle Muratte → Via del Governo Vecchio 方向。</div>
+        <div class="tl-chips"><span class="chip walk">🚶 15 分鐘</span><span class="chip tip">💡 全天免費</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--gold);background:var(--gold);"></div><div class="tl-line" style="display:none;"></div></div>
+      <div class="tl-time">19:30</div>
+      <div class="tl-content"><div class="tl-title">🍝 晚餐 Achille Al Pantheon（已訂位）</div>
+        <div class="tl-desc">回到萬神殿旁，地址：Via dei Pastini 120。The Fork 訂位碼 Codice: 2L2NFKSC0000001YS</div>
+        <div class="tl-chips"><span class="chip walk">🚶 步行回萬神殿</span><span class="chip warn">✓ 已訂位</span></div></div>
+    </div>
+  </div>
+  <div class="gmaps-row">
+    <div class="gmaps-label">📱 Google Maps 快速搜尋</div>
+    <span class="gm-chip">Pantheon Roma</span>
+    <span class="gm-chip">Fontana di Trevi</span>
+    <span class="gm-chip">Piazza Navona</span>
+    <span class="gm-chip">Achille al Pantheon</span>
+  </div>
+</div>
+
+<!-- D2 -->
+<div class="day-card">
+  <div class="day-header" style="background:linear-gradient(90deg,#9A1A22,#CE2B37);">
+    <div class="day-num">D2</div>
+    <div><div class="day-title">⛪ 聖天使城堡 → 梵蒂岡博物館 → 西班牙廣場</div><div class="day-date">5/27（三）</div></div>
+  </div>
+  <div class="map-area">
+    <div class="map-label">📍 地鐵 B→A 線路線示意</div>
+    <svg viewBox="0 0 560 100" style="width:100%;height:auto;max-height:100px;">
+      <circle cx="40" cy="50" r="14" fill="#1A1A2E"/>
+      <text x="40" y="53" text-anchor="middle" fill="white" font-size="8">住宿</text>
+      <line x1="56" y1="50" x2="95" y2="50" stroke="#2C5F8A" stroke-width="2.5"/>
+      <polygon points="95,45 105,50 95,55" fill="#2C5F8A"/>
+      <text x="73" y="43" text-anchor="middle" fill="#2C5F8A" font-size="8">🚶 5分</text>
+      <circle cx="120" cy="50" r="18" fill="#2C5F8A"/>
+      <text x="120" y="47" text-anchor="middle" fill="white" font-size="8">Termini</text>
+      <text x="120" y="57" text-anchor="middle" fill="white" font-size="7.5">B線→A線</text>
+      <line x1="140" y1="50" x2="175" y2="50" stroke="#2C5F8A" stroke-width="2.5"/>
+      <polygon points="175,45 185,50 175,55" fill="#2C5F8A"/>
+      <text x="160" y="43" text-anchor="middle" fill="#2C5F8A" font-size="8">🚇</text>
+      <circle cx="205" cy="50" r="20" fill="#CE2B37"/>
+      <text x="205" y="47" text-anchor="middle" fill="white" font-size="8">聖天使</text>
+      <text x="205" y="57" text-anchor="middle" fill="white" font-size="7.5">廣場</text>
+      <line x1="227" y1="50" x2="265" y2="50" stroke="#009246" stroke-width="2.5"/>
+      <polygon points="265,45 275,50 265,55" fill="#009246"/>
+      <text x="248" y="43" text-anchor="middle" fill="#009246" font-size="8">🚶15分</text>
+      <circle cx="295" cy="50" r="20" fill="#CE2B37"/>
+      <text x="295" y="47" text-anchor="middle" fill="white" font-size="8">梵蒂岡</text>
+      <text x="295" y="57" text-anchor="middle" fill="white" font-size="7.5">博物館</text>
+      <line x1="317" y1="50" x2="355" y2="50" stroke="#2C5F8A" stroke-width="2.5"/>
+      <polygon points="355,45 365,50 355,55" fill="#2C5F8A"/>
+      <text x="338" y="43" text-anchor="middle" fill="#2C5F8A" font-size="8">🚇Spagna</text>
+      <circle cx="385" cy="50" r="20" fill="#CE2B37"/>
+      <text x="385" y="47" text-anchor="middle" fill="white" font-size="8">西班牙</text>
+      <text x="385" y="57" text-anchor="middle" fill="white" font-size="7.5">廣場</text>
+      <line x1="407" y1="50" x2="450" y2="50" stroke="#2C5F8A" stroke-width="2.5"/>
+      <polygon points="450,45 460,50 450,55" fill="#2C5F8A"/>
+      <text x="432" y="43" text-anchor="middle" fill="#2C5F8A" font-size="8">🚇回Termini</text>
+      <circle cx="480" cy="50" r="14" fill="#1A1A2E"/>
+      <text x="480" y="53" text-anchor="middle" fill="white" font-size="8">住宿</text>
+    </svg>
+  </div>
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--red);background:var(--red);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">09:00</div>
+      <div class="tl-content"><div class="tl-title">聖天使廣場 Castel Sant'Angelo + 早餐</div>
+        <div class="tl-desc">住宿→Termini 步行5分→地鐵 A 線往 Battistini 方向→Ottaviano 站下（約15分）→步行10分到橋上。附近 Prati 區吃早餐。</div>
+        <div class="tl-chips"><span class="chip walk">🚶 5分</span><span class="chip metro">🚇 A線 Termini→Ottaviano</span><span class="chip walk">🚶 10分</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--red);background:var(--red);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">12:00</div>
+      <div class="tl-content"><div class="tl-title">梵蒂岡博物館 + 西斯汀教堂（⚠ 12:00 到場）</div>
+        <div class="tl-desc">Ottaviano 站出口往 Viale Vaticano 方向步行15分鐘。12:30 入場，提前 30 分在場外排隊安檢！帶訂位碼：2L2NFKSC0000001YS。禁無袖/短褲/露刺青。</div>
+        <div class="tl-chips"><span class="chip walk">🚶 15分</span><span class="chip warn">⚠ 12:00 前到!</span><span class="chip tip">⏱ 停留 3–4 小時</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--red);background:var(--red);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">16:00</div>
+      <div class="tl-content"><div class="tl-title">西班牙廣場 + 階梯 Piazza di Spagna</div>
+        <div class="tl-desc">梵蒂岡出口→步行或地鐵 A 線 Ottaviano→Spagna（2站，約5分）。Spagna 站出口直達廣場。<br/>⚠ 不可在階梯上飲食！</div>
+        <div class="tl-chips"><span class="chip metro">🚇 A線 Ottaviano→Spagna</span><span class="chip warn">⚠ 禁止階梯飲食</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--gold);background:var(--gold);"></div><div class="tl-line" style="display:none;"></div></div>
+      <div class="tl-time">19:30</div>
+      <div class="tl-content"><div class="tl-title">晚餐 + 返回住宿</div>
+        <div class="tl-desc">Spagna 附近晚餐後，地鐵 A 線 Spagna→Termini（8分）→步行5分回住宿。</div>
+        <div class="tl-chips"><span class="chip metro">🚇 A線 Spagna→Termini</span></div></div>
+    </div>
+  </div>
+  <div class="gmaps-row">
+    <div class="gmaps-label">📱 Google Maps 快速搜尋</div>
+    <span class="gm-chip">Castel Sant'Angelo Roma</span>
+    <span class="gm-chip">Musei Vaticani</span>
+    <span class="gm-chip">Piazza di Spagna Roma</span>
+    <span class="gm-chip">Ottaviano Metro Station</span>
+  </div>
+</div>
+
+<!-- D3 -->
+<div class="day-card">
+  <div class="day-header" style="background:linear-gradient(90deg,#9A1A22,#CE2B37);">
+    <div class="day-num">D3</div>
+    <div><div class="day-title">⛪ 聖彼德登頂 08:30 → 競技場 13:50</div><div class="day-date">5/28（四）</div></div>
+  </div>
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--red);background:var(--red);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">08:00</div>
+      <div class="tl-content"><div class="tl-title">出發前往梵蒂岡廣場（⚠ 08:30前到達廣場）</div>
+        <div class="tl-desc">住宿→步行5分→Termini→地鐵 A Ottaviano→步行10分→聖伯多祿廣場。需在廣場排隊 QR Code + 安檢，至少提前30分。</div>
+        <div class="tl-chips"><span class="chip metro">🚇 A線 Termini→Ottaviano</span><span class="chip walk">🚶 10分</span><span class="chip warn">⚠ 08:00出發!</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--red);background:var(--red);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">09:00</div>
+      <div class="tl-content"><div class="tl-title">聖彼德大教堂 Basilica 入場 + 10:00 圓頂電梯</div>
+        <div class="tl-desc">09:00 Basilica 入場→先入教堂→10:00 搭電梯登圓頂（Cupola）。禁無袖/短褲/露刺青。圓頂入口（右側）和教堂入口不同！</div>
+        <div class="tl-chips"><span class="chip warn">⚠ 禁無袖短褲</span><span class="chip tip">⏱ 合計 2.5 小時</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--gold);background:var(--gold);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">12:30</div>
+      <div class="tl-content"><div class="tl-title">🍝 午餐（Prati 區）</div>
+        <div class="tl-desc">梵蒂岡附近 Prati 區（Ottaviano 地鐵站周邊）是在地人用餐區，C.P. 值高。</div>
+        <div class="tl-chips"><span class="chip walk">🚶 10分</span><span class="chip tip">💡 Prati 比梵蒂岡入口便宜</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--red);background:var(--red);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">13:20</div>
+      <div class="tl-content"><div class="tl-title">前往羅馬競技場（⚠ 13:50 入場）</div>
+        <div class="tl-desc">Ottaviano→地鐵 A→Termini→換地鐵 B→Colosseo 站（約20分）。Colosseo 站出口即競技場。<strong>13:35 前需在現場購票完畢</strong>（先參觀頂層入口）。</div>
+        <div class="tl-chips"><span class="chip metro">🚇 A→B線 Colosseo站</span><span class="chip warn">⚠ 13:35 前買票到位!</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--red);background:var(--red);"></div><div class="tl-line" style="display:none;"></div></div>
+      <div class="tl-time">13:50</div>
+      <div class="tl-content"><div class="tl-title">羅馬競技場全體驗（頂層→地下室→廣場）</div>
+        <div class="tl-desc">路線單向不可回頭。套票當日有效，競技場結束後可繼續逛古羅馬廣場（Forum Romano）和帕拉提諾丘，約再需 1.5 小時。</div>
+        <div class="tl-chips"><span class="chip tip">⏱ 競技場 2 小時 + 廣場 1.5 小時</span><span class="chip warn">⚠ 路線單向</span></div></div>
+    </div>
+  </div>
+  <div class="gmaps-row">
+    <div class="gmaps-label">📱 Google Maps 快速搜尋</div>
+    <span class="gm-chip">St. Peter's Square Vatican</span>
+    <span class="gm-chip">Colosseo Roma</span>
+    <span class="gm-chip">Colosseo Metro Station</span>
+    <span class="gm-chip">Foro Romano</span>
+  </div>
+</div>
+
+<!-- ══════════════════ 拿坡里 ══════════════════ -->
+<div class="city-sep" style="background:linear-gradient(90deg,#1A5A6A,#2ABFAA);">
+  <span style="font-size:32px;">🌋</span>
+  <div><h2>拿坡里 ＆ 周邊</h2><p style="font-size:13px;opacity:.8;">大眾運輸 + 私鐵 + 船</p></div>
+  <div class="dt">5/29 – 6/1</div>
+</div>
+<div class="city-intro">
+  住宿：<strong>NaLusa rooms</strong>（Vico Campanile al Consiglio 22）— 地鐵 Toledo 站步行 4 分鐘<br/>
+  交通重點：Napoli Centrale → 地下室 Circumvesuviana → 龐貝（35分）；Beverello 港口 → Hydrofoil → 卡布里（50分）
+</div>
+
+<!-- D4 -->
+<div class="day-card">
+  <div class="day-header" style="background:linear-gradient(90deg,#1A5A6A,#2ABFAA);">
+    <div class="day-num">D4</div>
+    <div><div class="day-title">🚄 Roma → Napoli → 龐貝古城</div><div class="day-date">5/29（五）</div></div>
+  </div>
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--green);background:var(--green);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">09:25</div>
+      <div class="tl-content"><div class="tl-title">Frecciarossa 9603 出發（羅馬→拿坡里）</div>
+        <div class="tl-desc">Roma Termini 出發，Coach 3 Seat 5A/5B/6A/6B。10:33 抵達 Napoli Centrale。</div>
+        <div class="tl-chips"><span class="chip train">🚄 65 分鐘</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--teal);background:var(--teal);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">11:00</div>
+      <div class="tl-content"><div class="tl-title">Check in NaLusa rooms（含行李）</div>
+        <div class="tl-desc">Napoli Centrale → 計程車/Uber 至住宿（Toledo 區），約10分 EUR 10。Check in 14:00，但可先寄放行李。</div>
+        <div class="tl-chips"><span class="chip taxi">🚕 Freenow/Uber 約 EUR 10</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--teal);background:var(--teal);"></div><div class="tl-line" style="display:none;"></div></div>
+      <div class="tl-time">12:00</div>
+      <div class="tl-content"><div class="tl-title">龐貝古城出發 Circumvesuviana</div>
+        <div class="tl-desc">Napoli Centrale <strong>地下室</strong>（B1）搭 Circumvesuviana 私鐵，往 <strong>Pompei Villa/Sorrento 方向</strong>，Pompei Villa dei Misteri 站下（35分）。Campania ArteCard 可搭乘大眾運輸（部分路線）。<br/>⚠ Circumvesuviana 扒手多，行李背前面！</div>
+        <div class="tl-chips"><span class="chip metro">🚇 Circumvesuviana 35分</span><span class="chip warn">⚠ 注意扒手!</span><span class="chip tip">⏱ 古城 3–4 小時</span></div></div>
+    </div>
+  </div>
+  <div class="gmaps-row">
+    <div class="gmaps-label">📱 Google Maps 快速搜尋</div>
+    <span class="gm-chip">Napoli Centrale Circumvesuviana</span>
+    <span class="gm-chip">Pompei Villa dei Misteri Station</span>
+    <span class="gm-chip">Scavi di Pompei</span>
+  </div>
+</div>
+
+<!-- D5 卡布里 -->
+<div class="day-card">
+  <div class="day-header" style="background:linear-gradient(90deg,#1A5A6A,#2ABFAA);">
+    <div class="day-num">D5</div>
+    <div><div class="day-title">🔵 卡布里島 ＋ 藍洞（需當天確認）</div><div class="day-date">5/30（六）</div></div>
+  </div>
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--teal);background:var(--teal);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">07:30</div>
+      <div class="tl-content"><div class="tl-title">⚠ 先確認藍洞是否開放</div>
+        <div class="tl-desc">查看藍洞 FB 粉絲頁（Grotta Azzurra Info）或搜尋 infogrottazzurra。若關閉仍可前往卡布里島觀光，改走山頂纜車路線。</div>
+        <div class="tl-chips"><span class="chip warn">⚠ 出發前確認!</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--teal);background:var(--teal);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">08:30</div>
+      <div class="tl-content"><div class="tl-title">步行至住宿→ 搭計程車至 Beverello 港口</div>
+        <div class="tl-desc">Toledo 住宿→步行或計程車至 Molo Beverello 港（約15分）→買 Hydrofoil 快船票往卡布里（50分）。</div>
+        <div class="tl-chips"><span class="chip taxi">🚕 15分 / EUR 10</span><span class="chip boat">⛴ Hydrofoil 50分 / EUR 28</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--teal);background:var(--teal);"></div><div class="tl-line" style="display:none;"></div></div>
+      <div class="tl-time">10:30</div>
+      <div class="tl-content"><div class="tl-title">卡布里島 → 前往藍洞</div>
+        <div class="tl-desc">卡布里港→搭巴士或計程車至 Anacapri→再搭船至藍洞（或從 Marina Grande 直接搭船）。<strong>藍洞最佳光線：11:00–13:00</strong>。進洞需趴下（入口高 1 公尺以下）。</div>
+        <div class="tl-chips"><span class="chip bus">🚌 島內巴士</span><span class="chip boat">⛴ 藍洞小艇 EUR 21</span><span class="chip tip">💡 11–13時光線最佳</span></div></div>
+    </div>
+  </div>
+  <div class="gmaps-row">
+    <div class="gmaps-label">📱 Google Maps 快速搜尋</div>
+    <span class="gm-chip">Molo Beverello Napoli</span>
+    <span class="gm-chip">Capri Marina Grande</span>
+    <span class="gm-chip">Grotta Azzurra Capri</span>
+  </div>
+</div>
+
+<!-- ══════════════════ 西西里自駕 ══════════════════ -->
+<div class="city-sep" style="background:linear-gradient(90deg,#7A5A00,#C9A84C);">
+  <span style="font-size:32px;">🚗</span>
+  <div><h2>西西里島自駕路線</h2><p style="font-size:13px;opacity:.8;">切法盧為基地 · Europcar 自駕</p></div>
+  <div class="dt">6/1 – 6/5</div>
+</div>
+<div class="city-intro">
+  基地：<strong>Terrazza Incanto, Cefalù</strong>（Via del Giubileo Magno 33）<br/>
+  租車：Europcar Cefalù（Via Maestro Pintorno 11）— 6/1 11:30 取車 · 6/5 11:30 還車<br/>
+  ⚠ 重要：義大利高速公路 Autostrada（A 開頭）需繳過路費（Telepass/現金）。注意城市 ZTL 禁止進入區域（紅底圓牌）。
+</div>
+
+<!-- 西西里地圖 SVG -->
+<div class="sicily-map-wrap">
+  <div class="map-label">🗺️ 西西里島自駕路線示意圖</div>
+  <svg viewBox="0 0 520 300" style="width:100%;height:auto;max-height:280px;">
+    <!-- 島嶼輪廓 簡化 -->
+    <path d="M40,180 C50,120 80,80 130,60 C180,40 230,30 280,50 C330,65 380,60 430,90 C470,115 490,150 480,190 C470,225 440,250 400,255 C360,260 310,270 270,265 C220,260 170,270 130,250 C90,235 30,240 40,180 Z"
+          fill="#F0E8CC" stroke="#C9A84C" stroke-width="2" opacity=".8"/>
+    <!-- Cefalù 基地 -->
+    <circle cx="195" cy="92" r="12" fill="#CE2B37"/>
+    <text x="195" y="89" text-anchor="middle" fill="white" font-size="8" font-weight="bold">切法盧</text>
+    <text x="195" y="99" text-anchor="middle" fill="white" font-size="6">基地</text>
+    <!-- Palermo -->
+    <circle cx="125" cy="110" r="10" fill="#2C5F8A"/>
+    <text x="125" y="108" text-anchor="middle" fill="white" font-size="7.5" font-weight="bold">巴勒莫</text>
+    <text x="125" y="117" text-anchor="middle" fill="white" font-size="6">D10</text>
+    <!-- Agrigento -->
+    <circle cx="200" cy="215" r="10" fill="#7C5CBF"/>
+    <text x="200" y="213" text-anchor="middle" fill="white" font-size="7.5" font-weight="bold">阿格里</text>
+    <text x="200" y="222" text-anchor="middle" fill="white" font-size="6">真托 D8</text>
+    <!-- Taormina -->
+    <circle cx="390" cy="105" r="10" fill="#E07A3B"/>
+    <text x="390" y="103" text-anchor="middle" fill="white" font-size="7.5" font-weight="bold">陶爾米</text>
+    <text x="390" y="112" text-anchor="middle" fill="white" font-size="6">納 D9</text>
+    <!-- Etna -->
+    <circle cx="365" cy="140" r="9" fill="#CE2B37"/>
+    <text x="365" y="138" text-anchor="middle" fill="white" font-size="7">🌋Etna</text>
+    <text x="365" y="147" text-anchor="middle" fill="white" font-size="6">D9</text>
+    <!-- Catania -->
+    <circle cx="370" cy="175" r="8" fill="#1A1A2E"/>
+    <text x="370" y="173" text-anchor="middle" fill="white" font-size="7">卡塔</text>
+    <text x="370" y="181" text-anchor="middle" fill="white" font-size="6">尼亞</text>
+
+    <!-- Routes -->
+    <!-- D8: 切法盧→阿格里真托 A19 -->
+    <path d="M195,104 C200,150 200,185 200,205" fill="none" stroke="#7C5CBF" stroke-width="2.5" stroke-dasharray="6,3"/>
+    <text x="175" y="160" fill="#7C5CBF" font-size="8" font-weight="600">A19 D8</text>
+    <!-- D9: 切法盧→陶爾米納 A18 -->
+    <path d="M207,95 C280,85 340,95 380,105" fill="none" stroke="#E07A3B" stroke-width="2.5" stroke-dasharray="6,3"/>
+    <text x="290" y="78" fill="#E07A3B" font-size="8" font-weight="600">A18 D9</text>
+    <!-- D9: 陶爾米納→埃特納 -->
+    <path d="M385,115 C380,125 372,132 370,140" fill="none" stroke="#CE2B37" stroke-width="2" stroke-dasharray="4,3"/>
+    <!-- D10: 切法盧→巴勒莫 A20 -->
+    <path d="M183,96 C165,100 148,106 135,110" fill="none" stroke="#2C5F8A" stroke-width="2.5" stroke-dasharray="6,3"/>
+    <text x="148" y="90" fill="#2C5F8A" font-size="8" font-weight="600">A20 D10</text>
+    <!-- Legend -->
+    <rect x="25" y="255" width="200" height="38" rx="6" fill="white" opacity=".9"/>
+    <text x="35" y="268" fill="#7C5CBF" font-size="9" font-weight="700">─ ─ D8 阿格里真托（A19，2h）</text>
+    <text x="35" y="281" fill="#E07A3B" font-size="9" font-weight="700">─ ─ D9 陶爾米納（A18，1.5h）</text>
+    <text x="230" y="268" fill="#2C5F8A" font-size="9" font-weight="700">─ ─ D10 巴勒莫（A20，45m）</text>
+  </svg>
+</div>
+
+<!-- D8 阿格里真托 -->
+<div class="day-card">
+  <div class="day-header" style="background:linear-gradient(90deg,#5A3D8A,#7C5CBF);">
+    <div class="day-num">D8</div>
+    <div><div class="day-title">🏛️ 阿格里真托 — 神廟谷</div><div class="day-date">6/2（二）自駕</div></div>
+  </div>
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--gold);background:var(--gold);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">08:00</div>
+      <div class="tl-content"><div class="tl-title">切法盧出發 → A19 高速公路</div>
+        <div class="tl-desc">從切法盧住宿 → A20 → A19（往 Palermo 方向 → 轉 A19 往 Catania/Agrigento）→ 約 165km，2 小時。<br/>出發前在超市買好水、零食，沿途加油（自助加油，建議有現金）。</div>
+        <div class="tl-chips"><span class="chip car">🚗 A20→A19 約 2 小時</span><span class="chip tip">💡 避開 09:00–10:00 塞車</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--purple);background:var(--purple);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">10:00</div>
+      <div class="tl-content"><div class="tl-title">Valle dei Templi 神廟谷（停車場）</div>
+        <div class="tl-desc">停車場：Parcheggio Valle dei Templi（官方停車場，靠近西門）。建議提前在官網買票。參觀約 3–4 小時。⚠ 中午氣溫高，帶足水！</div>
+        <div class="tl-chips"><span class="chip warn">⚠ 帶帽子、水、防曬</span><span class="chip tip">⏱ 3–4 小時</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--gold);background:var(--gold);"></div><div class="tl-line" style="display:none;"></div></div>
+      <div class="tl-time">15:00</div>
+      <div class="tl-content"><div class="tl-title">返回切法盧</div>
+        <div class="tl-desc">原路 A19→A20 返回，約 2 小時，17:00 前回到切法盧。晚上在切法盧小鎮散步、晚餐（海鮮為主）。</div>
+        <div class="tl-chips"><span class="chip car">🚗 返程 2 小時</span></div></div>
+    </div>
+  </div>
+  <div class="drive-info">
+    <div class="drive-stat">🚗 總里程<span>約 330 km</span></div>
+    <div class="drive-stat">⛽ 油費<span>約 EUR 57</span></div>
+    <div class="drive-stat">⏱ 開車時間<span>約 4 小時</span></div>
+    <div class="drive-stat">🅿️ 停車<span>官方停車場</span></div>
+  </div>
+  <div class="gmaps-row">
+    <div class="gmaps-label">📱 Google Maps 快速搜尋</div>
+    <span class="gm-chip">Valle dei Templi Agrigento</span>
+    <span class="gm-chip">Parcheggio Valle dei Templi</span>
+    <span class="gm-chip">A19 Palermo-Catania</span>
+  </div>
+</div>
+
+<!-- D9 陶爾米納+埃特納 -->
+<div class="day-card">
+  <div class="day-header" style="background:linear-gradient(90deg,#A04A15,#E07A3B);">
+    <div class="day-num">D9</div>
+    <div><div class="day-title">🏟️ 陶爾米納 + 🌋 埃特納火山</div><div class="day-date">6/3（三）自駕</div></div>
+  </div>
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--orange);background:var(--orange);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">07:30</div>
+      <div class="tl-content"><div class="tl-title">切法盧出發 → A20/A18 → 陶爾米納</div>
+        <div class="tl-desc">切法盧 → A20（往Messina）→ A18 → 陶爾米納出口（Taormina）。約 110km，1.5 小時。<br/>⚠ 陶爾米納老城停車場：Parcheggio Lumbi（需步行或搭纜車進城），禁止開車進 ZTL 區。</div>
+        <div class="tl-chips"><span class="chip car">🚗 A20→A18 約 1.5 小時</span><span class="chip warn">⚠ ZTL 禁止進城</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--orange);background:var(--orange);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">09:00</div>
+      <div class="tl-content"><div class="tl-title">陶爾米納老城 + 希臘劇場</div>
+        <div class="tl-desc">纜車（Funivia Taormina）上城或步行爬坡（30分）。Corso Umberto 主街逛街。希臘劇場（Teatro Antico di Taormina）俯瞰埃特納火山。</div>
+        <div class="tl-chips"><span class="chip bus">🚠 纜車上城</span><span class="chip tip">⏱ 停留 3 小時</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--red);background:var(--red);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">13:00</div>
+      <div class="tl-content"><div class="tl-title">陶爾米納 → 埃特納火山纜車站</div>
+        <div class="tl-desc">從陶爾米納下山 → 往 Nicolosi/Etna Sud 方向，約 20–30 分車程。Funivia dell'Etna 纜車站（海拔 1923m）搭纜車上山。<br/>⚠ 山頂溫度 15°C 以下，帶外套！</div>
+        <div class="tl-chips"><span class="chip car">🚗 20–30 分</span><span class="chip warn">⚠ 帶外套!</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--gold);background:var(--gold);"></div><div class="tl-line" style="display:none;"></div></div>
+      <div class="tl-time">17:00</div>
+      <div class="tl-content"><div class="tl-title">返回切法盧（A18→A20）</div>
+        <div class="tl-desc">約 110km，1.5 小時，18:30 前可返抵切法盧晚餐。</div>
+        <div class="tl-chips"><span class="chip car">🚗 A18→A20 約 1.5 小時</span></div></div>
+    </div>
+  </div>
+  <div class="drive-info">
+    <div class="drive-stat">🚗 總里程<span>約 220 km</span></div>
+    <div class="drive-stat">⛽ 油費<span>約 EUR 38</span></div>
+    <div class="drive-stat">🅿️ 陶爾米納<span>Parcheggio Lumbi</span></div>
+  </div>
+</div>
+
+<!-- ══════════════════ 米蘭 ══════════════════ -->
+<div class="city-sep" style="background:linear-gradient(90deg,#1A1A2E,#2C5F8A);">
+  <span style="font-size:32px;">🏙️</span>
+  <div><h2>米蘭 ＋ 威尼斯一日</h2><p style="font-size:13px;opacity:.8;">地鐵 M1/M2/M3 + 高速列車</p></div>
+  <div class="dt">6/5 – 6/9</div>
+</div>
+<div class="city-intro">
+  住宿：<strong>Via Antonio Stoppani 2, Porta Venezia</strong><br/>
+  地鐵：Porta Venezia 站（M1 紅線）→ 直接連接 Centrale FS、Duomo、Cadorna。
+</div>
+
+<!-- D12 -->
+<div class="day-card">
+  <div class="day-header" style="background:linear-gradient(90deg,#1A1A2E,#2C5F8A);">
+    <div class="day-num">D12</div>
+    <div><div class="day-title">🖼️ 最後的晚餐（11:45）→ 米蘭大教堂</div><div class="day-date">6/6（六）</div></div>
+  </div>
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--blue);background:var(--blue);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">11:00</div>
+      <div class="tl-content"><div class="tl-title">住宿 → 地鐵 M1 → Cadorna → 最後的晚餐</div>
+        <div class="tl-desc">Porta Venezia（M1）→ 往 Rho Fieramilano 方向 → Cadorna 站下（10分）→ 步行 10 分至 Santa Maria delle Grazie（Piazza Santa Maria delle Grazie 2）。<strong>11:15 前到售票處出示護照</strong>。</div>
+        <div class="tl-chips"><span class="chip metro">🚇 M1 Porta Venezia→Cadorna</span><span class="chip walk">🚶 10分</span><span class="chip warn">⚠ 11:15 前到!</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--blue);background:var(--blue);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">13:00</div>
+      <div class="tl-content"><div class="tl-title">🍝 午餐 → Cadorna 或 Duomo 附近</div>
+        <div class="tl-desc">Cadorna/Brera 區午餐，然後搭地鐵 M1 往 Duomo（1 站）。</div>
+        <div class="tl-chips"><span class="chip metro">🚇 M1 Cadorna→Duomo（1站）</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--blue);background:var(--blue);"></div><div class="tl-line" style="display:none;"></div></div>
+      <div class="tl-time">15:00</div>
+      <div class="tl-content"><div class="tl-title">米蘭大教堂登頂 + Galleria 購物</div>
+        <div class="tl-desc">Duomo 廣場出站即到。電梯登頂（預約時間 15:00）。登頂後參觀教堂內部。再逛 Galleria Vittorio Emanuele II（精品廊）。最後入場 18:00。</div>
+        <div class="tl-chips"><span class="chip tip">⏱ 登頂+教堂 2 小時</span><span class="chip warn">⚠ 最後入場 18:00</span></div></div>
+    </div>
+  </div>
+  <div class="gmaps-row">
+    <div class="gmaps-label">📱 Google Maps 快速搜尋</div>
+    <span class="gm-chip">Santa Maria delle Grazie Milano</span>
+    <span class="gm-chip">Cadorna Metro Milan</span>
+    <span class="gm-chip">Duomo di Milano</span>
+    <span class="gm-chip">Galleria Vittorio Emanuele II</span>
+  </div>
+</div>
+
+<!-- D13 威尼斯 -->
+<div class="day-card">
+  <div class="day-header" style="background:linear-gradient(90deg,#5C3DAA,#7C5CBF);">
+    <div class="day-num">D13</div>
+    <div><div class="day-title">🚤 威尼斯一日遊</div><div class="day-date">6/7（日）07:35 出發</div></div>
+  </div>
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--purple);background:var(--purple);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">06:50</div>
+      <div class="tl-content"><div class="tl-title">住宿 → M1 Porta Venezia → Centrale FS</div>
+        <div class="tl-desc">步行至 Porta Venezia 地鐵站（3分）→ M1 往 Sesto FS 方向 → Loreto 換乘 M2（或直到 Centrale FS，視線路）。Centrale FS = 米蘭中央車站，約 15 分。</div>
+        <div class="tl-chips"><span class="chip walk">🚶 3分</span><span class="chip metro">🚇 M1 約 15分</span><span class="chip warn">⚠ 06:50 出發!</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--green);background:var(--green);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">07:35</div>
+      <div class="tl-content"><div class="tl-title">Italo 8973 出發 → 威尼斯 10:03 抵達</div>
+        <div class="tl-desc">Coach 4, Seat 27/28/29/30。抵達 Venezia Santa Lucia 站（島上唯一火車站）。</div>
+        <div class="tl-chips"><span class="chip train">🚄 Italo 2.5 小時</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--teal);background:var(--teal);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">10:10</div>
+      <div class="tl-content"><div class="tl-title">車站外購 Vaporetto 日票 → 前往聖馬可廣場</div>
+        <div class="tl-desc">Santa Lucia 站外購 Vaporetto 水上巴士日票（EUR 25）。搭 Line 2 或 Line 1（慢但更多風景）→ San Marco 站下（約 35–45 分）。<br/>⚠ 入城稅 EUR 5 需在 6/3 前線上繳費！</div>
+        <div class="tl-chips"><span class="chip boat">⛴ Vaporetto Line 1/2</span><span class="chip warn">⚠ 入城稅 6/3前繳!</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--teal);background:var(--teal);"></div><div class="tl-line" style="background:#EDE9E3;"></div></div>
+      <div class="tl-time">11:00</div>
+      <div class="tl-content"><div class="tl-title">聖馬可廣場 → 嘆息橋 → 里阿托橋 → 午餐</div>
+        <div class="tl-desc">步行路線：San Marco廣場→嘆息橋（Ponte dei Sospiri）→里阿托橋（Rialto Bridge），步行約20分。午餐選 Bacaro 小酒館吃 Cicchetti 小食。</div>
+        <div class="tl-chips"><span class="chip walk">🚶 全程步行</span><span class="chip tip">🍽️ Bacari Cicchetti 午餐</span></div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot" style="border-color:var(--gold);background:var(--gold);"></div><div class="tl-line" style="display:none;"></div></div>
+      <div class="tl-time">17:00</div>
+      <div class="tl-content"><div class="tl-title">出發返回車站 → 18:18 Frecciarossa 9754</div>
+        <div class="tl-desc">17:00 前往 Santa Lucia 站，Vaporetto Line 1/2 約 35 分。18:18 出發，Coach 4 Seat 7A/7B/7C/7D，20:45 抵米蘭中央站，地鐵回住宿。</div>
+        <div class="tl-chips"><span class="chip boat">⛴ Vaporetto 35分</span><span class="chip train">🚄 Frecciarossa 18:18</span><span class="chip warn">⚠ 17:00前出發!</span></div></div>
+    </div>
+  </div>
+  <div class="gmaps-row">
+    <div class="gmaps-label">📱 Google Maps 快速搜尋</div>
+    <span class="gm-chip">Venezia Santa Lucia Station</span>
+    <span class="gm-chip">Piazza San Marco Venezia</span>
+    <span class="gm-chip">Ponte dei Sospiri</span>
+    <span class="gm-chip">Ponte di Rialto</span>
+  </div>
+</div>
+
+<!-- 高速公路說明 -->
+<div class="slabel" style="margin-top:40px;">Driving Tips · 自駕注意事項</div>
+<div class="stitle">義大利 <span>自駕重要提醒</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;">
+  <div style="background:var(--card);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);">
+    <div style="font-size:28px;margin-bottom:10px;">🛣️</div>
+    <h4 style="font-size:15px;margin-bottom:8px;">Autostrada 高速公路</h4>
+    <p style="font-size:13px;color:var(--mid);line-height:1.7;">A 開頭的高速公路需繳過路費。Telepass 車道（橘色T）不可用，選 Contanti（現金）或 Carte（刷卡）車道。</p>
+  </div>
+  <div style="background:var(--card);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);">
+    <div style="font-size:28px;margin-bottom:10px;">🚫</div>
+    <h4 style="font-size:15px;margin-bottom:8px;">ZTL 禁止進入區</h4>
+    <p style="font-size:13px;color:var(--mid);line-height:1.7;">紅底白圈標誌 + 「ZTL」字樣 = 禁止進入。違規被攝像即開罰（EUR 80–300），租車公司會轉發給你。停外圍停車場走進去！</p>
+  </div>
+  <div style="background:var(--card);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);">
+    <div style="font-size:28px;margin-bottom:10px;">⛽</div>
+    <h4 style="font-size:15px;margin-bottom:8px;">加油站</h4>
+    <p style="font-size:13px;color:var(--mid);line-height:1.7;">高速公路服務區（Autogrill）24小時。市區加油站晚上可能無人值守，需自助（inserire denaro = 投錢）。Diesel = 柴油；Benzina = 汽油。</p>
+  </div>
+  <div style="background:var(--card);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);">
+    <div style="font-size:28px;margin-bottom:10px;">📱</div>
+    <h4 style="font-size:15px;margin-bottom:8px;">導航建議</h4>
+    <p style="font-size:13px;color:var(--mid);line-height:1.7;">出發前在 Google Maps 下載西西里離線地圖。Waze 在歐洲也好用（尤其速限提示）。租車附有 GPS 可設定義大利文語音。</p>
+  </div>
+</div>
+
+</div>
+<footer><strong>2026 南義行程路線規劃</strong> · 每日路線指南<br/>🚶步行 · 🚇地鐵 · 🚗自駕 · ⛴船 · 🚄高速列車 · Buon Viaggio! 🇮🇹</footer>
+</body>
+</html>
