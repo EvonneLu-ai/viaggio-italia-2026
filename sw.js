@@ -3,7 +3,7 @@
    快取策略：App Shell (Cache First) + API (Network Only)
 ═══════════════════════════════════════════ */
 
-const CACHE = 'viaggio-2026-v3';
+const CACHE = 'viaggio-2026-v5';
 
 // 離線可用的核心資源
 const SHELL = [
