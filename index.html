@@ -697,12 +697,6 @@ textarea{resize:vertical;}
       </div>
       <span class="di-label">翻譯</span>
     </button>
-    <button class="drawer-item" id="di-phrase" onclick="goTab('phrase');closeDrawer()">
-      <div class="di-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      </div>
-      <span class="di-label">語言</span>
-    </button>
     <button class="drawer-item" id="di-events" onclick="goTab('events');closeDrawer()">
       <div class="di-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -955,17 +949,115 @@ textarea{resize:vertical;}
   <div class="map-panel" id="map-panel"></div>
 </div>
 
-<!-- ══════ PANEL: 翻譯 ══════ -->
+<!-- ══════ PANEL: 翻譯 ＋ 語言 ══════ -->
 <div class="panel" id="p-trans">
   <div style="padding:20px 16px 0;">
-    <div style="font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--t1);margin-bottom:4px;">翻譯工具</div>
-    <div style="font-size:14px;color:var(--t2);margin-bottom:20px;">5 種翻譯方式，在義大利暢行無阻</div>
+    <div style="font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--t1);margin-bottom:4px;">翻譯 ＋ 語言速查</div>
+    <div style="font-size:14px;color:var(--t2);margin-bottom:20px;">即時翻譯 · 語音對話 · 義大利文速查</div>
 
-    <!-- ① 語音翻譯 -->
-    <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">① 語音翻譯</div>
+    <!-- 語音翻譯 -->
+    <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">語音翻譯</div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:6px;">
       <div style="padding:14px 14px 10px;display:flex;gap:8px;">
         <button class="lang-btn on" id="vl-zhi" onclick="setVoiceLang('zh',this)">中文說</button>
+        <button class="lang-btn" id="vl-ita" onclick="setVoiceLang('it',this)">義文說</button>
+      </div>
+      <div style="padding:0 14px 14px;">
+        <button id="voice-btn" onclick="toggleVoice()"
+          style="width:100%;padding:14px;border-radius:12px;background:var(--t1);border:none;color:var(--bg);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit;transition:background .2s;">
+          <svg id="mic-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          <span id="voice-btn-label">按住說話</span>
+        </button>
+        <div id="voice-result" style="display:none;margin-top:10px;">
+          <div style="background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--t3);margin-bottom:4px;">辨識</div>
+            <div id="voice-input-text" style="font-size:14px;color:var(--t1);"></div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--t3);margin-bottom:4px;">翻譯</div>
+            <div id="voice-output-text" style="font-size:16px;font-weight:600;color:var(--t1);"></div>
+          </div>
+          <div style="display:flex;gap:7px;margin-top:8px;">
+            <button onclick="speakVoiceResult()" class="btn btn-ghost btn-sm">再次朗讀</button>
+            <button onclick="cpyVoiceResult()" class="btn btn-outline btn-sm">複製</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--t3);padding:0 2px 18px;line-height:1.5;">說中文自動翻義大利文並朗讀，反之亦然 · 需網路</div>
+
+    <!-- 對話模式 -->
+    <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">對話模式</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:6px;">
+      <div id="conv-log" style="max-height:160px;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;min-height:60px;">
+        <div style="text-align:center;font-size:12px;color:var(--t3);padding:8px 0;">按下按鈕開始對話</div>
+      </div>
+      <div style="padding:10px 12px;display:flex;gap:8px;border-top:1px solid var(--border2);">
+        <button onclick="startConv('zh-TW','it-IT','我（中文）')"
+          style="flex:1;padding:11px 8px;border-radius:10px;background:var(--t1);border:none;color:var(--bg);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+          我說（中文）
+        </button>
+        <button onclick="startConv('it-IT','zh-TW','對方（義文）')"
+          style="flex:1;padding:11px 8px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);color:var(--t1);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+          對方說（義文）
+        </button>
+        <button onclick="clearConv()" style="padding:11px 12px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);color:var(--t2);font-size:13px;cursor:pointer;font-family:inherit;">清除</button>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--t3);padding:0 2px 18px;line-height:1.5;">輪流按鈕說話 · 點餐、問路都好用</div>
+
+    <!-- 文字翻譯 -->
+    <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">文字翻譯</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:4px;">
+      <div style="display:flex;gap:6px;padding:12px 12px 8px;">
+        <button class="lang-btn on" onclick="setLang('it|zh-TW',this)">義 → 中</button>
+        <button class="lang-btn" onclick="setLang('en|zh-TW',this)">英 → 中</button>
+        <button class="lang-btn" onclick="setLang('zh-TW|it',this)">中 → 義</button>
+        <a href="https://www.deepl.com/translator#it/zh/" target="_blank" class="lang-btn" style="text-decoration:none;text-align:center;">DeepL</a>
+      </div>
+      <div style="padding:0 12px 12px;">
+        <textarea id="tinp" placeholder="輸入文字…" rows="3" style="margin-bottom:8px;border-radius:10px;"></textarea>
+        <button class="btn" style="width:100%;background:var(--t1);color:var(--bg);" onclick="doTranslate()">翻譯</button>
+      </div>
+      <div class="trans-result" id="trans-result" style="margin:0 12px 12px;border-radius:10px;">
+        <div class="res-label">翻譯結果</div>
+        <div class="res-text" id="res-text"></div>
+        <div class="res-acts">
+          <button class="btn btn-ghost btn-sm" onclick="cpyResult()">複製</button>
+          <button class="btn btn-ghost btn-sm" onclick="spkResult()">朗讀</button>
+          <button class="btn btn-outline btn-sm" onclick="clrTrans()">清除</button>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--t3);padding:4px 2px 20px;">
+      <a href="https://translate.google.com/?sl=it&tl=zh-TW" target="_blank" style="color:var(--t2);">Google 翻譯</a> &nbsp;·&nbsp;
+      <a href="https://www.deepl.com/translator#it/zh/" target="_blank" style="color:var(--t2);">DeepL</a>
+    </div>
+  </div>
+
+  <!-- ─── 語言速查 ─── -->
+  <div style="height:1px;background:var(--border);"></div>
+  <div style="padding:20px 16px 8px;">
+    <div style="font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--t1);margin-bottom:12px;">語言速查</div>
+    <input type="text" id="psrch" placeholder="搜尋短語..." oninput="renderPhrases()" style="margin-bottom:4px;"/>
+  </div>
+  <div class="phrase-cats" id="phrase-cats">
+    <button class="pcat-btn on" onclick="setCat('全部',this)">全部</button>
+    <button class="pcat-btn" onclick="setCat('問候',this)">問候</button>
+    <button class="pcat-btn" onclick="setCat('餐廳',this)">餐廳</button>
+    <button class="pcat-btn" onclick="setCat('交通',this)">交通</button>
+    <button class="pcat-btn" onclick="setCat('購物',this)">購物</button>
+    <button class="pcat-btn" onclick="setCat('住宿',this)">住宿</button>
+    <button class="pcat-btn" onclick="setCat('緊急',this)">緊急</button>
+    <button class="pcat-btn" onclick="setCat('景點',this)">景點</button>
+  </div>
+  <div id="phrase-list"></div>
+  <div class="pb"></div>
+</div>
+
+
         <button class="lang-btn" id="vl-ita" onclick="setVoiceLang('it',this)">義文說</button>
       </div>
       <div style="padding:0 14px 14px;">
@@ -1349,7 +1441,6 @@ textarea{resize:vertical;}
   <button class="nb" id="nb-exp" onclick="goTab('exp')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>記帳</span></button>
   <button class="nb" id="nb-map" onclick="goTab('map')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span>地圖</span></button>
   <button class="nb" id="nb-trans" onclick="goTab('trans')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg><span>翻譯</span></button>
-  <button class="nb" id="nb-phrase" onclick="goTab('phrase')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>語言</span></button>
   <button class="nb" id="nb-events" onclick="goTab('events')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span>活動</span></button>
 </nav>
 <div id="toast"></div>
@@ -1598,6 +1689,7 @@ function goTab(t){
   if(t==='map'&&!S.mapOk)initMap();
   if(t==='packing')renderPacking();
   if(t==='vote'){renderDuty();renderVoteState();}
+  if(t==='trans'){renderPhrases();}
   if(t==='docs')renderDocs();
   if(t==='shopping')renderLuggage();
   if(t==='assist')renderCultureTips();
