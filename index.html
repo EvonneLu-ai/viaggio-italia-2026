@@ -274,8 +274,142 @@ textarea{resize:vertical;}
 .cs-map-btn svg{width:13px;height:13px;}
 
 /* ═══════════════════════════════════════════════
-   TAB 2 — EXPENSE
+   ADVANCED FEATURES — 6 大進階功能
 ═══════════════════════════════════════════════ */
+
+/* ── Packing List ── */
+.pack-progress{padding:16px 20px 8px;}
+.pack-prog-bar{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:6px;}
+.pack-prog-fill{height:100%;background:var(--green);border-radius:3px;transition:width .4s;}
+.pack-cat{margin:0 0 8px;}
+.pack-cat-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 20px 8px;cursor:pointer;
+  font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--t3);
+}
+.pack-cat-arr{transition:transform .2s;}
+.pack-cat.collapsed .pack-cat-arr{transform:rotate(-90deg);}
+.pack-cat.collapsed .pack-items{display:none;}
+.pack-items{}
+.pack-item{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 20px;border-bottom:1px solid var(--border2);
+}
+.pack-item:last-child{border-bottom:none;}
+.pack-cb{
+  width:22px;height:22px;border-radius:6px;border:2px solid var(--border);
+  cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;background:var(--bg);
+}
+.pack-cb.on{background:var(--blue);border-color:var(--blue);}
+.pack-cb.on::after{content:'';display:block;width:6px;height:10px;border:2px solid #fff;border-top:none;border-left:none;transform:rotate(45deg) translate(-1px,-1px);}
+.pack-lbl{flex:1;font-size:14px;color:var(--t1);}
+.pack-lbl.done{text-decoration:line-through;color:var(--t3);}
+.pack-tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;background:var(--red);color:#fff;}
+.pack-add-row{padding:12px 16px;display:flex;gap:8px;}
+
+/* ── Vote ── */
+.vote-setup,.vote-active,.vote-result{padding:16px;}
+.vote-option-row{
+  display:flex;align-items:center;gap:8px;margin-bottom:8px;
+}
+.vote-opt-input{flex:1;}
+.vote-btn{
+  flex:1;padding:14px 10px;border-radius:12px;
+  border:1.5px solid var(--border);background:var(--surface);
+  color:var(--t1);font-size:14px;font-weight:600;cursor:pointer;
+  text-align:center;transition:all .15s;font-family:inherit;
+}
+.vote-btn:hover,.vote-btn.voted{border-color:var(--blue);background:var(--blue-bg);color:var(--blue);}
+.vote-result-row{margin-bottom:10px;}
+.vote-result-lbl{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;}
+.vote-result-bar-bg{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;}
+.vote-result-bar-fill{height:100%;background:var(--blue);border-radius:4px;transition:width .5s;}
+.vote-code-box{
+  background:var(--surface);border-radius:12px;padding:14px;
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;
+}
+.vote-code-text{font-size:20px;font-weight:800;letter-spacing:3px;color:var(--blue);}
+.duty-item{
+  display:flex;align-items:center;gap:10px;padding:12px 16px;
+  border-bottom:1px solid var(--border2);
+}
+.duty-item:last-child{border-bottom:none;}
+.duty-tag{
+  font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;
+  background:var(--blue-bg);color:var(--blue);white-space:nowrap;
+}
+
+/* ── Document Vault ── */
+.doc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 16px;}
+.doc-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  overflow:hidden;cursor:pointer;transition:transform .15s;
+}
+.doc-card:active{transform:scale(.97);}
+.doc-thumb{width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--surface2);display:block;}
+.doc-thumb-placeholder{
+  width:100%;aspect-ratio:4/3;background:var(--surface2);
+  display:flex;align-items:center;justify-content:center;
+}
+.doc-info{padding:8px 10px;}
+.doc-name{font-size:12px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.doc-cat{font-size:10px;color:var(--t2);margin-top:2px;}
+.emerg-item{
+  display:flex;align-items:center;gap:12px;padding:13px 16px;
+  border-bottom:1px solid var(--border2);
+}
+.emerg-item:last-child{border-bottom:none;}
+.emerg-num{font-size:18px;font-weight:800;color:var(--blue);letter-spacing:.5px;}
+.emerg-lbl{font-size:12px;color:var(--t2);margin-top:2px;}
+
+/* ── Shopping ── */
+.shopping-result-card{
+  background:var(--blue-bg);border-radius:12px;padding:16px;margin-bottom:16px;
+}
+.shopping-result-main{font-size:28px;font-weight:800;color:var(--blue);}
+.shopping-result-sub{font-size:12px;color:var(--t2);margin-top:4px;}
+.luggage-item-row{
+  display:flex;align-items:center;gap:10px;padding:11px 16px;
+  border-bottom:1px solid var(--border2);
+}
+.luggage-item-row:last-child{border-bottom:none;}
+.luggage-weight{font-size:14px;font-weight:700;color:var(--t1);min-width:50px;text-align:right;}
+
+/* ── Travel Assistant ── */
+.tip-card-adv{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:16px;margin:0 16px 10px;
+}
+.tip-card-adv .tip-icon{
+  width:36px;height:36px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.tip-card-adv .tip-icon svg{width:18px;height:18px;}
+.transport-link{
+  display:flex;align-items:center;gap:12px;padding:13px 16px;
+  border-bottom:1px solid var(--border2);text-decoration:none;color:var(--t1);
+  transition:background .1s;cursor:pointer;
+}
+.transport-link:active{background:var(--surface);}
+.transport-link:last-child{border-bottom:none;}
+.transport-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.transport-icon svg{width:18px;height:18px;}
+
+/* ── Memory ── */
+.mem-item{
+  display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border2);
+}
+.mem-item:last-child{border-bottom:none;}
+.mem-photo{width:70px;height:70px;border-radius:10px;object-fit:cover;flex-shrink:0;}
+.mem-photo-placeholder{
+  width:70px;height:70px;border-radius:10px;background:var(--surface2);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+}
+.mem-title{font-size:14px;font-weight:700;color:var(--t1);margin-bottom:4px;}
+.mem-date{font-size:11px;color:var(--t3);margin-bottom:4px;}
+.mem-note{font-size:12px;color:var(--t2);line-height:1.6;}
+.mem-delete{background:none;border:none;color:var(--t3);cursor:pointer;padding:4px;font-size:18px;margin-left:auto;align-self:flex-start;}
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px;}
 .stat-card{
   background:var(--surface);border:1px solid var(--border);
@@ -571,6 +705,31 @@ textarea{resize:vertical;}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
       </div>
       <span class="di-label">活動</span>
+    </button>
+    <div class="drawer-section-label">進階功能</div>
+    <button class="drawer-item" id="di-packing" onclick="goTab('packing');closeDrawer()">
+      <div class="di-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="16 7 12 3 8 7"/><line x1="12" y1="12" x2="12" y2="17"/><line x1="9.5" y1="14.5" x2="14.5" y2="14.5"/></svg></div>
+      <span class="di-label">行李清單</span>
+    </button>
+    <button class="drawer-item" id="di-vote" onclick="goTab('vote');closeDrawer()">
+      <div class="di-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      <span class="di-label">共同決策</span>
+    </button>
+    <button class="drawer-item" id="di-docs" onclick="goTab('docs');closeDrawer()">
+      <div class="di-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
+      <span class="di-label">離線文件</span>
+    </button>
+    <button class="drawer-item" id="di-shopping" onclick="goTab('shopping');closeDrawer()">
+      <div class="di-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
+      <span class="di-label">購物追蹤</span>
+    </button>
+    <button class="drawer-item" id="di-assist" onclick="goTab('assist');closeDrawer()">
+      <div class="di-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+      <span class="di-label">旅行助理</span>
+    </button>
+    <button class="drawer-item" id="di-memory" onclick="goTab('memory');closeDrawer()">
+      <div class="di-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+      <span class="di-label">旅後回憶</span>
     </button>
   </div>
   <div class="drawer-footer">
@@ -946,6 +1105,260 @@ textarea{resize:vertical;}
       <a href="https://www.eventbrite.it/" target="_blank" class="search-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>Eventbrite</a>
       <a href="https://www.thelocal.it/events" target="_blank" class="search-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>The Local</a>
       <a href="https://www.labiennale.org/" target="_blank" class="search-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>Biennale</a>
+    </div>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- ══════ PANEL: 行李清單 ══════ -->
+<div class="panel" id="p-packing">
+  <div class="pack-progress">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--t1);">行李清單</div>
+      <div style="font-size:13px;font-weight:600;color:var(--green);" id="pack-count">0 / 0 已打包</div>
+    </div>
+    <div class="pack-prog-bar"><div class="pack-prog-fill" id="pack-prog" style="width:0%"></div></div>
+  </div>
+  <div id="pack-list"></div>
+  <div class="pack-add-row">
+    <input type="text" id="pack-new-input" placeholder="新增物品…" style="flex:1;"/>
+    <button class="btn btn-ghost btn-sm" onclick="addPackItem()">新增</button>
+    <button class="btn btn-danger btn-sm" onclick="clearPackChecked()">清除已打</button>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- ══════ PANEL: 共同決策 ══════ -->
+<div class="panel" id="p-vote">
+  <div style="padding:20px 16px 0;">
+    <div style="font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--t1);margin-bottom:4px;">共同決策</div>
+    <div style="font-size:14px;color:var(--t2);margin-bottom:20px;">投票箱與分工清單</div>
+
+    <!-- 投票 -->
+    <div class="sec-label" style="padding-left:0;">投票箱</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px;">
+      <div id="vote-area" style="padding:14px;">
+        <!-- 建立投票 -->
+        <div id="vote-setup">
+          <label class="lbl">投票標題</label>
+          <input type="text" id="vote-title" placeholder="例：午餐要去哪？" style="margin-bottom:10px;"/>
+          <label class="lbl">選項（最多4個）</label>
+          <div id="vote-opts">
+            <div class="vote-option-row"><input type="text" class="vote-opt-input" placeholder="選項 A"/><button onclick="removeVoteOpt(this)" style="background:none;border:none;color:var(--t3);font-size:18px;cursor:pointer;padding:0 4px;">×</button></div>
+            <div class="vote-option-row"><input type="text" class="vote-opt-input" placeholder="選項 B"/><button onclick="removeVoteOpt(this)" style="background:none;border:none;color:var(--t3);font-size:18px;cursor:pointer;padding:0 4px;">×</button></div>
+          </div>
+          <button class="btn btn-outline btn-sm" style="margin:6px 0 12px;" onclick="addVoteOpt()">+ 新增選項</button><br/>
+          <button class="btn btn-primary" style="width:100%;" onclick="createVote()">建立投票</button>
+        </div>
+        <!-- 投票中 -->
+        <div id="vote-active" style="display:none;">
+          <div class="vote-code-box">
+            <div><div style="font-size:11px;color:var(--t2);margin-bottom:3px;">分享代碼給旅伴</div><div class="vote-code-text" id="vote-code-display">------</div></div>
+            <button class="btn btn-ghost btn-sm" onclick="copyVoteCode()">複製</button>
+          </div>
+          <div style="font-size:15px;font-weight:700;color:var(--t1);margin-bottom:12px;" id="vote-active-title"></div>
+          <div id="vote-btns" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;"></div>
+          <button class="btn btn-outline btn-sm" style="width:100%;" onclick="joinVote()">加入已有投票</button>
+        </div>
+        <!-- 結果 -->
+        <div id="vote-result" style="display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div style="font-size:15px;font-weight:700;color:var(--t1);" id="vote-result-title"></div>
+            <button class="btn btn-outline btn-sm" onclick="resetVote()">新投票</button>
+          </div>
+          <div id="vote-result-list"></div>
+        </div>
+      </div>
+      <!-- 加入已有投票 -->
+      <div id="vote-join" style="display:none;padding:14px;border-top:1px solid var(--border2);">
+        <label class="lbl">輸入代碼</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="vote-join-code" placeholder="例：AB1234" maxlength="10" style="text-transform:uppercase;letter-spacing:2px;font-weight:700;"/>
+          <button class="btn btn-primary btn-sm" style="flex-shrink:0;" onclick="doJoinVote()">加入</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 分工清單 -->
+    <div class="sec-label" style="padding-left:0;">分工清單</div>
+    <div class="card" style="margin-bottom:10px;">
+      <div id="duty-list"></div>
+      <div style="padding:10px 12px;display:flex;gap:8px;border-top:1px solid var(--border2);">
+        <input type="text" id="duty-task" placeholder="任務名稱" style="flex:1;"/>
+        <input type="text" id="duty-who" placeholder="負責人" style="width:80px;"/>
+        <button class="btn btn-primary btn-sm" style="flex-shrink:0;" onclick="addDuty()">新增</button>
+      </div>
+    </div>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- ══════ PANEL: 離線文件 ══════ -->
+<div class="panel" id="p-docs">
+  <div style="padding:20px 16px 8px;">
+    <div style="font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--t1);margin-bottom:4px;">離線文件保險箱</div>
+    <div style="font-size:14px;color:var(--t2);margin-bottom:16px;">重要憑證離線儲存，無網路也能查看</div>
+    <!-- 上傳 -->
+    <div style="display:flex;gap:8px;margin-bottom:4px;">
+      <select id="doc-cat-sel" style="flex:1;">
+        <option value="機票">機票</option><option value="訂房">訂房確認</option>
+        <option value="護照">護照影本</option><option value="保險">保險單</option>
+        <option value="其他">其他</option>
+      </select>
+      <input type="text" id="doc-name-inp" placeholder="名稱" style="flex:1;"/>
+    </div>
+    <div style="margin-bottom:16px;display:flex;gap:8px;">
+      <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;background:var(--blue-bg);color:var(--blue);border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;border:1px dashed var(--blue);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        拍照/上傳
+        <input type="file" id="doc-file-inp" accept="image/*,application/pdf" capture="environment" style="display:none;" onchange="addDoc(this)"/>
+      </label>
+    </div>
+  </div>
+  <div class="doc-grid" id="doc-grid"></div>
+
+  <!-- 緊急聯絡 -->
+  <div class="sec-label">緊急聯絡</div>
+  <div class="card" style="margin-bottom:10px;">
+    <div class="emerg-item">
+      <div><div class="emerg-num">118</div><div class="emerg-lbl">義大利急救</div></div>
+      <a href="tel:118" class="btn btn-ghost btn-sm" style="margin-left:auto;">撥打</a>
+    </div>
+    <div class="emerg-item">
+      <div><div class="emerg-num">112</div><div class="emerg-lbl">義大利警察</div></div>
+      <a href="tel:112" class="btn btn-ghost btn-sm" style="margin-left:auto;">撥打</a>
+    </div>
+    <div class="emerg-item">
+      <div><div class="emerg-num">+39 06 9826 2800</div><div class="emerg-lbl">台灣駐義辦事處</div></div>
+      <a href="tel:+390698262800" class="btn btn-ghost btn-sm" style="margin-left:auto;">撥打</a>
+    </div>
+    <div class="emerg-item">
+      <div><div class="emerg-num">+886 800 085 095</div><div class="emerg-lbl">外交部緊急求助</div></div>
+      <a href="tel:+886800085095" class="btn btn-ghost btn-sm" style="margin-left:auto;">撥打</a>
+    </div>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- ══════ PANEL: 購物追蹤 ══════ -->
+<div class="panel" id="p-shopping">
+  <div style="padding:20px 16px 0;">
+    <div style="font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--t1);margin-bottom:4px;">購物追蹤</div>
+    <div style="font-size:14px;color:var(--t2);margin-bottom:20px;">退稅計算 + 行李限重管理</div>
+
+    <!-- 退稅計算機 -->
+    <div class="sec-label" style="padding-left:0;">義大利退稅計算機</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:6px;">
+      <div style="background:var(--blue-bg);border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--blue);line-height:1.6;">
+        <strong>義大利退稅規則：</strong>同一商店消費 €155 以上即可申請退稅（Tax Free），VAT 22%，實際退稅約 11–15%（扣手續費）
+      </div>
+      <label class="lbl">消費金額（EUR）</label>
+      <input type="number" id="tax-amount" placeholder="例：200" min="0" step="0.01" style="margin-bottom:12px;" oninput="calcTax()"/>
+      <div id="tax-result" style="display:none;">
+        <div class="shopping-result-card">
+          <div class="shopping-result-main" id="tax-result-amt"></div>
+          <div class="shopping-result-sub" id="tax-result-sub"></div>
+        </div>
+        <div style="font-size:12px;color:var(--t2);line-height:1.7;">
+          退稅流程：購物時索取 Tax Free 表單 → 離境前在機場海關蓋章 → 在機場退稅窗口（Global Blue / Premier）兌現
+        </div>
+      </div>
+    </div>
+    <div style="height:18px;"></div>
+
+    <!-- 行李限重 -->
+    <div class="sec-label" style="padding-left:0;">行李限重追蹤</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:10px;">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:10px;">
+        <span style="font-size:13px;color:var(--t2);">行李額度</span>
+        <input type="number" id="luggage-limit" value="23" min="1" max="50" style="width:70px;text-align:center;" oninput="renderLuggage()"/>
+        <span style="font-size:13px;color:var(--t2);">kg</span>
+        <div style="flex:1;"></div>
+        <div style="font-size:14px;font-weight:700;" id="luggage-total-display">已用 0 kg</div>
+      </div>
+      <div style="padding:8px 16px;background:var(--bg);">
+        <div class="prog-bar"><div class="prog-fill" id="luggage-prog" style="width:0%;background:var(--green);"></div></div>
+      </div>
+      <div id="luggage-list"></div>
+      <div style="padding:10px 12px;display:flex;gap:8px;border-top:1px solid var(--border2);">
+        <input type="text" id="luggage-item-name" placeholder="物品名稱" style="flex:2;"/>
+        <input type="number" id="luggage-item-kg" placeholder="kg" min="0" step="0.1" style="flex:1;"/>
+        <button class="btn btn-primary btn-sm" style="flex-shrink:0;" onclick="addLuggageItem()">新增</button>
+      </div>
+    </div>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- ══════ PANEL: 旅行助理 ══════ -->
+<div class="panel" id="p-assist">
+  <div style="padding:20px 16px 0;">
+    <div style="font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--t1);margin-bottom:4px;">旅行助理</div>
+    <div style="font-size:14px;color:var(--t2);margin-bottom:20px;">交通比較 + 義大利文化提醒</div>
+
+    <!-- 交通比較 -->
+    <div class="sec-label" style="padding-left:0;">交通接駁試算</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:6px;">
+      <label class="lbl">目的地（義大利地名或地址）</label>
+      <input type="text" id="transport-dest" placeholder="例：Pantheon, Rome" style="margin-bottom:10px;"/>
+      <button class="btn btn-primary" style="width:100%;margin-bottom:14px;" onclick="showTransport()">比較交通方式</button>
+      <div id="transport-results" style="display:none;">
+        <div class="card" style="margin:0;overflow:hidden;">
+          <a id="tr-walk" class="transport-link" target="_blank">
+            <div class="transport-icon" style="background:rgba(52,199,89,.12);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><path d="m9 10 2 3 2-2 2 3"/><path d="M7 19h10"/><path d="M9 22h6"/></svg>
+            </div>
+            <div><div style="font-size:14px;font-weight:600;">步行</div><div style="font-size:12px;color:var(--t2);">Google Maps 步行路線</div></div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2.5" stroke-linecap="round" style="margin-left:auto;"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+          <a id="tr-transit" class="transport-link" target="_blank">
+            <div class="transport-icon" style="background:rgba(0,113,227,.1);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M3 11V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5"/><line x1="12" y1="11" x2="12" y2="22"/><line x1="7" y1="11" x2="7" y2="22"/><line x1="17" y1="11" x2="17" y2="22"/></svg>
+            </div>
+            <div><div style="font-size:14px;font-weight:600;">大眾運輸</div><div style="font-size:12px;color:var(--t2);">地鐵/巴士路線</div></div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2.5" stroke-linecap="round" style="margin-left:auto;"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+          <a id="tr-uber" class="transport-link" target="_blank">
+            <div class="transport-icon" style="background:rgba(0,0,0,.06);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--t1)" stroke-width="2" stroke-linecap="round"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect x="9" y="11" width="14" height="10" rx="1"/><circle cx="12" cy="21" r="1"/><circle cx="20" cy="21" r="1"/></svg>
+            </div>
+            <div><div style="font-size:14px;font-weight:600;">Uber / Taxi</div><div style="font-size:12px;color:var(--t2);">叫車服務</div></div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2.5" stroke-linecap="round" style="margin-left:auto;"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+    <div style="height:18px;"></div>
+
+    <!-- 文化提醒 -->
+    <div class="sec-label" style="padding-left:0;">義大利文化提醒</div>
+    <div id="culture-tips"></div>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- ══════ PANEL: 旅後回憶 ══════ -->
+<div class="panel" id="p-memory">
+  <div style="padding:20px 16px 8px;display:flex;align-items:center;justify-content:space-between;">
+    <div>
+      <div style="font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--t1);margin-bottom:4px;">旅後回憶錄</div>
+      <div style="font-size:14px;color:var(--t2);">記錄旅途中的精彩瞬間</div>
+    </div>
+    <label style="display:flex;align-items:center;gap:6px;padding:9px 14px;background:var(--blue-bg);color:var(--blue);border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      新增
+      <input type="file" id="mem-file" accept="image/*" capture="environment" style="display:none;" onchange="addMemory(this)"/>
+    </label>
+  </div>
+  <div id="mem-list"></div>
+  <!-- 新增表單（隱藏，上傳後顯示）-->
+  <div id="mem-form" style="display:none;margin:0 16px 16px;padding:14px;background:var(--surface);border-radius:14px;border:1px solid var(--border);">
+    <img id="mem-preview" style="width:100%;border-radius:10px;margin-bottom:10px;max-height:200px;object-fit:cover;" alt=""/>
+    <input type="text" id="mem-title-inp" placeholder="這是哪裡？" style="margin-bottom:8px;"/>
+    <input type="text" id="mem-note-inp" placeholder="一句話記錄這個瞬間…" style="margin-bottom:8px;"/>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-primary" style="flex:1;" onclick="saveMemory()">儲存回憶</button>
+      <button class="btn btn-outline" onclick="cancelMemory()">取消</button>
     </div>
   </div>
   <div class="pb"></div>
@@ -1929,12 +2342,381 @@ function toast(m){
   clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('on'),2200);
 }
 
+/* ════════════════ NAV — 新增進階功能 Tab 支援 ════════════════ */
+const ADV_TABS=['packing','vote','docs','shopping','assist','memory'];
+const _origGoTab=goTab;
+function goTab(t){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nb,.drawer-item').forEach(b=>b.classList.remove('on'));
+  const panel=document.getElementById('p-'+t);
+  if(panel){
+    panel.classList.add('on');
+    const nb=document.getElementById('nb-'+t);
+    if(nb)nb.classList.add('on');
+    const di=document.getElementById('di-'+t);
+    if(di)di.classList.add('on');
+  }
+  S.tab=t;
+  if(t==='map'&&!S.mapOk)initMap();
+  if(t==='packing')renderPacking();
+  if(t==='vote'){renderDuty();renderVoteState();}
+  if(t==='docs')renderDocs();
+  if(t==='shopping')renderLuggage();
+  if(t==='assist')renderCultureTips();
+  if(t==='memory')renderMemories();
+}
+
+/* ════════════════ 1. PACKING LIST ════════════════ */
+const PACK_DEFAULTS=[
+  {cat:'證件',must:true,items:['護照（效期確認6個月以上）','信用卡 x2','國際駕照','保險單','訂房確認列印','機票確認','緊急聯絡卡']},
+  {cat:'衣物',items:['短袖上衣 x5','輕薄長褲 x2','遮肩圍巾（教堂必備）','運動鞋','涼鞋','薄外套/防風衣','內衣褲 x5','正式上衣（晚宴用）']},
+  {cat:'電子',items:['手機充電器','行動電源','歐規轉接頭（Type C/F）','相機＋記憶卡','耳機','平板/筆電']},
+  {cat:'盥洗',items:['牙刷牙膏','洗髮精','防曬乳 SPF50+','保濕乳液','濕紙巾x2包','個人化妝品']},
+  {cat:'藥品',items:['腸胃藥','止痛藥','暈車藥','退燒藥','OK繃','肌樂/痠痛貼片']},
+  {cat:'旅行',items:['行李鎖','壓縮袋','折疊購物袋','帽子','太陽眼鏡','小雨傘','零錢包']},
+];
+let packState=JSON.parse(localStorage.getItem('vi_pack')||'{}');
+let packCustom=JSON.parse(localStorage.getItem('vi_pack_custom')||'[]');
+
+function renderPacking(){
+  const allItems=[...PACK_DEFAULTS.flatMap(c=>c.items.map(i=>c.cat+'::'+i)),...packCustom.map(i=>'自訂::'+i)];
+  const total=allItems.length;
+  const done=allItems.filter(k=>packState[k]).length;
+  document.getElementById('pack-count').textContent=`${done} / ${total} 已打包`;
+  document.getElementById('pack-prog').style.width=(total?((done/total)*100).toFixed(0):0)+'%';
+
+  const cats=[...PACK_DEFAULTS,{cat:'自訂',items:packCustom}].filter(c=>c.items.length>0);
+  document.getElementById('pack-list').innerHTML=cats.map(c=>`
+    <div class="pack-cat" id="pcat-${c.cat}">
+      <div class="pack-cat-hdr" onclick="togPackCat('${c.cat}')">
+        <span>${c.cat} <span style="color:var(--t3);font-weight:400;">(${c.items.filter(i=>packState[(c.cat+'::'+i)]).length}/${c.items.length})</span></span>
+        <svg class="pack-cat-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="pack-items">
+        ${c.items.map(item=>{
+          const key=c.cat+'::'+item;
+          const checked=packState[key]||false;
+          return `<div class="pack-item">
+            <div class="pack-cb${checked?' on':''}" onclick="togglePack('${key}')"></div>
+            <span class="pack-lbl${checked?' done':''}">${item}</span>
+            ${c.cat==='自訂'?`<button onclick="removePack('${item}')" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:0 4px;">×</button>`:''}
+            ${c.must&&!checked?'<span class="pack-tag">必帶</span>':''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`).join('');
+}
+function togPackCat(cat){document.getElementById('pcat-'+cat)?.classList.toggle('collapsed');}
+function togglePack(key){
+  packState[key]=!packState[key];
+  localStorage.setItem('vi_pack',JSON.stringify(packState));
+  renderPacking();
+}
+function addPackItem(){
+  const v=document.getElementById('pack-new-input').value.trim();
+  if(!v)return;
+  packCustom.push(v);
+  localStorage.setItem('vi_pack_custom',JSON.stringify(packCustom));
+  document.getElementById('pack-new-input').value='';
+  renderPacking();toast('已新增：'+v);
+}
+function removePack(item){
+  packCustom=packCustom.filter(i=>i!==item);
+  delete packState['自訂::'+item];
+  localStorage.setItem('vi_pack_custom',JSON.stringify(packCustom));
+  localStorage.setItem('vi_pack',JSON.stringify(packState));
+  renderPacking();
+}
+function clearPackChecked(){
+  Object.keys(packState).forEach(k=>{if(packState[k])delete packState[k];});
+  localStorage.setItem('vi_pack',JSON.stringify(packState));
+  renderPacking();toast('已清除所有已打包項目');
+}
+
+/* ════════════════ 2. VOTING + DUTY ════════════════ */
+let voteData=JSON.parse(localStorage.getItem('vi_vote')||'null');
+let dutyList=JSON.parse(localStorage.getItem('vi_duty')||'[]');
+
+function renderVoteState(){
+  if(!voteData){
+    document.getElementById('vote-setup').style.display='block';
+    document.getElementById('vote-active').style.display='none';
+    document.getElementById('vote-result').style.display='none';
+  } else {
+    const totalVotes=Object.values(voteData.votes).reduce((s,v)=>s+v,0);
+    if(totalVotes>0){showVoteResult();}
+    else{
+      document.getElementById('vote-setup').style.display='none';
+      document.getElementById('vote-active').style.display='block';
+      document.getElementById('vote-result').style.display='none';
+      document.getElementById('vote-code-display').textContent=voteData.code;
+      document.getElementById('vote-active-title').textContent=voteData.title;
+      document.getElementById('vote-btns').innerHTML=voteData.options.map(opt=>`
+        <button class="vote-btn" onclick="castVote('${opt}')">${opt}</button>`).join('');
+    }
+  }
+}
+function createVote(){
+  const title=document.getElementById('vote-title').value.trim();
+  const opts=[...document.querySelectorAll('.vote-opt-input')].map(i=>i.value.trim()).filter(v=>v);
+  if(!title||opts.length<2){toast('請填入標題和至少2個選項');return;}
+  const code=Math.random().toString(36).substr(2,6).toUpperCase();
+  voteData={title,options:opts,code,votes:Object.fromEntries(opts.map(o=>[o,0]))};
+  localStorage.setItem('vi_vote',JSON.stringify(voteData));
+  renderVoteState();toast('投票已建立！代碼：'+code);
+}
+function castVote(opt){
+  if(!voteData)return;
+  voteData.votes[opt]=(voteData.votes[opt]||0)+1;
+  localStorage.setItem('vi_vote',JSON.stringify(voteData));
+  showVoteResult();toast('投票成功！');
+}
+function showVoteResult(){
+  document.getElementById('vote-setup').style.display='none';
+  document.getElementById('vote-active').style.display='none';
+  document.getElementById('vote-result').style.display='block';
+  document.getElementById('vote-result-title').textContent=voteData.title+' — 投票結果';
+  const total=Math.max(1,Object.values(voteData.votes).reduce((s,v)=>s+v,0));
+  const sorted=Object.entries(voteData.votes).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('vote-result-list').innerHTML=sorted.map(([opt,cnt])=>{
+    const pct=Math.round((cnt/total)*100);
+    return `<div class="vote-result-row">
+      <div class="vote-result-lbl"><span>${opt}</span><span style="font-weight:700;">${cnt} 票 (${pct}%)</span></div>
+      <div class="vote-result-bar-bg"><div class="vote-result-bar-fill" style="width:${pct}%;"></div></div>
+    </div>`;
+  }).join('');
+}
+function resetVote(){voteData=null;localStorage.removeItem('vi_vote');renderVoteState();}
+function copyVoteCode(){if(voteData)navigator.clipboard.writeText(voteData.code).then(()=>toast('代碼已複製：'+voteData.code));}
+function addVoteOpt(){
+  const c=document.querySelectorAll('.vote-option-row').length;
+  if(c>=4){toast('最多4個選項');return;}
+  const d=document.createElement('div');d.className='vote-option-row';
+  d.innerHTML=`<input type="text" class="vote-opt-input" placeholder="選項 ${String.fromCharCode(65+c)}"/><button onclick="removeVoteOpt(this)" style="background:none;border:none;color:var(--t3);font-size:18px;cursor:pointer;padding:0 4px;">×</button>`;
+  document.getElementById('vote-opts').appendChild(d);
+}
+function removeVoteOpt(btn){const row=btn.parentElement;if(document.querySelectorAll('.vote-option-row').length>2)row.remove();}
+function joinVote(){document.getElementById('vote-join').style.display=document.getElementById('vote-join').style.display==='none'?'block':'none';}
+function doJoinVote(){
+  const code=document.getElementById('vote-join-code').value.trim().toUpperCase();
+  // 本地模式：用同一個 localStorage 的投票
+  const saved=JSON.parse(localStorage.getItem('vi_vote')||'null');
+  if(saved&&saved.code===code){voteData=saved;renderVoteState();document.getElementById('vote-join').style.display='none';}
+  else toast('找不到代碼 '+code+'，請確認');
+}
+
+function renderDuty(){
+  document.getElementById('duty-list').innerHTML=dutyList.length===0?
+    '<div class="loading" style="color:var(--t3);">尚無分工任務</div>':
+    dutyList.map((d,i)=>`<div class="duty-item">
+      <span class="duty-tag">${d.who}</span>
+      <span style="font-size:14px;font-weight:500;color:var(--t1);flex:1;">${d.task}</span>
+      <button onclick="delDuty(${i})" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:17px;padding:0 4px;">×</button>
+    </div>`).join('');
+}
+function addDuty(){
+  const task=document.getElementById('duty-task').value.trim();
+  const who=document.getElementById('duty-who').value.trim()||'未指定';
+  if(!task)return;
+  dutyList.push({task,who});
+  localStorage.setItem('vi_duty',JSON.stringify(dutyList));
+  document.getElementById('duty-task').value='';document.getElementById('duty-who').value='';
+  renderDuty();
+}
+function delDuty(i){dutyList.splice(i,1);localStorage.setItem('vi_duty',JSON.stringify(dutyList));renderDuty();}
+
+/* ════════════════ 3. DOCUMENT VAULT ════════════════ */
+let docVault=JSON.parse(localStorage.getItem('vi_docs')||'[]');
+let tempDocData=null;
+
+function addDoc(inp){
+  const f=inp.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=e=>{
+    const name=document.getElementById('doc-name-inp').value.trim()||f.name.replace(/\.[^.]+$/,'');
+    const cat=document.getElementById('doc-cat-sel').value;
+    docVault.unshift({id:Date.now(),name,cat,data:e.target.result,date:new Date().toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'})});
+    if(docVault.length>20){docVault=docVault.slice(0,20);}// 最多20份
+    try{localStorage.setItem('vi_docs',JSON.stringify(docVault));}catch{toast('儲存空間不足，請清除部分文件');}
+    document.getElementById('doc-name-inp').value='';
+    renderDocs();toast('文件已儲存：'+name);
+  };rd.readAsDataURL(f);
+}
+function renderDocs(){
+  const CAT_COLORS={機票:'#0071e3',訂房:'#34c759',護照:'#ff9500',保險:'#bf5af2',其他:'#aeaeb2'};
+  document.getElementById('doc-grid').innerHTML=docVault.length===0?
+    '<div class="loading" style="color:var(--t3);grid-column:1/-1;">尚無文件</div>':
+    docVault.map((d,i)=>`<div class="doc-card" onclick="viewDoc(${i})">
+      ${d.data.startsWith('data:image')?
+        `<img class="doc-thumb" src="${d.data}" alt="${d.name}"/>`:
+        `<div class="doc-thumb-placeholder"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>`}
+      <div class="doc-info">
+        <div class="doc-name">${d.name}</div>
+        <div class="doc-cat" style="color:${CAT_COLORS[d.cat]||'#888'}">${d.cat} · ${d.date}</div>
+      </div>
+    </div>`).join('');
+}
+function viewDoc(i){
+  const d=docVault[i];
+  if(!d)return;
+  // 全螢幕預覽
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;';
+  overlay.innerHTML=`<div style="display:flex;width:100%;justify-content:space-between;align-items:center;margin-bottom:12px;color:#fff;">
+    <div><div style="font-size:15px;font-weight:700;">${d.name}</div><div style="font-size:12px;opacity:.6;">${d.cat}</div></div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="deleteDoc(${i});this.closest('[style*=fixed]').remove();" style="background:rgba(255,69,58,.3);border:none;color:#ff453a;padding:7px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;">刪除</button>
+      <button onclick="this.closest('[style*=fixed]').remove();" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:7px 14px;border-radius:8px;cursor:pointer;font-size:15px;">✕</button>
+    </div>
+  </div>
+  ${d.data.startsWith('data:image')?`<img src="${d.data}" style="max-width:100%;max-height:80vh;border-radius:12px;object-fit:contain;"/>`:
+    `<div style="color:#fff;font-size:14px;">PDF 文件：${d.name}</div>`}`;
+  document.body.appendChild(overlay);
+}
+function deleteDoc(i){docVault.splice(i,1);localStorage.setItem('vi_docs',JSON.stringify(docVault));renderDocs();}
+
+/* ════════════════ 4. SHOPPING & TAX ════════════════ */
+let luggageItems=JSON.parse(localStorage.getItem('vi_luggage')||'[]');
+
+function calcTax(){
+  const amt=parseFloat(document.getElementById('tax-amount').value);
+  const res=document.getElementById('tax-result');
+  if(!amt||amt<0){res.style.display='none';return;}
+  res.style.display='block';
+  const vat22=amt*0.22;
+  const refundLow=amt*0.11;const refundHigh=amt*0.15;
+  const eligible=amt>=155;
+  document.getElementById('tax-result-amt').textContent=eligible?
+    `€${refundLow.toFixed(2)} – €${refundHigh.toFixed(2)}`:'不符合退稅門檻';
+  document.getElementById('tax-result-sub').textContent=eligible?
+    `消費 €${amt.toFixed(2)}，含 VAT 22% (€${vat22.toFixed(2)})，退稅約 11–15%（扣手續費後）`:
+    `需在同一商店消費滿 €155 才可退稅（您差 €${(155-amt).toFixed(2)})`;
+  document.getElementById('tax-result-amt').style.color=eligible?'var(--blue)':'var(--red)';
+}
+
+function renderLuggage(){
+  const limit=parseFloat(document.getElementById('luggage-limit').value)||23;
+  const total=luggageItems.reduce((s,i)=>s+i.kg,0);
+  const pct=Math.min(100,(total/limit)*100);
+  const over=total>limit;
+  document.getElementById('luggage-total-display').textContent=`已用 ${total.toFixed(1)} kg / ${limit} kg`;
+  document.getElementById('luggage-total-display').style.color=over?'var(--red)':'var(--t1)';
+  document.getElementById('luggage-prog').style.width=pct.toFixed(0)+'%';
+  document.getElementById('luggage-prog').style.background=over?'var(--red)':'var(--green)';
+  document.getElementById('luggage-list').innerHTML=luggageItems.length===0?
+    '<div class="loading" style="color:var(--t3);">尚無物品</div>':
+    luggageItems.map((it,i)=>`<div class="luggage-item-row">
+      <span style="flex:1;font-size:14px;color:var(--t1);">${it.name}</span>
+      <span class="luggage-weight">${it.kg} kg</span>
+      <button onclick="delLuggage(${i})" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:17px;padding:0 4px;flex-shrink:0;">×</button>
+    </div>`).join('');
+}
+function addLuggageItem(){
+  const name=document.getElementById('luggage-item-name').value.trim();
+  const kg=parseFloat(document.getElementById('luggage-item-kg').value);
+  if(!name||!kg||kg<=0){toast('請填入物品名稱和重量');return;}
+  luggageItems.push({name,kg});
+  localStorage.setItem('vi_luggage',JSON.stringify(luggageItems));
+  document.getElementById('luggage-item-name').value='';document.getElementById('luggage-item-kg').value='';
+  renderLuggage();
+}
+function delLuggage(i){luggageItems.splice(i,1);localStorage.setItem('vi_luggage',JSON.stringify(luggageItems));renderLuggage();}
+
+/* ════════════════ 5. TRAVEL ASSISTANT ════════════════ */
+const CULTURE_TIPS=[
+  {icon:'⛪',color:'#ff3b30',title:'教堂著裝規定',text:'進入梵蒂岡、教堂等宗教場所，必須遮住肩膀和膝蓋。無袖、短褲、短裙、露刺青均不可入場，可帶一條薄圍巾備用。'},
+  {icon:'🍕',color:'#ff9500',title:'餐廳禮儀',text:'義大利人通常不會拿著食物邊走邊吃。坐下點餐後桌費（Coperto）約 €1–3 是正常的，不是敲詐。早餐通常站在吧台喝較便宜。'},
+  {icon:'💶',color:'#34c759',title:'小費文化',text:'義大利沒有強制給小費習慣。若服務很好，可以在桌上留硬幣，但不像美國那樣必須。高級餐廳留 5–10% 是禮貌。'},
+  {icon:'🚗',color:'#5ac8fa',title:'ZTL 禁車區',text:'城市中心的 ZTL（限制交通區）禁止外來車輛進入，違規會被攝影機拍下後郵寄罰單。租車時注意紅底白圈加「ZTL」字樣的路牌。'},
+  {icon:'🛍️',color:'#bf5af2',title:'市場扒手',text:'在龐貝 Circumvesuviana 火車、拿坡里 Ballaro 市場、羅馬熱門景點等人潮擁擠處，請把包包背在前面，不要把手機或錢包放後口袋。'},
+  {icon:'📸',color:'#0071e3',title:'拍照禁忌',text:'梵蒂岡西斯汀教堂禁止拍照（會被工作人員制止）。最後的晚餐也嚴格禁止拍照。部分博物館的特展區域也有拍照限制。'},
+  {icon:'🕐',color:'#ff9500',title:'餐廳時間',text:'義大利人午餐約 12:30–14:00，晚餐約 19:30–21:30。許多餐廳在這以外的時間不接待用餐客人（只提供飲料）。'},
+  {icon:'💧',color:'#34c759',title:'免費飲水台',text:'義大利城市有很多 Nasoni（公共飲水台），水質潔淨可以直接喝。出門記得帶環保水瓶，可以省下不少買水費用。'},
+];
+
+function renderCultureTips(){
+  document.getElementById('culture-tips').innerHTML=CULTURE_TIPS.map(t=>`
+    <div class="tip-card-adv">
+      <div style="display:flex;align-items:flex-start;gap:12px;">
+        <div class="tip-icon" style="background:${t.color}18;">${t.icon}</div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:5px;">${t.title}</div>
+          <div style="font-size:13px;color:var(--t2);line-height:1.65;">${t.text}</div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function showTransport(){
+  const dest=document.getElementById('transport-dest').value.trim();
+  if(!dest){toast('請輸入目的地');return;}
+  const enc=encodeURIComponent(dest);
+  document.getElementById('tr-walk').href=`https://www.google.com/maps/dir/?api=1&destination=${enc}&travelmode=walking`;
+  document.getElementById('tr-transit').href=`https://www.google.com/maps/dir/?api=1&destination=${enc}&travelmode=transit`;
+  document.getElementById('tr-uber').href=`https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[formatted_address]=${enc}`;
+  document.getElementById('transport-results').style.display='block';
+}
+
+/* ════════════════ 6. MEMORY ════════════════ */
+let memories=JSON.parse(localStorage.getItem('vi_mem')||'[]');
+let tempMemData=null;
+
+function addMemory(inp){
+  const f=inp.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=e=>{
+    tempMemData=e.target.result;
+    document.getElementById('mem-preview').src=tempMemData;
+    document.getElementById('mem-form').style.display='block';
+    document.getElementById('mem-title-inp').value='';
+    document.getElementById('mem-note-inp').value='';
+  };rd.readAsDataURL(f);
+}
+function saveMemory(){
+  const title=document.getElementById('mem-title-inp').value.trim()||'旅途回憶';
+  const note=document.getElementById('mem-note-inp').value.trim();
+  if(!tempMemData)return;
+  memories.unshift({id:Date.now(),title,note,data:tempMemData,
+    date:new Date().toLocaleDateString('zh-TW',{year:'numeric',month:'numeric',day:'numeric'})});
+  if(memories.length>50)memories=memories.slice(0,50);
+  try{localStorage.setItem('vi_mem',JSON.stringify(memories));}catch{toast('儲存空間不足');}
+  tempMemData=null;
+  document.getElementById('mem-form').style.display='none';
+  document.getElementById('mem-file').value='';
+  renderMemories();toast('回憶已儲存！');
+}
+function cancelMemory(){tempMemData=null;document.getElementById('mem-form').style.display='none';}
+function deleteMemory(id){
+  memories=memories.filter(m=>m.id!==id);
+  localStorage.setItem('vi_mem',JSON.stringify(memories));
+  renderMemories();
+}
+function renderMemories(){
+  document.getElementById('mem-list').innerHTML=memories.length===0?
+    `<div style="text-align:center;padding:40px 20px;">
+      <div style="font-size:48px;margin-bottom:12px;">📷</div>
+      <div style="font-size:14px;color:var(--t2);">點擊「新增」記錄旅途中的精彩瞬間</div>
+    </div>`:
+    memories.map(m=>`<div class="mem-item">
+      <img class="mem-photo" src="${m.data}" alt="${m.title}" onerror="this.style.display='none'"/>
+      <div style="flex:1;min-width:0;">
+        <div class="mem-title">${m.title}</div>
+        <div class="mem-date">${m.date}</div>
+        ${m.note?`<div class="mem-note">${m.note}</div>`:''}
+      </div>
+      <button class="mem-delete" onclick="deleteMemory(${m.id})">×</button>
+    </div>`).join('');
+}
+
+// 初始化時載入
+window.addEventListener('DOMContentLoaded',()=>{
+  renderCultureTips();
+},true);
+
 /* ════════════════ SERVICE WORKER ════════════════ */
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
     navigator.serviceWorker.register('./sw.js')
       .then(reg=>{
-        // 有新版本時提示用戶
         reg.addEventListener('updatefound',()=>{
           const nw=reg.installing;
           nw.addEventListener('statechange',()=>{
@@ -1944,7 +2726,7 @@ if('serviceWorker' in navigator){
           });
         });
       })
-      .catch(()=>{}); // 靜默失敗
+      .catch(()=>{});
   });
 }
 </script>
