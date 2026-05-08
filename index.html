@@ -1606,13 +1606,23 @@ function updHdr(){
 /* ════════════════ NAV ════════════════ */
 function goTab(t){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
-  document.querySelectorAll('.drawer-item').forEach(b=>b.classList.remove('on'));
-  document.getElementById('p-'+t).classList.add('on');
-  document.getElementById('nb-'+t).classList.add('on');
-  document.getElementById('di-'+t)?.classList.add('on');
+  document.querySelectorAll('.nb,.drawer-item').forEach(b=>b.classList.remove('on'));
+  const panel=document.getElementById('p-'+t);
+  if(panel){
+    panel.classList.add('on');
+    const nb=document.getElementById('nb-'+t);
+    if(nb)nb.classList.add('on');
+    const di=document.getElementById('di-'+t);
+    if(di)di.classList.add('on');
+  }
   S.tab=t;
   if(t==='map'&&!S.mapOk)initMap();
+  if(t==='packing')renderPacking();
+  if(t==='vote'){renderDuty();renderVoteState();}
+  if(t==='docs')renderDocs();
+  if(t==='shopping')renderLuggage();
+  if(t==='assist')renderCultureTips();
+  if(t==='memory')renderMemories();
 }
 
 /* ════════════════ ITINERARY ════════════════ */
@@ -2340,30 +2350,6 @@ function toast(m){
   const el=document.getElementById('toast');
   el.textContent=m;el.classList.add('on');
   clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('on'),2200);
-}
-
-/* ════════════════ NAV — 新增進階功能 Tab 支援 ════════════════ */
-const ADV_TABS=['packing','vote','docs','shopping','assist','memory'];
-const _origGoTab=goTab;
-function goTab(t){
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.nb,.drawer-item').forEach(b=>b.classList.remove('on'));
-  const panel=document.getElementById('p-'+t);
-  if(panel){
-    panel.classList.add('on');
-    const nb=document.getElementById('nb-'+t);
-    if(nb)nb.classList.add('on');
-    const di=document.getElementById('di-'+t);
-    if(di)di.classList.add('on');
-  }
-  S.tab=t;
-  if(t==='map'&&!S.mapOk)initMap();
-  if(t==='packing')renderPacking();
-  if(t==='vote'){renderDuty();renderVoteState();}
-  if(t==='docs')renderDocs();
-  if(t==='shopping')renderLuggage();
-  if(t==='assist')renderCultureTips();
-  if(t==='memory')renderMemories();
 }
 
 /* ════════════════ 1. PACKING LIST ════════════════ */
