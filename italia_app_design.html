@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Viaggio Italia — 2026 南義行程 App</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --green: #009246; --red: #CE2B37; --gold: #C9A84C;
+      --blue: #2C5F8A; --dark: #1A1A2E; --cream: #FDF6EC;
+      --soft: #F8F4EF; --card: #FFFFFF;
+      --text: #1A1A2E; --mid: #4A4A6A; --light: #8A8AAA;
+      --shadow: 0 6px 28px rgba(0,0,0,0.09);
+      --r: 18px;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',sans-serif; background:var(--soft); color:var(--text); }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(150deg,#1A1A2E 0%,#2C5F8A 45%,#009246 100%);
+      padding: 56px 32px 72px; text-align:center; position:relative; overflow:hidden;
+    }
+    .hero::before {
+      content:''; position:absolute; inset:0;
+      background:radial-gradient(ellipse at 70% 30%, rgba(201,168,76,0.15) 0%, transparent 60%);
+    }
+    .flag { display:flex; justify-content:center; gap:6px; margin-bottom:24px; }
+    .flag span { width:24px;height:24px;border-radius:50%; }
+    .hero h1 { font-family:'Playfair Display',serif; font-size:52px; font-weight:900; color:#fff; line-height:1.1; position:relative; }
+    .hero h1 em { color:var(--gold); font-style:italic; }
+    .hero .sub { color:rgba(255,255,255,0.7); font-size:15px; margin-top:12px; position:relative; }
+    .dates-badge { display:inline-flex; gap:10px; margin-top:18px; position:relative; }
+    .dates-badge span {
+      background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2);
+      color:#fff; font-size:12px; font-weight:600; padding:5px 14px;
+      border-radius:99px; letter-spacing:0.5px;
+    }
+
+    /* ── LAYOUT ── */
+    .wrap { max-width:1080px; margin:0 auto; padding:0 28px 80px; }
+
+    /* ── CITY BLOCK ── */
+    .city-block { margin-top:56px; }
+    .city-header {
+      display:flex; align-items:center; gap:16px;
+      background:var(--card); border-radius:var(--r);
+      padding:24px 28px; margin-bottom:20px;
+      box-shadow:var(--shadow);
+      border-left:5px solid var(--gold);
+    }
+    .city-emoji { font-size:40px; }
+    .city-info h2 { font-family:'Playfair Display',serif; font-size:26px; font-weight:700; }
+    .city-info p { font-size:13px; color:var(--mid); margin-top:4px; }
+    .city-dates {
+      margin-left:auto; text-align:right;
+      font-size:12px; font-weight:600; color:var(--gold);
+      background:#FDF3DC; padding:8px 14px; border-radius:10px;
+    }
+
+    /* ── DAY CARD ── */
+    .day-card {
+      background:var(--card); border-radius:var(--r);
+      box-shadow:var(--shadow); margin-bottom:16px;
+      overflow:hidden; border:1px solid rgba(0,0,0,0.05);
+    }
+    .day-header {
+      display:flex; align-items:center; gap:12px;
+      padding:16px 22px;
+      background:linear-gradient(90deg,var(--dark) 0%,#2a3a5c 100%);
+      color:#fff;
+    }
+    .day-num {
+      width:36px; height:36px; border-radius:50%;
+      background:var(--gold); color:var(--dark);
+      display:flex; align-items:center; justify-content:center;
+      font-weight:700; font-size:14px; flex-shrink:0;
+    }
+    .day-title { font-weight:600; font-size:15px; }
+    .day-date { font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px; }
+
+    /* ── SPOTS ── */
+    .spots { padding:16px 20px; display:flex; flex-direction:column; gap:12px; }
+    .spot {
+      border-radius:12px; padding:16px;
+      border:1px solid #EDEAE4;
+      background:#FAFAF8;
+    }
+    .spot-top { display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; }
+    .spot-icon { font-size:22px; flex-shrink:0; margin-top:1px; }
+    .spot-name { font-weight:700; font-size:15px; color:var(--text); }
+    .spot-time { font-size:11px; color:var(--light); margin-top:2px; font-weight:500; }
+
+    .notice-list { list-style:none; }
+    .notice-list li {
+      font-size:13px; color:var(--mid); line-height:1.6;
+      padding:4px 0 4px 20px; position:relative;
+    }
+    .notice-list li::before {
+      content:''; position:absolute; left:0; top:10px;
+      width:8px; height:8px; border-radius:50%;
+      background:var(--gold);
+    }
+    .notice-list li.warn::before { background:var(--red); }
+    .notice-list li.ok::before   { background:var(--green); }
+    .notice-list li.info::before { background:var(--blue); }
+
+    /* ── NEARBY ── */
+    .nearby-section { margin-top:12px; padding-top:12px; border-top:1px dashed #DDD8CF; }
+    .nearby-title { font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--blue); margin-bottom:8px; }
+    .nearby-chips { display:flex; flex-wrap:wrap; gap:6px; }
+    .chip {
+      font-size:11px; font-weight:600; padding:4px 10px;
+      border-radius:99px; border:1px solid;
+    }
+    .chip.food  { background:#FEF0E7; color:#B85A1A; border-color:#F5C8A0; }
+    .chip.cafe  { background:#FDF3DC; color:#9A7A2A; border-color:#E8D49A; }
+    .chip.shop  { background:#E3EDF7; color:#1E4E78; border-color:#AAC8E8; }
+    .chip.util  { background:#E8F7EE; color:#007A3D; border-color:#90D4A8; }
+    .chip.atm   { background:#F0EAF9; color:#5C3DAA; border-color:#C8A8E8; }
+    .chip.wc    { background:#E0F7F5; color:#1A9988; border-color:#90D8D0; }
+    .chip.hotel { background:#FDE8EA; color:#A0222C; border-color:#F0A0A8; }
+
+    /* ── COST TABLE ── */
+    .cost-section { margin-top:56px; }
+    .cost-table-wrap {
+      background:var(--card); border-radius:var(--r);
+      box-shadow:var(--shadow); overflow:hidden;
+    }
+    .cost-table-header {
+      background:linear-gradient(90deg,var(--dark),#2C5F8A);
+      color:#fff; padding:20px 28px;
+      font-family:'Playfair Display',serif; font-size:22px;
+    }
+    table { width:100%; border-collapse:collapse; }
+    thead tr { background:var(--soft); }
+    thead th { font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--mid); padding:12px 18px; text-align:left; }
+    tbody tr { border-bottom:1px solid #F0EDE8; transition:background 0.15s; }
+    tbody tr:last-child { border-bottom:none; }
+    tbody td { padding:12px 18px; font-size:13px; color:var(--mid); vertical-align:top; }
+    tbody td:first-child { font-weight:600; color:var(--text); }
+    .cat-badge {
+      display:inline-block; font-size:11px; font-weight:600;
+      padding:2px 8px; border-radius:99px;
+    }
+    .cat-flight { background:#E3EDF7; color:#1E4E78; }
+    .cat-train  { background:#E8F7EE; color:#007A3D; }
+    .cat-hotel  { background:#FDE8EA; color:#A0222C; }
+    .cat-car    { background:#FDF3DC; color:#9A7A2A; }
+    .cat-ticket { background:#F0EAF9; color:#5C3DAA; }
+    .cat-tour   { background:#FEF0E7; color:#B85A1A; }
+    .cat-bus    { background:#E0F7F5; color:#1A9988; }
+
+    .cost-summary {
+      display:flex; gap:16px; padding:20px 28px;
+      background:#FAFAF8; flex-wrap:wrap;
+      border-top:1px solid #EDE9E3;
+    }
+    .cost-kpi {
+      flex:1; min-width:140px; background:var(--card);
+      border-radius:12px; padding:16px;
+      border:1px solid #EDE9E3; text-align:center;
+    }
+    .cost-kpi .kv { font-family:'Playfair Display',serif; font-size:24px; font-weight:700; color:var(--dark); }
+    .cost-kpi .kl { font-size:11px; color:var(--light); margin-top:4px; text-transform:uppercase; letter-spacing:1px; }
+
+    /* ── FEATURES STRIP ── */
+    .features-strip {
+      display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+      gap:18px; margin-top:20px;
+    }
+    .feat {
+      background:var(--card); border-radius:var(--r);
+      padding:24px; box-shadow:var(--shadow);
+      position:relative; overflow:hidden;
+    }
+    .feat::before {
+      content:''; position:absolute; top:0;left:0;right:0;height:4px;
+    }
+    .feat.f1::before { background:var(--red); }
+    .feat.f2::before { background:var(--blue); }
+    .feat.f3::before { background:var(--gold); }
+    .feat.f4::before { background:#2ABFAA; }
+    .feat.f5::before { background:#7C5CBF; }
+    .feat.f6::before { background:#E07A3B; }
+    .feat-icon { font-size:32px; margin-bottom:12px; }
+    .feat h3 { font-family:'Playfair Display',serif; font-size:18px; margin-bottom:8px; }
+    .feat p { font-size:13px; color:var(--mid); line-height:1.7; }
+
+    /* ── SECTION LABEL ── */
+    .slabel { font-size:11px; font-weight:700; letter-spacing:2.5px; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
+    .stitle { font-family:'Playfair Display',serif; font-size:30px; font-weight:700; margin-bottom:24px; }
+    .stitle span { color:var(--blue); }
+
+    /* ── TIPS BANNER ── */
+    .tips-banner {
+      background:linear-gradient(135deg,#1A1A2E,#2C5F8A);
+      border-radius:var(--r); padding:32px; color:#fff; margin-top:56px;
+    }
+    .tips-banner h2 { font-family:'Playfair Display',serif; font-size:24px; margin-bottom:20px; color:var(--gold); }
+    .tips-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; }
+    .tip-item {
+      background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12);
+      border-radius:12px; padding:16px;
+    }
+    .tip-item .ti { font-size:24px; margin-bottom:8px; }
+    .tip-item p { font-size:13px; color:rgba(255,255,255,0.8); line-height:1.6; }
+    .tip-item strong { display:block; font-size:14px; color:#fff; margin-bottom:4px; }
+
+    footer { text-align:center; padding:40px 20px; color:var(--light); font-size:12px; border-top:1px solid #EDE9E3; }
+    footer strong { color:var(--gold); }
+  </style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="flag">
+    <span style="background:#009246"></span>
+    <span style="background:#fff;width:24px;height:24px;border-radius:50%;"></span>
+    <span style="background:#CE2B37"></span>
+  </div>
+  <h1>2026 南義<br/><em>行程 App</em></h1>
+  <p class="sub">Viaggio nell'Italia del Sud · 行程客製化規劃</p>
+  <div class="dates-badge">
+    <span>✈ 5/25 出發</span>
+    <span>🏛 羅馬 → 拿坡里 → 西西里 → 米蘭</span>
+    <span>🏠 6/10 返台</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ════════════════════════════════
+     SECTION 1: 行程注意事項
+════════════════════════════════ -->
+<div class="city-block">
+  <div style="margin-top:48px; margin-bottom:8px;" class="slabel">Itinerary Notes · 行程注意事項</div>
+  <div class="stitle">每日景點 <span>詳細提醒</span></div>
+
+  <!-- 羅馬 -->
+  <div class="city-header">
+    <div class="city-emoji">🏛️</div>
+    <div class="city-info">
+      <h2>羅馬 ＆ 梵蒂岡</h2>
+      <p>Roma & Vaticano · 住宿：Termini Station - Bright Flat</p>
+    </div>
+    <div class="city-dates">5/26 – 5/29</div>
+  </div>
+
+  <!-- Day 1 -->
+  <div class="day-card">
+    <div class="day-header">
+      <div class="day-num">D1</div>
+      <div>
+        <div class="day-title">✈ 抵達米蘭 → 轉乘羅馬 → 下午散策</div>
+        <div class="day-date">2026 / 5 / 26（二）</div>
+      </div>
+    </div>
+    <div class="spots">
+
+      <div class="spot">
+        <div class="spot-top"><div class="spot-icon">✈️</div><div><div class="spot-name">EVA BR095 抵達 MXP T1 → 轉地鐵 → 搭 Italo 9979 至羅馬</div><div class="spot-time">07:35 抵達 · Coach 2, Seat 17/18/20/21 · Ticket: H9KUGI</div></div></div>
+        <ul class="notice-list">
+          <li class="info">Italo 抵達 Roma Termini 約 14:30，Coach 3 Seat 5A/5B/6A/6B（Business）</li>
+          <li class="warn">米蘭機場地鐵 → 中央車站 → 轉 Italo：預留至少 1.5 小時轉乘緩衝</li>
+          <li class="ok">Italo 為高速列車，有行李架，商務車廂較寬敞</li>
+        </ul>
+        <div class="nearby-section">
+          <div class="nearby-title">📍 Termini 車站周邊</div>
+          <div class="nearby-chips">
+            <span class="chip util">🛒 Supermercato Conad（站內）</span>
+            <span class="chip atm">🏧 BNL ATM（站內）</span>
+            <span class="chip food">🍕 Pizzarium（步行 10 分）</span>
+            <span class="chip wc">🚻 付費廁所（月台區）</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="spot">
+        <div class="spot-top"><div class="spot-icon">⛲</div><div><div class="spot-name">萬神殿 Pantheon</div><div class="spot-time">下午 4:00 · Via dei Pastini 120</div></div></div>
+        <ul class="notice-list">
+          <li class="info">門票 5 歐，可現場決定是否購票進入</li>
+          <li class="warn">禁止穿無袖、短褲、短裙，露刺青需遮蓋</li>
+          <li class="ok">外觀免費欣賞，內部約 30 分鐘可逛完</li>
+          <li class="info">傍晚人潮較下午少，光線也更美</li>
+        </ul>
+        <div class="nearby-section">
+          <div class="nearby-title">📍 萬神殿周邊</div>
+          <div class="nearby-chips">
+            <span class="chip cafe">☕ Sant'Eustachio il Caffè（最佳咖啡）</span>
+            <span class="chip food">🍝 Achille Al Pantheon（已訂位）</span>
+            <span class="chip shop">🛍️ 周邊伴手禮店</span>
+            <span class="chip atm">🏧 ATM（廣場附近）</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="spot">
+        <div class="spot-top"><div class="spot-icon">💦</div><div><div class="spot-name">特雷維噴泉 Fontana di Trevi</div><div class="spot-time">傍晚 ~ 晚間</div></div></div>
+        <ul class="notice-list">
+          <li class="ok">22:00 以後入場免費（白天需 2 歐）</li>
+          <li class="warn">隨身包包請注意扒手，廣場人潮多</li>
+          <li class="info">丟硬幣：右手拿硬幣繞過左肩拋入，代表下次再來羅馬</li>
+          <li class="info">早晨 7:00 前人最少、最好拍照</li>
+        </ul>
+      </div>
+
+      <div class="spot">
+        <div class="spot-top"><div class="spot-icon">🎨</div><div><div class="spot-name">納沃納廣場 Piazza Navona</div><div class="spot-time">散步順訪</div></div></div>
+        <ul class="notice-list">
+          <li class="ok">全天免費開放，廣場藝術家表演可欣賞</li>
+          <li class="info">廣場周邊有許多露天餐廳，但價格偏高（觀光客區）</li>
+          <li class="warn">注意套路：「有人搭話送你東西」多為索費陷阱</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Day 2 -->
+  <div class="day-card">
+    <div class="day-header">
+      <div class="day-num">D2</div>
+      <div>
+        <div class="day-title">🕊️ 聖天使廣場 → 梵蒂岡博物館 → 西班牙廣場</div>
+        <div class="day-date">2026 / 5 / 27（三）</div>
+      </div>
+    </div>
+    <div class="spots">
+
+      <div class="spot">
+        <div class="spot-top"><div class="spot-icon">🏰</div><div><div class="spot-name">聖天使廣場 Castel Sant'Angelo</div><div class="spot-time">09:00 · 附近吃早餐</div></div></div>
+        <ul class="notice-list">
+          <li class="info">城堡可購票進入（約 16 歐），或在廣場欣賞外觀、拍照免費</li>
+          <li class="ok">早晨人少，光線好，適合拍橋上天使雕像</li>
+          <li class="info">附近的 Prati 區是羅馬人常去的美食街，早餐選擇豐富</li>
+        </ul>
+        <div class="nearby-section">
+          <div class="nearby-title">📍 Prati 區早餐選擇</div>
+          <div class="nearby-chips">
+            <span class="chip cafe">☕ Sciascia Caffè（羅馬最老咖啡館之一）</span>
+            <span class="chip food">🥐 Bar Gelateria Il Sorpasso</span>
+            <span class="chip util">🛒 Conad Superstore（補給品）</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="spot">
+        <div class="spot-top"><div class="spot-icon">🎭</div><div><div class="spot-name">梵蒂岡博物館 ＋ 西斯汀教堂</div><div class="spot-time">12:30 · Codice: 2L2NFKSC0000001YS</div></div></div>
+        <ul class="notice-list">
+          <li class="warn">⚠️ 禁止穿無袖上衣、短褲、短裙、露刺青（需遮蓋，否則入場被拒）</li>
+          <li class="warn">⚠️ 提前 15～30 分鐘抵達排隊安檢</li>
+          <li class="ok">每人有中文語音導覽（已包含）</li>
+          <li class="info">西斯汀教堂內禁止拍照、禁止說話（保持肅靜）</li>
+          <li class="info">整體參觀約 3～4 小時，穿舒適的鞋！</li>
+          <li class="info">入口：Viale Vaticano，可從地鐵 A 線 Ottaviano 站步行約 10 分</li>
+        </ul>
+      </div>
+
+      <div class="spot">
+        <div class="spot-top"><div class="spot-icon">🪜</div><div><div class="spot-name">西班牙廣場 ＆ 階梯 Piazza di Spagna</div><div class="spot-time">下午 4:00</div></div></div>
+        <ul class="notice-list">
+          <li class="ok">免費，隨時可逛，傍晚夕陽拍照最美</li>
+          <li class="warn">不可在階梯上坐著飲食，違者罰款 250 歐起</li>
+          <li class="info">階梯旁 Via Condotti 為精品街（Gucci、Valentino 等）</li>
+          <li class="info">地鐵 A 線 Spagna 站，出站即到達</li>
+        </ul>
+        <div class="nearby-section">
+          <div class="nearby-title">📍 西班牙廣場周邊</div>
+          <div class="nearby-chips">
+            <span class="chip shop">🛍️ Via Condotti 精品街</span>
+            <span class="chip cafe">☕ Antico Caffè Greco（1760年老咖啡館）</span>
+            <span class="chip food">🍦 Giolitti 冰淇淋</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Day 3 -->
+  <div class="day-card">
+    <div class="day-header">
+      <div class="day-num">D3</div>
+      <div>
+        <div class="day-title">⛪ 聖彼德大教堂登頂 → 羅馬競技場</div>
+        <div class="day-date">2026 / 5 / 28（四）</div>
+      </div>
+    </div>
+    <div class="spots">
+
+      <div class="spot">
+        <div class="spot-top"><div class="spot-icon">⛪</div><div><div class="spot-name">聖彼德大教堂 ＋ 圓頂登頂</div><div class="spot-time">09:00 進教堂 · 10:00 圓頂電梯（含電梯票）</div></div></div>
+        <ul class="notice-list">
+          <li class="warn">⚠️ 至少提前 30 分鐘抵達聖伯多祿廣場（QR Code 核驗 + 安檢排隊）</li>
+          <li class="warn">⚠️ 禁止穿無袖上衣、短褲、短裙、露刺青</li>
+          <li class="info">圓頂入口（電梯）與教堂入口不同，注意指標</li>
+          <li class="ok">圓頂頂端可俯瞰整個梵蒂岡與羅馬，超值！</li>
+          <li class="info">參觀完圓頂後再進入教堂內部欣賞聖伯多祿墓、貝尼尼祭壇等</li>
+        </ul>
+      </div>
+
+      <div class="spot">
+        <div class="spot-top"><div class="spot-icon">🏟️</div><div><div class="spot-name">羅馬競技場 Colosseo（全體驗套票・含頂層）</div><div class="spot-time">13:50 入場（先參觀頂層） · 需現場購票</div></div></div>
+        <ul class="notice-list">
+          <li class="warn">⚠️ 需提前入場時間 15 分鐘前報到（先參觀頂層）</li>
+          <li class="warn">⚠️ 盡快到達電梯入口，頂層名額有限</li>
+          <li class="warn">⚠️ 參觀路線單一方向，不可回頭</li>
+          <li class="info">全體驗套票含：競技場、地下室、頂層 + 古羅馬廣場 + 帕拉提諾丘</li>
+          <li class="ok">套票當天有效，可先逛完競技場再去廣場</li>
+        </ul>
+        <div class="nearby-section">
+          <div class="nearby-title">📍 競技場周邊</div>
+          <div class="nearby-chips">
+            <span class="chip food">🍝 Aroma Restaurant（競技場景觀餐廳）</span>
+            <span class="chip util">🚻 公廁（競技場旁）</span>
+            <span class="chip shop">🛍️ 官方紀念品店</span>
+            <span class="chip util">💊 Farmacia（競技場地鐵站附近）</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 拿坡里 -->
+<div class="city-block">
+  <div class="city-header">
+    <div class="city-emoji">🌋</div>
+    <div class="city-info">
+      <h2>拿坡里 ＆ 周邊</h2>
+      <p>Napoli, Pompei, Capri, Amalfi · 住宿：NaLusa rooms - Toledo</p>
+    </div>
+    <div class="city-dates">5/29 – 6/1</div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-header">
+      <div class="day-num">D4</div>
+      <div>
+        <div class="day-title">🚄 Roma → Napoli → 龐貝古城</div>
+        <div class="day-date">2026 / 5 / 29（五）</div>
+      </div>
+    </div>
+    <div class="spots">
+
+      <div class="spot">
+        <div class="spot-top"><div class="spot-icon">🚄</div><div><div class="spot-name">Frecciarossa 9603 羅馬 → 拿坡里</div><div class="spot-time">09:25 發車 · 10:33 抵達 · PNR: HWTWQ5 · Coach 3 Seat 5A/5B/6A/6B</div></div></div>
+        <ul class="notice-list">
+          <li class="ok">Business 商務艙，附早餐/點心服務</li>
+          <li class="info">抵達 Napoli Centrale 後搭計程車（Uber / Freenow）前往住宿</li>
+          <li class="warn">托雷多區街道狹窄，計程車可能無法到門口，下車走短距離</li>
+        </ul>
+      </div>
+
+      <div class="spot">
+        <div class="spot-top"><div class="spot-icon">🏺</div><div><div class="spot-name">龐貝古城 Pompei</div><div class="spot-time">下午 · Campania ArteCard 適用（3日券 EUR 41）</div></div></div>
+        <ul class="notice-list">
+          <li class="ok">Campania ArteCard 可免費進入龐貝，建議 App 購買三日券（72小時）</li>
+          <li class="info">在 Napoli Centrale 地下室搭 Circumvesuviana 私鐵，往 Pompei Villa / Sorrento 方向，約 35 分鐘</li>
+          <li class="warn">Circumvesuviana 扒手多，隨身財物要特別注意</li>
+          <li class="info">龐貝古城廣大，建議穿輕便運動鞋，攜帶水和防曬</li>
+          <li class="ok">下午 3 點後入場人潮較少，且票價可能有折扣</li>
+        </ul>
+        <div class="nearby-section">
+          <div class="nearby-title">📍 龐貝站周邊</div>
+          <div class="nearby-chips">
+            <span class="chip food">🍕 Ristorante President（米其林）</span>
+            <span class="chip util">🛒 小型超市（車站附近）</span>
+            <span class="chip cafe">☕ Bar 咖啡（義式 espresso）</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-header">
+      <div class="day-num">D5</div>
+      <div>
+        <div class="day-title">🚤 卡布里島 ＋ 藍洞（需當天確認開放）</div>
+        <div class="day-date">2026 / 5 / 30（六）</div>
+      </div>
+    </div>
+    <div class="spots">
+      <div class="spot">
+        <div class="spot-top"><div class="spot-icon">🔵</div><div><div class="spot-name">卡布里島 ＋ 藍洞 Grotta Azzurra</div><div class="spot-time">全天 · 參考 GetYourGuide 船遊行程</div></div></div>
+        <ul class="notice-list">
+          <li class="warn">⚠️ 藍洞受天氣/海浪影響，當天早上務必確認是否開放（確認方法：藍洞粉絲頁 FB）</li>
+          <li class="info">從 Napoli 搭船至 Capri 約 50 分鐘（Hydrofoil 快船），建議提早訂票</li>
+          <li class="info">進藍洞需換小艇，需躺下進入（高度不足 1 公尺）</li>
+          <li class="ok">藍洞最佳時間：上午 11:00–13:00（太陽角度最佳，光線最藍）</li>
+          <li class="warn">藍洞洞口需自費：小艇費約 18 歐/人 + 進場費 3 歐/人（另計）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-header">
+      <div class="day-num">D6</div>
+      <div>
+        <div class="day-title">🌊 索倫多 → 阿瑪菲 → 波西塔諾</div>
+        <div class="day-date">2026 / 5 / 31（日）</div>
+      </div>
+    </div>
+    <div class="spots">
+      <div class="spot">
+        <div class="spot-top"><div class="spot-icon">🏘️</div><div><div class="spot-name">阿瑪菲海岸一日團（Worldtours 提供）</div><div class="spot-time">參團 · NTD 1,838 · 最晚取消：5/30 前</div></div></div>
+        <ul class="notice-list">
+          <li class="warn">⚠️ 最晚取消時間：5/30（前一日）出發前確認取消政策</li>
+          <li class="info">出發前可用 Freenow 確認計程車價格是否更優惠</li>
+          <li class="ok">阿瑪菲海岸道路狹窄，跟團最省事，不用擔心開車/停車</li>
+          <li class="info">波西塔諾最佳拍照點：山坡上俯瞰海灣 + Santa Maria Assunta 教堂</li>
+          <li class="warn">阿瑪菲海岸 5–6 月為旺季，人多且熱，帶足水和防曬</li>
+        </ul>
+        <div class="nearby-section">
+          <div class="nearby-title">📍 阿瑪菲 ＆ 波西塔諾周邊</div>
+          <div class="nearby-chips">
+            <span class="chip food">🍋 Limoncello 酒（當地特產必買）</span>
+            <span class="chip cafe">☕ 海邊露天咖啡</span>
+            <span class="chip shop">🛍️ 陶瓷伴手禮（沿途商店）</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 西西里 -->
+<div class="city-block">
+  <div class="city-header">
+    <div class="city-emoji">🌞</div>
+    <div class="city-info">
+      <h2>西西里島</h2>
+      <p>Sicilia · 切法盧 Cefalù 為基地 · 租車自駕</p>
+    </div>
+    <div class="city-dates">6/1 – 6/5</div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-header">
+      <div class="day-num">D7</div>
+      <div>
+        <div class="day-title">✈ 抵達巴勒莫 → 切法盧 Check in → 取車</div>
+        <div class="day-date">2026 / 6 / 1（一）</div>
+      </div>
+    </div>
+    <div class="spots">
+      <div class="spot">
+        <div class="spot-top"><div class="spot-icon">🚗</div><div><div class="spot-name">Europcar 取車 · Cefalù</div><div class="spot-time">11:30 · 預定號碼：1199884873 · Via Maestro Pintorno 11</div></div></div>
+        <ul class="notice-list">
+          <li class="info">租車方案：Comfort+ · NT$18,216.70 · 還車：6/5 11:30am</li>
+          <li class="warn">⚠️ 西西里道路多為雙線道山路，部分路段狹窄，需謹慎駕駛</li>
+          <li class="ok">取車時確認有無已有刮痕，拍照存證再出發</li>
+          <li class="info">義大利加油站部分無人值守（自助加油），建議攜帶現金</li>
+          <li class="warn">ZTL（禁止進入區域）路標注意！違規停車罰款高昂</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-header">
+      <div class="day-num">D8</div>
+      <div>
+        <div class="day-title">🏛️ 阿格里真托 Valle dei Templi</div>
+        <div class="day-date">2026 / 6 / 2（二）</div>
+      </div>
+    </div>
+    <div class="spots">
+      <div class="spot">
+        <div class="spot-top"><div class="spot-icon">🏛️</div><div><div class="spot-name">神廟谷 Valle dei Templi</div><div class="spot-time">全天 · 自駕前往（約 2 小時）</div></div></div>
+        <ul class="notice-list">
+          <li class="info">距切法盧約 2 小時車程，建議 8:00 出發避開午後高溫</li>
+          <li class="warn">夏季中午氣溫可達 35°C+，帶足水、帽子、防曬</li>
+          <li class="ok">UNESCO 世界遺產，保存最完整的古希臘神廟群之一</li>
+          <li class="info">門票約 10–15 歐，建議網路預購避免排隊</li>
+          <li class="info">神廟谷面積廣大，整個參觀需 3–4 小時</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-header">
+      <div class="day-num">D9</div>
+      <div>
+        <div class="day-title">🌋 陶爾米納 ＋ 埃特納火山 (卡塔尼亞)</div>
+        <div class="day-date">2026 / 6 / 3（三）</div>
+      </div>
+    </div>
+    <div class="spots">
+      <div class="spot">
+        <div class="spot-top"><div class="spot-icon">🏟️</div><div><div class="spot-name">陶爾米納 Taormina</div></div></div>
+        <ul class="notice-list">
+          <li class="ok">希臘劇場（Teatro Greco）俯瞰埃特納火山與海岸線，絕美</li>
+          <li class="info">主街 Corso Umberto 全天逛街，精品店與當地特色小店林立</li>
+          <li class="warn">陶爾米納停車難，建議在城外停車場停車後步行上城</li>
+        </ul>
+      </div>
+      <div class="spot">
+        <div class="spot-top"><div class="spot-icon">🌋</div><div><div class="spot-name">埃特納火山 Etna</div></div></div>
+        <ul class="notice-list">
+          <li class="info">可搭纜車（Funivia dell'Etna）上山，再步行或搭 4WD 吉普車至高處</li>
+          <li class="warn">⚠️ 山頂氣溫低（即使夏天也可能 15°C 以下），帶外套</li>
+          <li class="ok">可購買當地火山土特產：火山鹽、開心果製品</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-header">
+      <div class="day-num">D10</div>
+      <div>
+        <div class="day-title">🏙️ 巴勒莫 Palermo</div>
+        <div class="day-date">2026 / 6 / 4（四）</div>
+      </div>
+    </div>
+    <div class="spots">
+      <div class="spot">
+        <div class="spot-top"><div class="spot-icon">🕌</div><div><div class="spot-name">巴勒莫市區探索</div></div></div>
+        <ul class="notice-list">
+          <li class="ok">必訪：巴勒莫大教堂、諾曼宮、Ballaro 市場、Quattro Canti</li>
+          <li class="info">Ballaro 市場：每天上午，賣海鮮、蔬果、街食，是西西里最熱鬧的市集</li>
+          <li class="warn">市場區人潮複雜，注意隨身財物</li>
+          <li class="ok">必吃：Arancina（炸飯糰）、Cannoli（脆皮甜筒起士餡）</li>
+          <li class="info">明日早 12:00 需退房，11:30 前安排機場接送</li>
+        </ul>
+        <div class="nearby-section">
+          <div class="nearby-title">📍 巴勒莫必吃</div>
+          <div class="nearby-chips">
+            <span class="chip food">🍊 Arancina（炸飯糰）</span>
+            <span class="chip food">🧁 Cannoli（脆皮起士捲）</span>
+            <span class="chip food">🦑 烤海鮮（Ballaro 市場）</span>
+            <span class="chip cafe">☕ Caffè del Viale</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 米蘭 -->
+<div class="city-block">
+  <div class="city-header">
+    <div class="city-emoji">🏙️</div>
+    <div class="city-info">
+      <h2>米蘭 ＋ 威尼斯一日</h2>
+      <p>Milano & Venezia · 住宿：Luxury Apartment Porta Venezia</p>
+    </div>
+    <div class="city-dates">6/5 – 6/9</div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-header">
+      <div class="day-num">D12</div>
+      <div>
+        <div class="day-title">🍽️ 最後的晚餐 → 米蘭大教堂登頂</div>
+        <div class="day-date">2026 / 6 / 6（六）</div>
+      </div>
+    </div>
+    <div class="spots">
+
+      <div class="spot">
+        <div class="spot-top"><div class="spot-icon">🖼️</div><div><div class="spot-name">最後的晚餐 Cenacolo Vinciano</div><div class="spot-time">11:45 · 需提前 30 分鐘到售票處出示證件</div></div></div>
+        <ul class="notice-list">
+          <li class="warn">⚠️ 提前 30 分鐘到票務窗口，出示護照（不可用電子票，需現場核驗）</li>
+          <li class="info">每場僅限 30 人，參觀時間 15 分鐘，請把握！</li>
+          <li class="ok">作品在 Santa Maria delle Grazie 教堂側廳，教堂本身也很美</li>
+          <li class="warn">絕對禁止拍照（被抓到直接請出）</li>
+        </ul>
+      </div>
+
+      <div class="spot">
+        <div class="spot-top"><div class="spot-icon">⛪</div><div><div class="spot-name">米蘭大教堂 Duomo 登頂（電梯）</div><div class="spot-time">下午 3:00 · 最後入場 18:00</div></div></div>
+        <ul class="notice-list">
+          <li class="info">電梯直達屋頂露台，可近距離欣賞哥德式尖塔群，俯瞰米蘭市區</li>
+          <li class="ok">建議先登頂後再參觀教堂內部（節省時間）</li>
+          <li class="info">教堂正面廣場（Piazza del Duomo）為米蘭最熱鬧區域</li>
+          <li class="warn">廣場附近鴿子餵食陷阱：有人把鴿子放你手上再索取高額費用，拒絕即可</li>
+        </ul>
+        <div class="nearby-section">
+          <div class="nearby-title">📍 Duomo 廣場周邊</div>
+          <div class="nearby-chips">
+            <span class="chip shop">🛍️ Galleria Vittorio Emanuele II（精品拱廊）</span>
+            <span class="chip food">🍽️ Luini 炸薄餅（排隊名店）</span>
+            <span class="chip cafe">☕ Caffè Zucca（1867年老咖啡館）</span>
+            <span class="chip atm">🏧 多家 ATM</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-header">
+      <div class="day-num">D13</div>
+      <div>
+        <div class="day-title">🚤 威尼斯一日遊</div>
+        <div class="day-date">2026 / 6 / 7（日）</div>
+      </div>
+    </div>
+    <div class="spots">
+      <div class="spot">
+        <div class="spot-top"><div class="spot-icon">🚢</div><div><div class="spot-name">Italo 8973 → Venezia ＋ Frecciarossa 9754 回</div><div class="spot-time">去：07:35 Coach 4 Seat 27/28/29/30 · 回：18:18 Coach 4 Seat 7A/7B/7C/7D · PNR: MHV84N</div></div></div>
+        <ul class="notice-list">
+          <li class="warn">⚠️ 入城稅 5 歐/人：抵達前 4 天以前線上繳費 cda.ve.it/en/（6/3 前）</li>
+          <li class="info">威尼斯 Santa Lucia 車站出來即可購 Vaporetto（水上巴士）日票</li>
+          <li class="ok">必訪：聖馬可廣場、嘆息橋、里阿托橋、布拉諾彩色島</li>
+          <li class="warn">聖馬可廣場常有積水（Acqua Alta），建議穿防水鞋或攜帶雨靴</li>
+          <li class="info">回程 18:18，建議 17:00 前就往車站方向移動</li>
+        </ul>
+        <div class="nearby-section">
+          <div class="nearby-title">📍 威尼斯必訪 ＆ 必吃</div>
+          <div class="nearby-chips">
+            <span class="chip food">🦞 海鮮燉飯 Risotto al Nero</span>
+            <span class="chip food">🥃 Bacari 小酒館 Cicchetti 小食</span>
+            <span class="chip shop">🎭 Murano 玻璃製品</span>
+            <span class="chip cafe">☕ Caffè Florian（威尼斯最老咖啡館）</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════
+     SECTION 2: 花費總覽
+════════════════════════════════ -->
+<div class="cost-section" style="margin-top:56px;">
+  <div class="slabel">Budget · 行程花費</div>
+  <div class="stitle">已確認費用 <span>總覽</span></div>
+
+  <div class="cost-table-wrap">
+    <div class="cost-table-header">💶 行程確認費用明細</div>
+    <table>
+      <thead>
+        <tr>
+          <th>項目</th>
+          <th>類別</th>
+          <th>幣別 / 金額</th>
+          <th>備註</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>EVA BR095 TPE → MXP</td><td><span class="cat-badge cat-flight">✈ 機票</span></td><td>已含</td><td>Coach 2, Seat 17/18/20/21 (Business)</td></tr>
+        <tr><td>Italo 9979 米蘭 → 羅馬</td><td><span class="cat-badge cat-train">🚄 火車</span></td><td>已含</td><td>Business · 抵達 14:30</td></tr>
+        <tr><td>羅馬住宿 Termini Flat (3晚)</td><td><span class="cat-badge cat-hotel">🏨 住宿</span></td><td>AirBnb</td><td>Check in 15:00 · 含 WiFi+AC</td></tr>
+        <tr><td>梵蒂岡博物館門票</td><td><span class="cat-badge cat-ticket">🎟 門票</span></td><td>已含</td><td>含中文語音導覽</td></tr>
+        <tr><td>萬神殿</td><td><span class="cat-badge cat-ticket">🎟 門票</span></td><td>EUR 5/人</td><td>可現場決定是否入內</td></tr>
+        <tr><td>特雷維噴泉 (22:00後)</td><td><span class="cat-badge cat-ticket">🎟 門票</span></td><td>免費 / EUR 2</td><td>22:00 後免費</td></tr>
+        <tr><td>羅馬競技場全體驗套票</td><td><span class="cat-badge cat-ticket">🎟 門票</span></td><td>需現場購票</td><td>含頂層+廣場+帕拉提諾</td></tr>
+        <tr><td>Frecciarossa 9603 羅馬→拿坡里</td><td><span class="cat-badge cat-train">🚄 火車</span></td><td>已含</td><td>Coach 3 Business</td></tr>
+        <tr><td>拿坡里住宿 NaLusa (3晚)</td><td><span class="cat-badge cat-hotel">🏨 住宿</span></td><td>Booking.com</td><td>Check in 14:00 · Toledo 地鐵 4 分鐘</td></tr>
+        <tr><td>Campania ArteCard (3日券)</td><td><span class="cat-badge cat-ticket">🎟 門票</span></td><td>EUR 41/人</td><td>涵蓋龐貝、那不勒斯博物館等</td></tr>
+        <tr><td>阿瑪菲海岸一日團</td><td><span class="cat-badge cat-tour">🚌 行程</span></td><td>NTD 1,838/人</td><td>Worldtours · 取消期限 5/30</td></tr>
+        <tr><td>EasyJet EJU4101 NAP → PMO</td><td><span class="cat-badge cat-flight">✈ 機票</span></td><td>已含</td><td>Booking Code: KC1TM56</td></tr>
+        <tr><td>西西里住宿 Terrazza Incanto</td><td><span class="cat-badge cat-hotel">🏨 住宿</span></td><td>Booking.com</td><td>Check in 11:00 · 切法盧</td></tr>
+        <tr><td>Europcar 租車 (5天)</td><td><span class="cat-badge cat-car">🚗 租車</span></td><td>NT$ 18,216</td><td>Comfort+ · 含保險 · 還車 6/5 11:30</td></tr>
+        <tr><td>EasyJet EJU3506 PMO → MXP</td><td><span class="cat-badge cat-flight">✈ 機票</span></td><td>已含</td><td>Booking Code: KC1MM5K</td></tr>
+        <tr><td>Terravision MXP T2 → 米蘭中央站</td><td><span class="cat-badge cat-bus">🚌 巴士</span></td><td>Klook</td><td>約 18:20 / 18:50 班次</td></tr>
+        <tr><td>米蘭住宿 Porta Venezia (4晚)</td><td><span class="cat-badge cat-hotel">🏨 住宿</span></td><td>AirBnb</td><td>Check in 14:00 · Via Antonio Stoppani 2</td></tr>
+        <tr><td>最後的晚餐門票</td><td><span class="cat-badge cat-ticket">🎟 門票</span></td><td>已含</td><td>需提前 30 分鐘到場 + 護照</td></tr>
+        <tr><td>米蘭大教堂登頂（電梯）</td><td><span class="cat-badge cat-ticket">🎟 門票</span></td><td>已含</td><td>最後入場 18:00</td></tr>
+        <tr><td>Italo 8973 米蘭 → 威尼斯</td><td><span class="cat-badge cat-train">🚄 火車</span></td><td>Ticket: LD2JNP</td><td>Coach 4 Seat 27/28/29/30</td></tr>
+        <tr><td>威尼斯入城稅</td><td><span class="cat-badge cat-ticket">🎟 門票</span></td><td>EUR 5/人</td><td>⚠️ 需 6/3 前線上繳費</td></tr>
+        <tr><td>Frecciarossa 9754 威尼斯 → 米蘭</td><td><span class="cat-badge cat-train">🚄 火車</span></td><td>PNR: MHV84N</td><td>18:18 發 · 20:45 抵</td></tr>
+        <tr><td>Terravision 米蘭中央站 → MXP T1</td><td><span class="cat-badge cat-bus">🚌 巴士</span></td><td>Klook</td><td>06:30am · 約 1 小時</td></tr>
+        <tr><td>EVA BR095 MXP → TPE</td><td><span class="cat-badge cat-flight">✈ 機票</span></td><td>已含</td><td>抵台 6/10 06:05am</td></tr>
+        <tr><td>卡布里藍洞小艇費</td><td><span class="cat-badge cat-tour">🚌 行程</span></td><td>約 EUR 21/人</td><td>18 歐小艇 + 3 歐進場費</td></tr>
+        <tr><td>神廟谷 Valle dei Templi</td><td><span class="cat-badge cat-ticket">🎟 門票</span></td><td>EUR 10–15/人</td><td>建議網路預購</td></tr>
+      </tbody>
+    </table>
+    <div class="cost-summary">
+      <div class="cost-kpi"><div class="kv">16 天</div><div class="kl">旅行天數</div></div>
+      <div class="cost-kpi"><div class="kv">4 城市</div><div class="kl">羅馬・拿坡里・西西里・米蘭</div></div>
+      <div class="cost-kpi"><div class="kv">EUR ~70+</div><div class="kl">現金門票預估/人</div></div>
+      <div class="cost-kpi"><div class="kv">NT$ ~20K</div><div class="kl">租車費用</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SECTION 3: App 功能對應
+════════════════════════════════ -->
+<div style="margin-top:56px;">
+  <div class="slabel">App Features · 功能模組</div>
+  <div class="stitle">App 功能 <span>對應行程需求</span></div>
+  <div class="features-strip">
+
+    <div class="feat f1">
+      <div class="feat-icon">🗓️</div>
+      <h3>行程注意事項</h3>
+      <p>依你的行程預載每個景點的禮俗、穿著規定、預約資訊、到場時間建議。梵蒂岡、競技場、最後的晚餐全部已整合注意事項。</p>
+    </div>
+
+    <div class="feat f2">
+      <div class="feat-icon">📍</div>
+      <h3>景點周邊標的</h3>
+      <p>當前景點半徑 1km 內餐廳、咖啡館、ATM、藥局、廁所即時顯示。從 Termini 車站到切法盧，周邊資訊一鍵查詢。</p>
+    </div>
+
+    <div class="feat f3">
+      <div class="feat-icon">📷</div>
+      <h3>相機翻譯</h3>
+      <p>掃描義大利文菜單、路標、告示牌即時翻譯。在 Ballaro 市場買食材、在拿坡里看菜單都用得到！</p>
+    </div>
+
+    <div class="feat f4">
+      <div class="feat-icon">💬</div>
+      <h3>旅遊義文 ＆ 英文</h3>
+      <p>分情境收錄：訂位確認（The Fork 時用到）、租車交接、問路、緊急求助。三語對照 + 語音朗讀。</p>
+    </div>
+
+    <div class="feat f5">
+      <div class="feat-icon">🗺️</div>
+      <h3>即時地圖 ＆ 離線</h3>
+      <p>西西里自駕時離線地圖最關鍵！預下載羅馬、拿坡里、西西里、米蘭、威尼斯五個地區地圖，行程路線一覽。</p>
+    </div>
+
+    <div class="feat f6">
+      <div class="feat-icon">💶</div>
+      <h3>花費記帳</h3>
+      <p>歐元為主幣，自動換算台幣。預設本次行程類別：交通/住宿/餐飲/門票/購物，圓餅圖追蹤每日花費比例。</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- TIPS BANNER -->
+<div class="tips-banner">
+  <h2>✦ 南義旅行重要提醒</h2>
+  <div class="tips-grid">
+    <div class="tip-item">
+      <div class="ti">👗</div>
+      <strong>穿著規定</strong>
+      <p>梵蒂岡、西斯汀、聖彼德大教堂 → 不可穿無袖、短褲、短裙，刺青需遮蓋</p>
+    </div>
+    <div class="tip-item">
+      <div class="ti">⏰</div>
+      <strong>預訂提前到場</strong>
+      <p>最後的晚餐提前 30 分、聖彼德大教堂 QR 安檢提前 30 分、競技場提前 15 分</p>
+    </div>
+    <div class="tip-item">
+      <div class="ti">💶</div>
+      <strong>威尼斯入城稅</strong>
+      <p>EUR 5/人，需在 6/3（出發前 4 天）前到 cda.ve.it/en 線上繳費</p>
+    </div>
+    <div class="tip-item">
+      <div class="ti">🚗</div>
+      <strong>西西里 ZTL</strong>
+      <p>注意城區禁止進入（ZTL）標誌，違規罰款高，市中心停外圍停車場</p>
+    </div>
+    <div class="tip-item">
+      <div class="ti">🌊</div>
+      <strong>藍洞確認</strong>
+      <p>藍洞受天氣影響每天是否開放不定，出發前確認粉絲頁或撥打確認電話</p>
+    </div>
+    <div class="tip-item">
+      <div class="ti">💊</div>
+      <strong>緊急聯絡</strong>
+      <p>義大利急救 118 · 警察 112 · 台灣駐義辦事處 +39 06 9826 2800</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<footer>
+  <strong>2026 南義行程 App</strong> · Viaggio Italia<br/>
+  5/26 出發 → 6/10 返台 · 16 天南義精華行程 · Buon Viaggio! 🇮🇹
+</footer>
+
+</body>
+</html>
