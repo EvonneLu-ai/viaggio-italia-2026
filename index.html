@@ -1758,25 +1758,27 @@ async function fetchYahooRate(){
   const src=document.getElementById('rate-source');
   if(btn){btn.innerHTML='查詢中…';btn.disabled=true;}
   if(src)src.textContent='';
-  let rate=null,source='';
+  let rate=null, source='';
 
-  // 方法1：Yahoo Finance via CORS proxy
+  // Open Exchange Rates (免費、無需 Key、CORS 開放、每小時更新)
   try{
-    const url='https://query1.finance.yahoo.com/v8/finance/chart/EURTWD=X?interval=1d&range=1d';
-    const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-    const r=await fetch(proxy,{signal:AbortSignal.timeout(8000)});
-    const outer=await r.json();
-    const data=JSON.parse(outer.contents);
-    const p=data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-    if(p&&p>1){rate=p;source='Yahoo Finance';}
+    const r=await fetch('https://open.er-api.com/v6/latest/EUR',{signal:AbortSignal.timeout(8000)});
+    const d=await r.json();
+    if(d?.rates?.TWD&&d.result==='success'){
+      rate=Math.round(d.rates.TWD*100)/100;
+      source='Open Exchange Rates';
+    }
   }catch{}
 
-  // 方法2：Frankfurter（ECB 歐洲央行，備用）
+  // 備用：ExchangeRate-API 免費版
   if(!rate){
     try{
-      const r=await fetch('https://api.frankfurter.app/latest?from=EUR&to=TWD',{signal:AbortSignal.timeout(6000)});
+      const r=await fetch('https://api.exchangerate-api.com/v4/latest/EUR',{signal:AbortSignal.timeout(6000)});
       const d=await r.json();
-      if(d?.rates?.TWD){rate=d.rates.TWD;source='Frankfurter (ECB)';}
+      if(d?.rates?.TWD){
+        rate=Math.round(d.rates.TWD*100)/100;
+        source='ExchangeRate-API';
+      }
     }catch{}
   }
 
@@ -1784,12 +1786,12 @@ async function fetchYahooRate(){
   if(btn){btn.innerHTML=iconSvg+' 即時匯率';btn.disabled=false;}
 
   if(rate){
-    rate=Math.round(rate*100)/100;
-    S.rate=rate;localStorage.setItem('vi_r',rate);
+    S.rate=rate;
+    localStorage.setItem('vi_r',rate);
     document.getElementById('rateinp').value=rate;
     renderExps();calcFromEur();
     const now=new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
-    if(src)src.innerHTML=`<span style="color:var(--green);">已更新</span> &nbsp;1 EUR = <strong>${rate}</strong> NTD&nbsp;·&nbsp;${source}&nbsp;·&nbsp;${now}`;
+    if(src)src.innerHTML=`<span style="color:var(--green);">已更新</span> &nbsp;1 EUR = <strong style="color:var(--t1);">${rate}</strong> NTD &nbsp;·&nbsp; ${source} &nbsp;·&nbsp; ${now}`;
     toast(`即時匯率 1 EUR = ${rate} NTD`);
   }else{
     if(src)src.innerHTML=`<span style="color:var(--red);">無法取得，請確認網路或手動輸入</span>`;
