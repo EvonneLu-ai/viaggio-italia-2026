@@ -1002,6 +1002,10 @@ textarea{resize:vertical;}
 
 <!-- ══════ PANEL: 地圖 ══════ -->
 <div class="panel" id="p-map">
+  <!-- 離線地圖 banner（有網路時隱藏） -->
+  <div id="map-offline-bar" style="display:none;margin:10px 12px 0;padding:9px 13px;background:rgba(255,149,0,.1);border:1px solid rgba(255,149,0,.35);border-radius:10px;font-size:12px;color:var(--t1);line-height:1.5;">
+    📡 <strong>離線模式</strong> — 已預載的城市景點標記仍可查看，未快取區域地圖底圖會顯示灰色
+  </div>
   <div class="map-ctrls">
     <div class="hscroll" id="city-btns">
       <button class="city-btn on" style="color:#ff3b30;border-color:#ff3b30;background:rgba(255,59,48,.08);" onclick="flyTo(41.9028,12.4964,13,this,'Roma')">Roma</button>
@@ -1014,6 +1018,9 @@ textarea{resize:vertical;}
       <button class="city-btn" onclick="flyTo(37.8521,15.2844,14,this,'Sicilia')">Taormina</button>
       <button class="city-btn" onclick="flyTo(45.4654,9.1859,14,this,'Milano')">Milano</button>
       <button class="city-btn" onclick="flyTo(45.4408,12.3155,14,this,'Venezia')">Venezia</button>
+      <button class="city-btn" id="precache-btn" onclick="preCacheTiles(this)" style="color:#34c759;border-color:#34c759;background:rgba(52,199,89,.08);white-space:nowrap;">
+        <span id="precache-label">⬇ 預載地圖</span>
+      </button>
     </div>
     <div class="hscroll" id="poi-btns">
       <button class="poi-btn" onclick="srchPOI('restaurant',this)">
@@ -1893,6 +1900,60 @@ function flyToGroup(la,lo,name){
     if(S.map){S.map.flyTo([la,lo],13,{duration:1});toast('地圖已跳至 '+name);}
   },delay);
 }
+
+/* ── 預載離線地圖 ── */
+function latLng2Tile(lat,lng,z){
+  const x=Math.floor((lng+180)/360*Math.pow(2,z));
+  const sinLat=Math.sin(lat*Math.PI/180);
+  const y=Math.floor((1-Math.log((sinLat+1)/Math.cos(lat*Math.PI/180))/Math.PI)/2*Math.pow(2,z));
+  return {x,y,z};
+}
+async function preCacheTiles(btn){
+  if(!navigator.onLine){toast('請在有網路時預載地圖');return;}
+  if(!('serviceWorker' in navigator)){toast('瀏覽器不支援 Service Worker');return;}
+  const label=document.getElementById('precache-label');
+  btn.disabled=true;
+  // 5 大城市中心點 + 阿瑪菲海岸
+  const CITIES=[
+    {name:'Roma',      lat:41.9028,lng:12.4964},
+    {name:'Napoli',    lat:40.8518,lng:14.2681},
+    {name:'Capri',     lat:40.5537,lng:14.2228},
+    {name:'Amalfi',    lat:40.6340,lng:14.6025},
+    {name:'Palermo',   lat:38.1157,lng:13.3615},
+    {name:'Cefalù',    lat:38.0393,lng:14.0228},
+    {name:'Agrigento', lat:37.2908,lng:13.5883},
+    {name:'Taormina',  lat:37.8521,lng:15.2844},
+    {name:'Milano',    lat:45.4654,lng:9.1859},
+    {name:'Venezia',   lat:45.4408,lng:12.3155},
+  ];
+  const ZOOMS=[12,13,14]; // zoom 12=城市全覽，13=街區，14=街道
+  const RADIUS=2;         // 每個城市往外擴 2 個 tile
+  const subs=['a','b','c'];
+  let total=0,done=0,failed=0;
+  // 計算總數
+  CITIES.forEach(c=>{ZOOMS.forEach(z=>{total+=(RADIUS*2+1)*(RADIUS*2+1);});});
+  label.textContent=`下載中 0/${total}…`;
+  for(const city of CITIES){
+    for(const z of ZOOMS){
+      const {x:cx,y:cy}=latLng2Tile(city.lat,city.lng,z);
+      for(let dx=-RADIUS;dx<=RADIUS;dx++){
+        for(let dy=-RADIUS;dy<=RADIUS;dy++){
+          const x=cx+dx, y=cy+dy;
+          const sub=subs[(x+y)%3];
+          const url=`https://${sub}.tile.openstreetmap.org/${z}/${x}/${y}.png`;
+          try{await fetch(url,{cache:'force-cache'});}catch{failed++;}
+          done++;
+          if(done%20===0)label.textContent=`下載中 ${done}/${total}…`;
+          await new Promise(r=>setTimeout(r,30)); // 避免同時發太多請求
+        }
+      }
+    }
+  }
+  btn.disabled=false;
+  btn.style.color='var(--t3)';btn.style.borderColor='var(--t3)';btn.style.background='';
+  label.textContent='✓ 地圖已離線';
+  toast(`預載完成！${done-failed}/${total} 個地圖區塊已快取`);
+}
 function mapDay(n){
   const cm={1:'Roma',2:'Roma',3:'Roma',4:'Napoli',5:'Napoli',6:'Napoli',
     7:'Cefalù',8:'Agrigento',9:'Taormina',10:'Palermo',11:'Milano',12:'Milano',
@@ -2407,9 +2468,13 @@ function stopPolling(){if(FB.pollTimer){clearInterval(FB.pollTimer);FB.pollTimer
 window.addEventListener('online',()=>{
   if(!FB.connected){autoConnect();}
   else if(FB.pendingPush){pushFB();}
+  const bar=document.getElementById('map-offline-bar');
+  if(bar)bar.style.display='none';
 });
 window.addEventListener('offline',()=>{
   FB.connected=false;setSyncUI('offline');
+  const bar=document.getElementById('map-offline-bar');
+  if(bar)bar.style.display='block';
 });
 
 /* ════════════════ MAP ════════════════ */
