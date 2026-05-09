@@ -831,47 +831,14 @@ textarea{resize:vertical;}
 
 <!-- ══════ PANEL: 記帳 ══════ -->
 <div class="panel" id="p-exp">
-  <!-- 同步狀態 -->
-  <div id="sync-bar" style="margin:12px 16px 0;padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;">
-    <div style="display:flex;align-items:center;gap:8px;">
-      <div id="sync-dot" style="width:8px;height:8px;border-radius:50%;background:var(--t3);flex-shrink:0;"></div>
-      <div>
-        <div id="sync-title" style="font-size:13px;font-weight:600;color:var(--t1);">本地模式</div>
-        <div id="sync-sub" style="font-size:11px;color:var(--t2);margin-top:1px;">僅存於此裝置</div>
-      </div>
+  <!-- 同步狀態列（自動連線，無需設定） -->
+  <div id="sync-bar" style="margin:12px 16px 0;padding:10px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+    <div id="sync-dot" style="width:8px;height:8px;border-radius:50%;background:var(--t3);flex-shrink:0;transition:background .3s;"></div>
+    <div style="flex:1;min-width:0;">
+      <div id="sync-title" style="font-size:13px;font-weight:600;color:var(--t1);">連線中…</div>
+      <div id="sync-sub" style="font-size:11px;color:var(--t2);margin-top:1px;">正在連接雲端共享</div>
     </div>
-    <button class="btn btn-ghost btn-sm" id="sync-setup-btn" onclick="openSyncDrawer()">啟用共享</button>
-  </div>
-  <!-- 同步設定 -->
-  <div id="sync-drawer-exp" style="display:none;margin:10px 16px 0;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
-    <div id="sync-connected" style="display:none;padding:16px;">
-      <div style="font-size:13px;font-weight:700;color:var(--t1);margin-bottom:6px;">即時共享已啟用</div>
-      <div style="font-size:12px;color:var(--t2);margin-bottom:12px;">把代碼分享給旅伴，輸入相同代碼即可共享花費。</div>
-      <div style="background:var(--surface2);border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <span style="font-size:18px;font-weight:800;letter-spacing:3px;color:var(--blue);" id="trip-code-display">------</span>
-        <button class="btn btn-ghost btn-sm" onclick="copyTripCode()">複製代碼</button>
-      </div>
-      <button class="btn btn-danger btn-sm" style="width:100%;" onclick="disconnectSync()">中斷共享</button>
-    </div>
-    <div id="sync-setup" style="padding:16px;">
-      <div style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:4px;">啟用即時共享</div>
-      <div style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:14px;">需要一個免費 Firebase Realtime Database URL。</div>
-      <div style="background:var(--blue-bg);border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;color:var(--t1);line-height:2;">
-        <div style="font-weight:700;color:var(--blue);margin-bottom:4px;">三步驟設定（約 3 分鐘）</div>
-        <div>1. 前往 <a href="https://console.firebase.google.com/" target="_blank" style="color:var(--blue);font-weight:600;">console.firebase.google.com</a></div>
-        <div>2. 新增專案 → Realtime Database → 建立（選 Test mode）</div>
-        <div>3. 複製 URL（https://xxx.firebaseio.com）貼入下方</div>
-      </div>
-      <label class="lbl">Firebase 資料庫 URL</label>
-      <input type="text" id="fb-url-inp" placeholder="https://your-project-default-rtdb.firebaseio.com" style="margin-bottom:8px;font-size:13px;"/>
-      <label class="lbl" style="margin-top:6px;">行程代碼（兩人相同）</label>
-      <div style="display:flex;gap:8px;margin-bottom:12px;">
-        <input type="text" id="trip-code-inp" placeholder="IT2026" maxlength="10" style="font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;"/>
-        <button class="btn btn-outline btn-sm" onclick="genCode()" style="flex-shrink:0;">隨機</button>
-      </div>
-      <button class="btn btn-primary" style="width:100%;margin-bottom:6px;" onclick="connectSync()">連線共享</button>
-      <button class="btn btn-outline btn-sm" style="width:100%;" onclick="closeSyncDrawerExp()">取消</button>
-    </div>
+    <div id="sync-time" style="font-size:11px;color:var(--t3);white-space:nowrap;"></div>
   </div>
 
   <div class="stats-grid" id="exp-stats"></div>
@@ -1766,7 +1733,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   const dd=String(today.getDate()).padStart(2,'0');
   const edateEl=document.getElementById('edate');
   if(edateEl)edateEl.value=`${yy}-${mm}-${dd}`;
-  if(FB.url&&FB.code){FB.connected=true;updateSyncUI(true);startPolling();}
+  autoConnect();
 });
 
 function updHdr(){
@@ -2353,93 +2320,97 @@ function exportText(){
 
 /* ════════════════ FIREBASE SYNC ════════════════ */
 const FB={
-  url:localStorage.getItem('vi_fb_url')||'',
-  code:localStorage.getItem('vi_trip_code')||'',
-  pollTimer:null,lastHash:'',connected:false
+  url:'https://italytravel-7e596-default-rtdb.firebaseio.com',
+  code:'IT2026',
+  pollTimer:null,lastHash:'',connected:false,pendingPush:false
 };
-function openSyncDrawer(){
-  document.getElementById('sync-drawer-exp').style.display='block';
-  if(FB.connected){
-    document.getElementById('sync-connected').style.display='block';
-    document.getElementById('sync-setup').style.display='none';
-    document.getElementById('trip-code-display').textContent=FB.code;
-  }else{
-    document.getElementById('sync-connected').style.display='none';
-    document.getElementById('sync-setup').style.display='block';
-    if(FB.url)document.getElementById('fb-url-inp').value=FB.url;
-    if(FB.code)document.getElementById('trip-code-inp').value=FB.code;
-  }
-}
-function closeSyncDrawerExp(){document.getElementById('sync-drawer-exp').style.display='none';}
-function genCode(){
-  const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let r='';for(let i=0;i<6;i++)r+=c[Math.floor(Math.random()*c.length)];
-  document.getElementById('trip-code-inp').value=r;
-}
-async function connectSync(){
-  const url=document.getElementById('fb-url-inp').value.trim().replace(/\/+$/,'');
-  const code=document.getElementById('trip-code-inp').value.trim().toUpperCase();
-  if(!url||!code){toast('請填入資料庫 URL 和行程代碼');return;}
-  if(!url.includes('firebaseio.com')){toast('URL 需包含 firebaseio.com');return;}
-  const btn=document.querySelector('#sync-setup .btn-primary');
-  btn.textContent='連線中...';btn.disabled=true;
-  try{
-    const r=await fetch(`${url}/vi_ping.json`,{method:'PUT',body:JSON.stringify({t:Date.now()})});
-    if(!r.ok)throw new Error();
-  }catch{btn.textContent='連線共享';btn.disabled=false;toast('無法連線，請確認 URL 並確保 Test mode');return;}
-  FB.url=url;FB.code=code;FB.connected=true;
-  localStorage.setItem('vi_fb_url',url);localStorage.setItem('vi_trip_code',code);
-  btn.textContent='連線共享';btn.disabled=false;
-  await pushFB();updateSyncUI(true);startPolling();
-  document.getElementById('sync-connected').style.display='block';
-  document.getElementById('sync-setup').style.display='none';
-  document.getElementById('trip-code-display').textContent=code;
-  toast('共享已啟用！代碼：'+code);
-}
-function disconnectSync(){
-  if(!confirm('確定中斷共享？本機資料保留。'))return;
-  stopPolling();FB.url='';FB.code='';FB.connected=false;
-  localStorage.removeItem('vi_fb_url');localStorage.removeItem('vi_trip_code');
-  updateSyncUI(false);closeSyncDrawerExp();toast('已中斷共享');
-}
-function updateSyncUI(on){
+/* 自動同步核心 */
+function setSyncUI(state){
+  // state: 'connecting' | 'online' | 'offline' | 'syncing'
   const dot=document.getElementById('sync-dot');
   const title=document.getElementById('sync-title');
   const sub=document.getElementById('sync-sub');
-  const btn=document.getElementById('sync-setup-btn');
-  if(on){
-    dot.style.cssText='width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(52,199,89,.2);flex-shrink:0;';
-    title.textContent='即時共享模式';sub.textContent='代碼：'+FB.code+' · 每 5 秒同步';btn.textContent='設定';
-  }else{
-    dot.style.cssText='width:8px;height:8px;border-radius:50%;background:var(--t3);flex-shrink:0;';
-    title.textContent='本地模式';sub.textContent='僅存於此裝置';btn.textContent='啟用共享';
+  const timeEl=document.getElementById('sync-time');
+  if(!dot)return;
+  const now=()=>new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
+  const dotBase='width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:background .3s;';
+  if(state==='connecting'){
+    dot.style.cssText=dotBase+'background:var(--t3);';
+    title.textContent='連線中…';sub.textContent='正在連接雲端共享';if(timeEl)timeEl.textContent='';
+  }else if(state==='online'){
+    dot.style.cssText=dotBase+'background:var(--green);box-shadow:0 0 0 3px rgba(52,199,89,.2);';
+    title.textContent='✓ 雲端同步';sub.textContent='四人即時共享 · 每 5 秒更新';if(timeEl)timeEl.textContent=now();
+  }else if(state==='syncing'){
+    dot.style.cssText=dotBase+'background:#ff9500;box-shadow:0 0 0 3px rgba(255,149,0,.2);';
+    title.textContent='同步中…';sub.textContent='正在上傳最新資料';if(timeEl)timeEl.textContent='';
+  }else if(state==='offline'){
+    dot.style.cssText=dotBase+'background:var(--t3);';
+    title.textContent='離線模式';sub.textContent='已暫存本機，上線後自動補推';if(timeEl)timeEl.textContent='';
+  }
+}
+async function autoConnect(){
+  setSyncUI('connecting');
+  try{
+    const r=await fetch(`${FB.url}/vi_ping.json`,{method:'PUT',body:JSON.stringify({t:Date.now()})});
+    if(!r.ok)throw new Error('ping fail');
+    FB.connected=true;
+    // 先拉遠端資料，若遠端有資料且比本機新則以遠端為主
+    const remote=await fetchFB();
+    if(remote&&remote.length>0&&remote.length>=S.exps.length){
+      S.exps=remote;localStorage.setItem('vi_e',JSON.stringify(S.exps));renderExps();
+      FB.lastHash=JSON.stringify(remote);
+    } else {
+      await pushFB();
+    }
+    setSyncUI('online');
+    startPolling();
+  }catch{
+    FB.connected=false;setSyncUI('offline');
   }
 }
 async function pushFB(){
   if(!FB.connected)return;
-  try{await fetch(`${FB.url}/trips/${FB.code}/expenses.json`,{
-    method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(S.exps)
-  });}catch{}
+  setSyncUI('syncing');
+  try{
+    await fetch(`${FB.url}/trips/${FB.code}/expenses.json`,{
+      method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(S.exps)
+    });
+    FB.pendingPush=false;
+    setSyncUI('online');
+  }catch{FB.pendingPush=true;setSyncUI('offline');}
 }
 async function fetchFB(){
-  if(!FB.connected)return null;
   try{
     const r=await fetch(`${FB.url}/trips/${FB.code}/expenses.json`);
     if(!r.ok)return null;
     const d=await r.json();
-    return Array.isArray(d)?d:(d?Object.values(d):[]);
+    return Array.isArray(d)?d:(d&&typeof d==='object'?Object.values(d):[]);
   }catch{return null;}
 }
 function startPolling(){
   stopPolling();
   FB.pollTimer=setInterval(async()=>{
-    const remote=await fetchFB();if(remote===null)return;
+    if(!navigator.onLine){setSyncUI('offline');FB.connected=false;return;}
+    if(!FB.connected){autoConnect();return;}
+    const remote=await fetchFB();
+    if(remote===null){FB.connected=false;setSyncUI('offline');return;}
     const h=JSON.stringify(remote);
-    if(h!==FB.lastHash){FB.lastHash=h;S.exps=remote;localStorage.setItem('vi_e',JSON.stringify(S.exps));renderExps();}
+    if(h!==FB.lastHash){
+      FB.lastHash=h;S.exps=remote;
+      localStorage.setItem('vi_e',JSON.stringify(S.exps));renderExps();
+      setSyncUI('online');
+    }
   },5000);
 }
 function stopPolling(){if(FB.pollTimer){clearInterval(FB.pollTimer);FB.pollTimer=null;}}
-function copyTripCode(){navigator.clipboard.writeText(FB.code).then(()=>toast('代碼已複製：'+FB.code));}
+// online/offline 事件監聽
+window.addEventListener('online',()=>{
+  if(!FB.connected){autoConnect();}
+  else if(FB.pendingPush){pushFB();}
+});
+window.addEventListener('offline',()=>{
+  FB.connected=false;setSyncUI('offline');
+});
 
 /* ════════════════ MAP ════════════════ */
 const ATTRACTIONS=[
