@@ -848,6 +848,36 @@ textarea{resize:vertical;}
       </div>
     </div>
     <div style="margin-bottom:10px;"><input type="text" id="enote" placeholder="備註（如：Pantheon 門票）"/></div>
+
+    <!-- 付款人 & 分攤 -->
+    <div class="row2" style="margin-bottom:10px;">
+      <div>
+        <label class="lbl">誰付款</label>
+        <select id="epayer">
+          <option value="Grace">Grace</option>
+          <option value="Vicky">Vicky</option>
+          <option value="水晶">水晶</option>
+          <option value="Evonne" selected>Evonne</option>
+        </select>
+      </div>
+      <div>
+        <label class="lbl">分攤模式</label>
+        <select id="esplit-mode" onchange="toggleSplitCustom()">
+          <option value="all">四人均攤</option>
+          <option value="custom">自選成員</option>
+          <option value="none">不分攤（個人）</option>
+        </select>
+      </div>
+    </div>
+    <div id="split-custom" style="display:none;margin-bottom:10px;">
+      <label class="lbl">選擇分攤成員</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;padding:8px 0;">
+        <label style="display:flex;align-items:center;gap:5px;font-size:14px;cursor:pointer;"><input type="checkbox" id="sc-Grace" value="Grace" checked style="width:auto;border-radius:4px;"/> Grace</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:14px;cursor:pointer;"><input type="checkbox" id="sc-Vicky" value="Vicky" checked style="width:auto;border-radius:4px;"/> Vicky</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:14px;cursor:pointer;"><input type="checkbox" id="sc-水晶" value="水晶" checked style="width:auto;border-radius:4px;"/> 水晶</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:14px;cursor:pointer;"><input type="checkbox" id="sc-Evonne" value="Evonne" checked style="width:auto;border-radius:4px;"/> Evonne</label>
+      </div>
+    </div>
     <button class="btn btn-primary" style="width:100%;" onclick="addExp()">新增花費</button>
   </div>
 
@@ -858,6 +888,22 @@ textarea{resize:vertical;}
   <div class="card" id="exp-list" style="margin-bottom:10px;"></div>
   <div class="sec-label">類別分析</div>
   <div class="card" style="padding:14px 16px;margin-bottom:10px;"><div id="cat-bars"></div></div>
+
+  <!-- 分帳結算 -->
+  <div class="sec-label">分帳結算</div>
+  <div class="card" style="margin-bottom:10px;">
+    <div id="split-summary"></div>
+    <div style="padding:12px 14px;border-top:1px solid var(--border2);display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        匯出 CSV
+      </button>
+      <button class="btn btn-outline btn-sm" onclick="exportText()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        複製結算（貼 Line）
+      </button>
+    </div>
+  </div>
 
   <!-- ── 購物相關 ── -->
   <div class="sec-label">退稅計算機</div>
@@ -1510,7 +1556,7 @@ function closeDrawer(){
 /* ════════════════ INIT ════════════════ */
 window.addEventListener('DOMContentLoaded',()=>{
   updHdr();setInterval(updHdr,60000);
-  renderItin();renderExps();renderPhrases();renderEvents();
+  renderItin();renderExps();renderPhrases();renderEvents();renderSplitSummary();
   document.getElementById('rateinp').value=S.rate;
   if(FB.url&&FB.code){FB.connected=true;updateSyncUI(true);startPolling();}
 });
@@ -1652,19 +1698,33 @@ function mapDay(n){
 }
 
 /* ════════════════ EXPENSE ════════════════ */
+const MEMBERS=['Grace','Vicky','水晶','Evonne'];
+const MEMBER_CLR={Grace:'#ff3b30',Vicky:'#34c759',水晶:'#5ac8fa',Evonne:'#C9A84C'};
 const CCLR={食:'#ff9500',住:'#ff3b30',行:'#0071e3',票:'#bf5af2',購:'#34c759',車:'#5ac8fa',雜:'#aeaeb2'};
 const CNME={食:'餐飲',住:'住宿',行:'交通',票:'門票',購:'購物',車:'租車',雜:'雜費'};
+
+function toggleSplitCustom(){
+  const mode=document.getElementById('esplit-mode').value;
+  document.getElementById('split-custom').style.display=mode==='custom'?'block':'none';
+}
 
 function addExp(){
   const amt=parseFloat(document.getElementById('eamt').value);
   if(!amt||amt<=0){toast('請輸入金額');return;}
   const cur=document.getElementById('ecur').value;
   const eur=cur==='EUR'?amt:amt/S.rate;
+  const payer=document.getElementById('epayer').value;
+  const mode=document.getElementById('esplit-mode').value;
+  let splitWith=[];
+  if(mode==='all') splitWith=[...MEMBERS];
+  else if(mode==='custom') splitWith=MEMBERS.filter(m=>document.getElementById('sc-'+m)?.checked);
+  else splitWith=[];
   S.exps.unshift({id:Date.now(),amt,cur,eur,twd:Math.round(eur*S.rate),
     cat:document.getElementById('ecat').value,
     city:document.getElementById('ecity').value,
     note:document.getElementById('enote').value||'花費',
-    date:new Date().toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'})});
+    date:new Date().toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'}),
+    payer,splitWith});
   saveExps();
   document.getElementById('eamt').value='';document.getElementById('enote').value='';
   renderExps();toast('已新增花費');
@@ -1674,6 +1734,7 @@ function clearExp(){if(!confirm('確定清除所有記錄？'))return;S.exps=[];
 function saveExps(){
   localStorage.setItem('vi_e',JSON.stringify(S.exps));
   if(FB.connected)pushFB();
+  renderSplitSummary();
 }
 function saveRate(){
   const r=parseFloat(document.getElementById('rateinp').value);
@@ -1767,7 +1828,7 @@ function renderExps(){
         <div class="exp-cat-dot" style="background:${CCLR[e.cat]||'#aaa'}"></div>
         <div class="exp-info">
           <div class="exp-name">${e.note}</div>
-          <div class="exp-meta">${e.date} · ${e.city} · ${CNME[e.cat]||e.cat}</div>
+          <div class="exp-meta">${e.date} · ${e.city} · ${CNME[e.cat]||e.cat}${e.payer?` · <span style="color:${MEMBER_CLR[e.payer]||'var(--t2)'};font-weight:700;">${e.payer}付</span>`:''}${e.splitWith&&e.splitWith.length?` · 分${e.splitWith.length}人`:''}</div>
         </div>
         <div style="text-align:right;margin-right:4px;">
           <div class="exp-eur">${e.cur==='EUR'?'€':'NT$'}${e.amt}</div>
@@ -1785,6 +1846,124 @@ function renderExps(){
       <div class="bar-label"><span>${CNME[c]||c}</span><span>€${v.toFixed(1)}</span></div>
       <div class="bar-bg"><div class="bar-fill" style="width:${(v/mx*100).toFixed(0)}%;background:${CCLR[c]}"></div></div>
     </div>`).join('')||'<div style="font-size:13px;color:var(--t3);padding:8px 0;">尚無資料</div>';
+}
+
+/* ════════════════ SPLIT & EXPORT ════════════════ */
+function renderSplitSummary(){
+  const el=document.getElementById('split-summary');
+  if(!el)return;
+  const relevant=S.exps.filter(e=>e.splitWith&&e.splitWith.length>0&&e.payer);
+  if(!relevant.length){
+    el.innerHTML='<div class="loading" style="color:var(--t3);">尚無分帳記錄</div>';return;
+  }
+  // 計算每人付出多少、應分攤多少
+  const paid={},owed={};
+  MEMBERS.forEach(m=>{paid[m]=0;owed[m]=0;});
+  relevant.forEach(e=>{
+    const sw=e.splitWith;if(!sw.length)return;
+    const share=e.eur/sw.length;
+    if(paid[e.payer]!==undefined)paid[e.payer]+=e.eur;
+    sw.forEach(m=>{if(owed[m]!==undefined)owed[m]+=share;});
+  });
+  // 淨額（正=別人欠你，負=你欠別人）
+  const net={};
+  MEMBERS.forEach(m=>{net[m]=paid[m]-owed[m];});
+  // 最簡化還款（貪心演算法）
+  const creditors=[],debtors=[];
+  MEMBERS.forEach(m=>{
+    if(net[m]>0.005)creditors.push({m,amt:net[m]});
+    else if(net[m]<-0.005)debtors.push({m,amt:-net[m]});
+  });
+  const settlements=[];
+  let ci=0,di=0;
+  while(ci<creditors.length&&di<debtors.length){
+    const pay=Math.min(creditors[ci].amt,debtors[di].amt);
+    settlements.push({from:debtors[di].m,to:creditors[ci].m,eur:pay,twd:Math.round(pay*S.rate)});
+    creditors[ci].amt-=pay;debtors[di].amt-=pay;
+    if(creditors[ci].amt<0.005)ci++;
+    if(debtors[di].amt<0.005)di++;
+  }
+  // 渲染
+  let html=`<div style="padding:14px 14px 8px;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">各人淨額</div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px;">
+      ${MEMBERS.map(m=>{
+        const n=net[m]||0;const clr=MEMBER_CLR[m];
+        return `<div style="background:${clr}12;border:1px solid ${clr}33;border-radius:10px;padding:10px 12px;">
+          <div style="font-size:12px;font-weight:700;color:${clr};margin-bottom:3px;">${m}</div>
+          <div style="font-size:14px;font-weight:700;color:${n>0.005?'var(--green)':n<-0.005?'var(--red)':'var(--t2)'};">${n>0.005?'+':n<-0.005?'':''}€${n.toFixed(2)}</div>
+          <div style="font-size:11px;color:var(--t2);margin-top:2px;">${n>0.005?'可收回':n<-0.005?'需付出':'均等'} NT$${Math.abs(Math.round(n*S.rate)).toLocaleString()}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">最簡化還款方式</div>
+    ${settlements.length===0?
+      `<div style="font-size:13px;color:var(--green);padding:8px 0;">已均等，無需轉帳！</div>`:
+      settlements.map(s=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border2);">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:13px;font-weight:700;color:${MEMBER_CLR[s.from]}">${s.from}</span>
+          <span style="font-size:13px;color:var(--t3);">→</span>
+          <span style="font-size:13px;font-weight:700;color:${MEMBER_CLR[s.to]}">${s.to}</span>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:14px;font-weight:700;color:var(--t1);">€${s.eur.toFixed(2)}</div>
+          <div style="font-size:11px;color:var(--t2);">≈ NT$${s.twd.toLocaleString()}</div>
+        </div>
+      </div>`).join('')}
+  </div>`;
+  el.innerHTML=html;
+}
+
+function exportCSV(){
+  const headers=['日期','備註','城市','類別','EUR','NTD','付款人','分攤成員','人均EUR','人均NTD'];
+  const rows=S.exps.map(e=>{
+    const sw=e.splitWith&&e.splitWith.length?e.splitWith:['個人'];
+    const shareEur=(e.eur/sw.length).toFixed(2);
+    const shareTwd=Math.round(e.eur/sw.length*S.rate);
+    return [e.date,e.note,e.city,CNME[e.cat]||e.cat,e.eur.toFixed(2),e.twd,e.payer||'-',sw.join('/'),shareEur,shareTwd];
+  });
+  const csv=[headers,...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`viaggio_expenses_${new Date().toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'')}.csv`;
+  a.click();
+  toast('CSV 匯出成功，可用 Numbers/Excel 開啟！');
+}
+
+function exportText(){
+  const relevant=S.exps.filter(e=>e.splitWith&&e.splitWith.length>0&&e.payer);
+  if(!S.exps.length){toast('尚無記錄');return;}
+  const paid={},owed={};
+  MEMBERS.forEach(m=>{paid[m]=0;owed[m]=0;});
+  relevant.forEach(e=>{
+    const sw=e.splitWith;if(!sw.length)return;
+    const share=e.eur/sw.length;
+    if(paid[e.payer]!==undefined)paid[e.payer]+=e.eur;
+    sw.forEach(m=>{if(owed[m]!==undefined)owed[m]+=share;});
+  });
+  const net={};MEMBERS.forEach(m=>{net[m]=paid[m]-owed[m];});
+  const creditors=[],debtors=[];
+  MEMBERS.forEach(m=>{if(net[m]>0.005)creditors.push({m,amt:net[m]});else if(net[m]<-0.005)debtors.push({m,amt:-net[m]});});
+  const settlements=[];
+  let ci=0,di=0;
+  while(ci<creditors.length&&di<debtors.length){
+    const pay=Math.min(creditors[ci].amt,debtors[di].amt);
+    settlements.push({from:debtors[di].m,to:creditors[ci].m,eur:pay,twd:Math.round(pay*S.rate)});
+    creditors[ci].amt-=pay;debtors[di].amt-=pay;
+    if(creditors[ci].amt<0.005)ci++;if(debtors[di].amt<0.005)di++;
+  }
+  const tot=S.exps.reduce((s,e)=>s+e.eur,0);
+  let text=`🇮🇹 Viaggio Italia 2026 — 花費結算\n`;
+  text+=`總花費：€${tot.toFixed(2)} ≈ NT$${Math.round(tot*S.rate).toLocaleString()}\n`;
+  text+=`匯率：1 EUR = ${S.rate} NTD\n\n`;
+  text+=`【各人淨額】\n`;
+  MEMBERS.forEach(m=>{const n=net[m]||0;text+=`${m}：${n>0.005?'可收回':'應付出'} €${Math.abs(n).toFixed(2)} ≈ NT$${Math.abs(Math.round(n*S.rate)).toLocaleString()}\n`;});
+  text+=`\n【還款清單】\n`;
+  if(settlements.length===0){text+='已均等，無需轉帳！\n';}
+  else{settlements.forEach(s=>{text+=`${s.from} → ${s.to}：€${s.eur.toFixed(2)} ≈ NT$${s.twd.toLocaleString()}\n`;});}
+  text+=`\n生成時間：${new Date().toLocaleString('zh-TW')}`;
+  navigator.clipboard.writeText(text).then(()=>toast('已複製！直接貼到 Line 群組'));
 }
 
 /* ════════════════ FIREBASE SYNC ════════════════ */
