@@ -838,7 +838,16 @@ textarea{resize:vertical;}
       <div id="sync-title" style="font-size:13px;font-weight:600;color:var(--t1);">連線中…</div>
       <div id="sync-sub" style="font-size:11px;color:var(--t2);margin-top:1px;">正在連接雲端共享</div>
     </div>
-    <div id="sync-time" style="font-size:11px;color:var(--t3);white-space:nowrap;"></div>
+    <div id="sync-time" style="font-size:11px;color:var(--t3);white-space:nowrap;margin-right:4px;"></div>
+    <button onclick="manualSync(this)" id="sync-refresh-btn" title="手動同步"
+      style="width:30px;height:30px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);
+             display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0;
+             color:var(--t2);transition:transform .3s;">
+      <svg id="sync-refresh-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+      </svg>
+    </button>
   </div>
 
   <div class="stats-grid" id="exp-stats"></div>
@@ -955,7 +964,6 @@ textarea{resize:vertical;}
 
   <div style="display:flex;justify-content:space-between;align-items:center;padding:0 16px;">
     <div class="sec-label" style="padding:16px 0 10px;">花費明細</div>
-    <button class="btn btn-danger btn-sm" onclick="clearExp()">清除全部</button>
   </div>
   <div class="card" id="exp-list" style="margin-bottom:10px;"></div>
   <div class="sec-label">類別分析</div>
@@ -2073,6 +2081,56 @@ function addExp(){
 }
 function delExp(id){S.exps=S.exps.filter(e=>e.id!==id);saveExps();renderExps();}
 function clearExp(){if(!confirm('確定清除所有記錄？'))return;S.exps=[];saveExps();renderExps();}
+
+/* 兩段式刪除確認：第一次按變紅顯示「確定？」，3 秒後自動還原，第二次按才真正刪除 */
+let _delTimer=null;
+let _delPending=null;
+function confirmDel(id,btn){
+  if(_delPending===id){
+    // 第二次按：真正刪除
+    clearTimeout(_delTimer);_delPending=null;
+    delExp(id);
+  } else {
+    // 第一次按：進入確認狀態
+    if(_delPending!==null){
+      // 取消前一個待確認
+      const prev=document.getElementById('del-'+_delPending);
+      if(prev)resetDelBtn(prev);
+    }
+    clearTimeout(_delTimer);
+    _delPending=id;
+    btn.style.cssText+='background:rgba(255,59,48,.15);border-color:rgba(255,59,48,.5);color:#ff3b30;width:auto;padding:0 8px;border-radius:6px;font-size:11px;font-weight:700;';
+    btn.innerHTML='確定？';
+    _delTimer=setTimeout(()=>{resetDelBtn(btn);_delPending=null;},3000);
+  }
+}
+function resetDelBtn(btn){
+  btn.style.cssText='';
+  btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+}
+
+/* 手動同步 */
+async function manualSync(btn){
+  const icon=document.getElementById('sync-refresh-icon');
+  if(icon)icon.style.animation='sp .8s linear infinite';
+  btn.disabled=true;
+  if(!FB.connected){
+    await autoConnect();
+  } else {
+    // 拉取最新遠端資料，再推本地
+    const remote=await fetchFB();
+    if(remote){
+      const personal=S.exps.filter(e=>e.personal);
+      S.exps=[...personal,...remote].sort((a,b)=>b.id-a.id);
+      localStorage.setItem('vi_e',JSON.stringify(S.exps));renderExps();
+      FB.lastHash=JSON.stringify(remote);
+    }
+    await pushFB();
+  }
+  if(icon)icon.style.animation='';
+  btn.disabled=false;
+  toast('同步完成');
+}
 function saveExps(){
   localStorage.setItem('vi_e',JSON.stringify(S.exps));
   if(FB.connected)pushFB();
@@ -2176,7 +2234,7 @@ function renderExps(){
           <div class="exp-eur">${e.cur==='EUR'?'€':'NT$'}${e.amt}</div>
           <div class="exp-twd">${e.cur==='EUR'?'NT$'+e.twd:'€'+e.eur.toFixed(1)}</div>
         </div>
-        <button class="del-btn" onclick="delExp(${e.id})">
+        <button class="del-btn" id="del-${e.id}" onclick="confirmDel(${e.id},this)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
