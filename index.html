@@ -1808,6 +1808,7 @@ function goTab(t){
     if(di)di.classList.add('on');
   }
   S.tab=t;
+  closeDrawer(); // 無論從哪裡呼叫 goTab，一律關閉 drawer
   if(t==='map'&&!S.mapOk)initMap();
   if(t==='packing')renderPacking();
   if(t==='exp')renderLuggage();
