@@ -2045,7 +2045,6 @@ function addExp(){
   if(!amt||amt<=0){toast('請輸入金額');return;}
   const cur=document.getElementById('ecur').value;
   const eur=cur==='EUR'?amt:amt/S.rate;
-  // 日期：讀取日期欄位，格式化為 zh-TW 顯示
   const edateVal=document.getElementById('edate')?.value;
   let dateDisplay='';
   if(edateVal){
@@ -2056,18 +2055,21 @@ function addExp(){
   }
   const payerBtn=document.querySelector('#payer-btns .member-btn.payer-on');
   const payer=payerBtn?payerBtn.dataset.p:'Evonne';
-  // 讀取分攤成員
   const splitWith=[...document.querySelectorAll('#split-btns .member-btn.split-on')].map(b=>b.dataset.p);
+  // 個人帳判定：沒有分攤對象，或分攤對象只有付款人自己
+  const isPersonal=splitWith.length===0||(splitWith.length===1&&splitWith[0]===payer);
   S.exps.unshift({id:Date.now(),amt,cur,eur,twd:Math.round(eur*S.rate),
     cat:document.getElementById('ecat').value,
     city:document.getElementById('ecity').value,
     note:document.getElementById('enote').value||'花費',
     date:dateDisplay,
-    payer,splitWith});
+    payer,splitWith,
+    personal:isPersonal||undefined}); // 個人帳加標記，共享帳不加欄位
   saveExps();
   document.getElementById('eamt').value='';document.getElementById('enote').value='';
   document.getElementById('split-preview').style.display='none';
-  renderExps();toast('已新增花費');
+  renderExps();
+  toast(isPersonal?'已新增個人花費（僅本機）':'已新增花費');
 }
 function delExp(id){S.exps=S.exps.filter(e=>e.id!==id);saveExps();renderExps();}
 function clearExp(){if(!confirm('確定清除所有記錄？'))return;S.exps=[];saveExps();renderExps();}
@@ -2167,8 +2169,8 @@ function renderExps(){
       <div class="exp-item-row">
         <div class="exp-cat-dot" style="background:${CCLR[e.cat]||'#aaa'}"></div>
         <div class="exp-info">
-          <div class="exp-name">${e.note}</div>
-          <div class="exp-meta">${e.date} · ${e.city} · ${CNME[e.cat]||e.cat}${e.payer?` · <span style="color:${MEMBER_CLR[e.payer]||'var(--t2)'};font-weight:700;">${e.payer}付</span>`:''}${e.splitWith&&e.splitWith.length?` · 分${e.splitWith.length}人`:''}</div>
+          <div class="exp-name">${e.note}${e.personal?'<span style="display:inline-block;font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;background:var(--surface2);color:var(--t3);margin-left:5px;vertical-align:middle;letter-spacing:.3px;">個人</span>':''}</div>
+          <div class="exp-meta">${e.date} · ${e.city} · ${CNME[e.cat]||e.cat}${e.payer?` · <span style="color:${MEMBER_CLR[e.payer]||'var(--t2)'};font-weight:700;">${e.payer}付</span>`:''}${e.splitWith&&e.splitWith.length&&!e.personal?` · 分${e.splitWith.length}人`:''}</div>
         </div>
         <div style="text-align:right;margin-right:4px;">
           <div class="exp-eur">${e.cur==='EUR'?'€':'NT$'}${e.amt}</div>
@@ -2192,7 +2194,7 @@ function renderExps(){
 function renderSplitSummary(){
   const el=document.getElementById('split-summary');
   if(!el)return;
-  const relevant=S.exps.filter(e=>e.splitWith&&e.splitWith.length>0&&e.payer);
+  const relevant=S.exps.filter(e=>e.splitWith&&e.splitWith.length>0&&e.payer&&!e.personal);
   if(!relevant.length){
     el.innerHTML='<div class="loading" style="color:var(--t3);">尚無分帳記錄</div>';return;
   }
@@ -2415,10 +2417,12 @@ async function autoConnect(){
     const r=await fetch(`${FB.url}/vi_ping.json`,{method:'PUT',body:JSON.stringify({t:Date.now()})});
     if(!r.ok)throw new Error('ping fail');
     FB.connected=true;
-    // 先拉遠端資料，若遠端有資料且比本機新則以遠端為主
     const remote=await fetchFB();
-    if(remote&&remote.length>0&&remote.length>=S.exps.length){
-      S.exps=remote;localStorage.setItem('vi_e',JSON.stringify(S.exps));renderExps();
+    if(remote&&remote.length>0){
+      // 保留本機的個人帳，合併遠端共享帳
+      const personal=S.exps.filter(e=>e.personal);
+      S.exps=[...personal,...remote].sort((a,b)=>b.id-a.id);
+      localStorage.setItem('vi_e',JSON.stringify(S.exps));renderExps();
       FB.lastHash=JSON.stringify(remote);
     } else {
       await pushFB();
@@ -2433,8 +2437,10 @@ async function pushFB(){
   if(!FB.connected)return;
   setSyncUI('syncing');
   try{
+    // 只上傳非個人帳，個人帳僅存本機
+    const shared=S.exps.filter(e=>!e.personal);
     await fetch(`${FB.url}/trips/${FB.code}/expenses.json`,{
-      method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(S.exps)
+      method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(shared)
     });
     FB.pendingPush=false;
     setSyncUI('online');
@@ -2457,7 +2463,10 @@ function startPolling(){
     if(remote===null){FB.connected=false;setSyncUI('offline');return;}
     const h=JSON.stringify(remote);
     if(h!==FB.lastHash){
-      FB.lastHash=h;S.exps=remote;
+      FB.lastHash=h;
+      // 合併時保留個人帳
+      const personal=S.exps.filter(e=>e.personal);
+      S.exps=[...personal,...remote].sort((a,b)=>b.id-a.id);
       localStorage.setItem('vi_e',JSON.stringify(S.exps));renderExps();
       setSyncUI('online');
     }
