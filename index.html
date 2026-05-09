@@ -948,8 +948,10 @@ textarea{resize:vertical;}
     <div style="margin-bottom:8px;margin-top:12px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
         <div style="font-size:12px;font-weight:600;color:var(--t2);">分給誰？（點選要分攤的人）</div>
-        <button onclick="selectAllSplit()" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--surface2);border:1px solid var(--border);color:var(--t2);cursor:pointer;font-family:inherit;">全選四人</button>
-        <button onclick="clearSplit()" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--surface2);border:1px solid var(--border);color:var(--t3);cursor:pointer;font-family:inherit;">清除</button>
+        <div style="display:flex;gap:6px;">
+          <button onclick="selectAllSplit()" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--surface2);border:1px solid var(--border);color:var(--t2);cursor:pointer;font-family:inherit;">全選四人</button>
+          <button onclick="clearSplit()" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--surface2);border:1px solid var(--border);color:var(--t3);cursor:pointer;font-family:inherit;">清除</button>
+        </div>
       </div>
       <div style="display:flex;gap:6px;" id="split-btns">
         <button class="member-btn split-off" data-p="Grace" onclick="toggleSplit(this)" style="border-color:var(--border);color:var(--t3);">Grace</button>
