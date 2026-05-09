@@ -857,7 +857,16 @@ textarea{resize:vertical;}
         </select>
       </div>
     </div>
-    <div style="margin-bottom:10px;"><input type="text" id="enote" placeholder="備註（如：晚餐 Achille）"/></div>
+    <div class="row2" style="margin-bottom:10px;">
+      <div>
+        <label class="lbl">日期</label>
+        <input type="date" id="edate" style="font-size:14px;"/>
+      </div>
+      <div>
+        <label class="lbl">備註</label>
+        <input type="text" id="enote" placeholder="如：晚餐 Achille"/>
+      </div>
+    </div>
 
     <!-- 誰付款：單選 -->
     <div style="margin-bottom:4px;">
@@ -1565,6 +1574,13 @@ window.addEventListener('DOMContentLoaded',()=>{
   updHdr();setInterval(updHdr,60000);
   renderItin();renderExps();renderPhrases();renderEvents();renderSplitSummary();
   document.getElementById('rateinp').value=S.rate;
+  // 日期預設今天
+  const today=new Date();
+  const yy=today.getFullYear();
+  const mm=String(today.getMonth()+1).padStart(2,'0');
+  const dd=String(today.getDate()).padStart(2,'0');
+  const edateEl=document.getElementById('edate');
+  if(edateEl)edateEl.value=`${yy}-${mm}-${dd}`;
   if(FB.url&&FB.code){FB.connected=true;updateSyncUI(true);startPolling();}
 });
 
@@ -1784,7 +1800,15 @@ function addExp(){
   if(!amt||amt<=0){toast('請輸入金額');return;}
   const cur=document.getElementById('ecur').value;
   const eur=cur==='EUR'?amt:amt/S.rate;
-  // 讀取付款人（哪個按鈕有 payer-on class）
+  // 日期：讀取日期欄位，格式化為 zh-TW 顯示
+  const edateVal=document.getElementById('edate')?.value;
+  let dateDisplay='';
+  if(edateVal){
+    const d=new Date(edateVal+'T00:00:00');
+    dateDisplay=d.toLocaleDateString('zh-TW',{month:'numeric',day:'numeric',weekday:'short'});
+  }else{
+    dateDisplay=new Date().toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'});
+  }
   const payerBtn=document.querySelector('#payer-btns .member-btn.payer-on');
   const payer=payerBtn?payerBtn.dataset.p:'Evonne';
   // 讀取分攤成員
@@ -1793,7 +1817,7 @@ function addExp(){
     cat:document.getElementById('ecat').value,
     city:document.getElementById('ecity').value,
     note:document.getElementById('enote').value||'花費',
-    date:new Date().toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'}),
+    date:dateDisplay,
     payer,splitWith});
   saveExps();
   document.getElementById('eamt').value='';document.getElementById('enote').value='';
@@ -2035,7 +2059,37 @@ function exportCSV(){
   // 匯率說明列
   const rateRow=[`匯率：1 EUR = ${S.rate} NTD`,'','','','','','','','','','','','','','',''];
 
-  const all=[headers,...rows,[''],totalRow,rateRow];
+  // ── 結算明細區塊 ──
+  const paid2={},owed2={};
+  MEMBERS.forEach(m=>{paid2[m]=0;owed2[m]=0;});
+  S.exps.forEach(e=>{
+    const sw=e.splitWith||[];if(!sw.length||!e.payer)return;
+    const share=e.eur/sw.length;
+    if(paid2[e.payer]!==undefined)paid2[e.payer]+=e.eur;
+    sw.forEach(m=>{if(owed2[m]!==undefined)owed2[m]+=share;});
+  });
+  const net2={};MEMBERS.forEach(m=>{net2[m]=paid2[m]-owed2[m];});
+  const cred=[],debt=[];
+  MEMBERS.forEach(m=>{if(net2[m]>0.005)cred.push({m,amt:net2[m]});else if(net2[m]<-0.005)debt.push({m,amt:-net2[m]});});
+  const settles=[];
+  let ci=0,di=0;
+  while(ci<cred.length&&di<debt.length){
+    const pay=Math.min(cred[ci].amt,debt[di].amt);
+    settles.push({from:debt[di].m,to:cred[ci].m,eur:pay,twd:Math.round(pay*S.rate)});
+    cred[ci].amt-=pay;debt[di].amt-=pay;
+    if(cred[ci].amt<0.005)ci++;if(debt[di].amt<0.005)di++;
+  }
+
+  const settleHeader=['','','結算明細','','','付款方','收款方','EUR','NTD','說明','','','','','',''];
+  const settleRows=settles.length===0
+    ?[['','','已均等，無需轉帳','','','','','','','','','','','','','']]
+    :settles.map(s=>['','','','' ,'',s.from,s.to,s.eur.toFixed(2),s.twd,`${s.from} 需轉給 ${s.to}`,'','','','','','']);
+  const netHeader=['','','各人淨額','','','Grace','Vicky','水晶','Evonne','','','','','','',''];
+  const netRow=['','','','','',
+    ...MEMBERS.map(m=>{const n=net2[m]||0;return `${n>0.005?'+':''}€${n.toFixed(2)} (NT$${Math.round(n*S.rate)})`}),
+    '','','','','','',''];
+
+  const all=[headers,...rows,[''],totalRow,rateRow,[''],settleHeader,...settleRows,[''],netHeader,netRow];
   const csv=all.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
   const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');
