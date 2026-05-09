@@ -321,6 +321,49 @@ textarea{resize:vertical;}
   .city-tip-row.warn{background:rgba(255,59,48,.13);}
 }
 
+/* ── Tax Return Guide ── */
+.tax-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:14px 16px;margin-bottom:0;
+}
+.tax-card.tax-highlight{
+  background:rgba(201,168,76,.08);border-color:rgba(201,168,76,.35);
+}
+.tax-card-title{font-size:12px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.tax-row-big{font-size:18px;font-weight:800;color:var(--t1);margin-bottom:4px;}
+.tax-note{font-size:12.5px;color:var(--t2);line-height:1.5;}
+.tax-step{
+  display:flex;gap:12px;align-items:flex-start;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:12px 14px;
+}
+.tax-step-num{
+  width:24px;height:24px;border-radius:50%;
+  background:var(--t1);color:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:800;flex-shrink:0;margin-top:1px;
+}
+.tax-step-body{flex:1;min-width:0;}
+.tax-step-title{font-size:13px;font-weight:700;color:var(--t1);margin-bottom:3px;}
+.tax-step-desc{font-size:12px;color:var(--t2);line-height:1.6;}
+.tax-company{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:11px 14px;
+}
+.tax-company-name{font-size:13px;font-weight:700;color:var(--t1);margin-bottom:3px;}
+.tax-company-desc{font-size:12px;color:var(--t2);line-height:1.5;}
+.tax-airport-row{
+  display:flex;align-items:center;gap:10px;
+  font-size:13px;color:var(--t1);padding:5px 0;
+  border-bottom:1px solid var(--border2);
+}
+.tax-airport-row:last-of-type{border-bottom:none;padding-bottom:0;}
+.tax-airport-code{
+  font-size:11px;font-weight:800;letter-spacing:1px;
+  background:var(--surface2);color:var(--t2);
+  border-radius:5px;padding:2px 6px;flex-shrink:0;
+}
+
 /* ═══════════════════════════════════════════════
    ADVANCED FEATURES — 6 大進階功能
 ═══════════════════════════════════════════════ */
@@ -735,6 +778,10 @@ textarea{resize:vertical;}
     <button class="drawer-item" id="di-assist" onclick="goTab('assist');closeDrawer()">
       <div class="di-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
       <span class="di-label">文化提醒</span>
+    </button>
+    <button class="drawer-item" id="di-taxreturn" onclick="goTab('taxreturn');closeDrawer()">
+      <div class="di-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+      <span class="di-label">退稅指南</span>
     </button>
   </div>
   <div class="drawer-footer">
@@ -1365,6 +1412,136 @@ textarea{resize:vertical;}
 
     <!-- 文化提醒 -->
     <div id="culture-tips"></div>
+
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- ══════ PANEL: 退稅指南 ══════ -->
+<div class="panel" id="p-taxreturn">
+  <div style="padding:20px 16px 0;">
+    <div style="font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--t1);margin-bottom:4px;">🧾 退稅指南</div>
+    <div style="font-size:14px;color:var(--t2);margin-bottom:20px;">義大利購物退稅完整攻略</div>
+
+    <!-- 退稅門檻 -->
+    <div class="tax-card tax-highlight">
+      <div class="tax-card-title">💰 退稅門檻</div>
+      <div class="tax-row-big">同一天 · 同一家店消費 <strong>≥ €155</strong></div>
+      <div class="tax-note">VAT 稅率 22%，實際退稅入手約 <strong>9–15%</strong>（並非全額退回）</div>
+    </div>
+
+    <!-- 退稅流程 -->
+    <div class="sec-label" style="padding-left:0;margin-top:16px;">📋 退稅 SOP</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+
+      <div class="tax-step">
+        <div class="tax-step-num">1</div>
+        <div class="tax-step-body">
+          <div class="tax-step-title">購物時告知店員退稅</div>
+          <div class="tax-step-desc">說 <em>「TAX FREE / TAX REFUND / TAX RETURN」</em>，提供護照讓店員製作退稅單，取得：退稅單 + 退稅信封 + 購物收據</div>
+        </div>
+      </div>
+
+      <div class="tax-step">
+        <div class="tax-step-num">2</div>
+        <div class="tax-step-body">
+          <div class="tax-step-title">⚠️ 確認退稅單國籍欄</div>
+          <div class="tax-step-desc">必須寫 <strong>Taiwan</strong> / Taiwan China / 158 Taiwan Region。若只寫 <strong>China</strong> 收不到退稅款！當場請店員重開，可拿其他家正確的退稅單佐證</div>
+        </div>
+      </div>
+
+      <div class="tax-step">
+        <div class="tax-step-num">3</div>
+        <div class="tax-step-body">
+          <div class="tax-step-title">填寫退稅單資料</div>
+          <div class="tax-step-desc">姓名（護照英文名）· 地址（英文）· 國籍 Taiwan · 護照號碼 · 簽名（同護照）· 信用卡號（可與消費卡不同張，但姓名須一致）</div>
+        </div>
+      </div>
+
+      <div class="tax-step">
+        <div class="tax-step-num">4</div>
+        <div class="tax-step-body">
+          <div class="tax-step-title">精品放手提行李</div>
+          <div class="tax-step-desc">退稅商品務必放手提行李，勿托運（機場有不肖人員）。高價精品若被抽查，需當場出示商品核驗</div>
+        </div>
+      </div>
+
+      <div class="tax-step">
+        <div class="tax-step-num">5</div>
+        <div class="tax-step-body">
+          <div class="tax-step-title">機場退稅（先退稅再掛行李）</div>
+          <div class="tax-step-desc">米蘭 MXP：出境大廳 2 樓 <strong>Area 12</strong>，依退稅單上的公司分三處辦理。一般不到 3 分鐘完成</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 三大退稅公司 -->
+    <div class="sec-label" style="padding-left:0;">🏢 三大退稅公司（MXP Area 12）</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+      <div class="tax-company" style="border-left:4px solid #0071e3;">
+        <div class="tax-company-name">Global Blue <span style="color:#0071e3;">●</span> 藍色</div>
+        <div class="tax-company-desc">有電子自助櫃台，掃護照資料頁 → 選航班 → 確認金額 → 印收據，全程自助超快速</div>
+      </div>
+      <div class="tax-company" style="border-left:4px solid #34c759;">
+        <div class="tax-company-name">Planet <span style="color:#34c759;">●</span> 綠色</div>
+        <div class="tax-company-desc">人工櫃台，有會說中文的服務人員</div>
+      </div>
+      <div class="tax-company" style="border-left:4px solid #ff9500;">
+        <div class="tax-company-name">Tax Refund <span style="color:#ff9500;">●</span> 黃色</div>
+        <div class="tax-company-desc">人工櫃台辦理</div>
+      </div>
+    </div>
+
+    <!-- 可退稅機場 -->
+    <div class="sec-label" style="padding-left:0;">✈️ 義大利可退稅機場</div>
+    <div class="tax-card" style="margin-bottom:16px;">
+      <div class="tax-airport-row"><span class="tax-airport-code">MXP</span> 米蘭馬爾彭薩（長榮直航）</div>
+      <div class="tax-airport-row"><span class="tax-airport-code">FCO</span> 羅馬達文西（華航直航）</div>
+      <div class="tax-airport-row"><span class="tax-airport-code">NAP</span> 拿坡里國際機場</div>
+      <div class="tax-airport-row"><span class="tax-airport-code">VCE</span> 威尼斯馬可波羅機場</div>
+      <div class="tax-airport-row"><span class="tax-airport-code">BLQ</span> 波隆納國際機場</div>
+      <div style="font-size:12px;color:var(--t2);margin-top:8px;padding-top:8px;border-top:1px solid var(--border2);">💡 百貨公司與 Outlet（如 Serravalle Designer Outlet）也設有退稅櫃台</div>
+    </div>
+
+    <!-- 現金 vs 信用卡 -->
+    <div class="sec-label" style="padding-left:0;">💳 退稅方式比較</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+      <div class="tax-card" style="text-align:center;">
+        <div style="font-size:20px;margin-bottom:6px;">💵</div>
+        <div style="font-size:13px;font-weight:700;color:var(--t1);margin-bottom:4px;">現金退稅</div>
+        <div style="font-size:12px;color:var(--t2);line-height:1.6;">當場拿到歐元<br>⚠️ 手續費較高<br>⚠️ 幣別選<strong>歐元</strong>，勿選美金（匯率差）</div>
+      </div>
+      <div class="tax-card" style="text-align:center;border-color:var(--blue);">
+        <div style="font-size:20px;margin-bottom:6px;">💳</div>
+        <div style="font-size:13px;font-weight:700;color:var(--blue);margin-bottom:4px;">信用卡退稅 ★推薦</div>
+        <div style="font-size:12px;color:var(--t2);line-height:1.6;">1–3 個月入帳<br>✅ 金額較高<br>⚠️ 電子系統會退回原消費卡</div>
+      </div>
+    </div>
+
+    <!-- 常見陷阱 -->
+    <div class="sec-label" style="padding-left:0;">⚠️ 常見陷阱 ＆ 注意</div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
+      <div class="city-tip-row warn">🏷️ 國籍欄寫 <strong>China</strong> 會收不到退稅款，務必當場確認並要求重開</div>
+      <div class="city-tip-row warn">🧳 高價精品放手提行李，不要托運，防範機場竊盜</div>
+      <div class="city-tip-row warn">💶 現金退稅一定選 <strong>歐元</strong>，選美金匯率很差</div>
+      <div class="city-tip-row warn">⏱️ 記得先辦退稅、再去掛行李托運，順序不能錯</div>
+      <div class="city-tip-row warn">📦 在退稅信封上標註品牌 ＆ 放在哪個行李箱，抽查時好找</div>
+    </div>
+
+    <!-- 資料來源 -->
+    <div style="margin-bottom:8px;">
+      <a href="https://evalife.tw/italy-taxreturn/" target="_blank" style="text-decoration:none;">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:16px;">🔗</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:600;color:var(--t1);">完整退稅教學</div>
+            <div style="font-size:11px;color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">evalife.tw/italy-taxreturn</div>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </a>
+    </div>
 
   </div>
   <div class="pb"></div>
