@@ -185,6 +185,9 @@ input,textarea,select{
   font-size:14px;width:100%;outline:none;font-family:inherit;
   appearance:none;-webkit-appearance:none;transition:border-color .15s,box-shadow .15s;
 }
+input[type="checkbox"],input[type="radio"]{
+  width:auto;padding:0;border-radius:4px;appearance:auto;-webkit-appearance:auto;
+}
 input:focus,textarea:focus,select:focus{
   border-color:var(--t2);
   box-shadow:0 0 0 3px rgba(0,0,0,0.06);
@@ -381,6 +384,13 @@ textarea{resize:vertical;}
 .mem-date{font-size:11px;color:var(--t3);margin-bottom:4px;}
 .mem-note{font-size:12px;color:var(--t2);line-height:1.6;}
 .mem-delete{background:none;border:none;color:var(--t3);cursor:pointer;padding:4px;font-size:18px;margin-left:auto;align-self:flex-start;}
+/* ── Member Buttons ── */
+.member-btn{flex:1;padding:10px 4px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--t2);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;text-align:center;}
+.member-btn.payer-on{color:#fff;border-color:transparent;}
+.member-btn.split-on{border-width:2px;}
+.member-btn.split-off{opacity:.38;}
+.split-preview{background:var(--surface);border-radius:10px;padding:10px 14px;margin-top:8px;font-size:13px;color:var(--t2);display:none;}
+.split-preview b{color:var(--t1);}
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px;}
 .stat-card{
   background:var(--surface);border:1px solid var(--border);
@@ -825,7 +835,7 @@ textarea{resize:vertical;}
   <div class="sec-label">新增花費</div>
   <div style="padding:0 16px 16px;">
     <div class="row2" style="margin-bottom:10px;">
-      <div><label class="lbl">金額</label><input type="number" id="eamt" placeholder="0.00" step="0.01" min="0"/></div>
+      <div><label class="lbl">金額</label><input type="number" id="eamt" placeholder="0.00" step="0.01" min="0" oninput="updateSplitPreview()"/></div>
       <div><label class="lbl">幣別</label>
         <select id="ecur"><option value="EUR">EUR €</option><option value="TWD">TWD NT$</option></select>
       </div>
@@ -847,38 +857,32 @@ textarea{resize:vertical;}
         </select>
       </div>
     </div>
-    <div style="margin-bottom:10px;"><input type="text" id="enote" placeholder="備註（如：Pantheon 門票）"/></div>
+    <div style="margin-bottom:10px;"><input type="text" id="enote" placeholder="備註（如：晚餐 Achille）"/></div>
 
-    <!-- 付款人 & 分攤 -->
-    <div class="row2" style="margin-bottom:10px;">
-      <div>
-        <label class="lbl">誰付款</label>
-        <select id="epayer">
-          <option value="Grace">Grace</option>
-          <option value="Vicky">Vicky</option>
-          <option value="水晶">水晶</option>
-          <option value="Evonne" selected>Evonne</option>
-        </select>
-      </div>
-      <div>
-        <label class="lbl">分攤模式</label>
-        <select id="esplit-mode" onchange="toggleSplitCustom()">
-          <option value="all">四人均攤</option>
-          <option value="custom">自選成員</option>
-          <option value="none">不分攤（個人）</option>
-        </select>
+    <!-- 誰付款：單選 -->
+    <div style="margin-bottom:4px;">
+      <div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:8px;">誰付款？（點選一人）</div>
+      <div style="display:flex;gap:6px;" id="payer-btns">
+        <button class="member-btn" data-p="Grace" onclick="selectPayer(this)" style="border-color:rgba(255,59,48,.4);">Grace</button>
+        <button class="member-btn" data-p="Vicky" onclick="selectPayer(this)" style="border-color:rgba(52,199,89,.4);">Vicky</button>
+        <button class="member-btn" data-p="水晶" onclick="selectPayer(this)" style="border-color:rgba(90,200,250,.4);">水晶</button>
+        <button class="member-btn payer-on" data-p="Evonne" onclick="selectPayer(this)" style="background:rgba(201,168,76,1);">Evonne</button>
       </div>
     </div>
-    <div id="split-custom" style="display:none;margin-bottom:10px;">
-      <label class="lbl">選擇分攤成員</label>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;padding:8px 0;">
-        <label style="display:flex;align-items:center;gap:5px;font-size:14px;cursor:pointer;"><input type="checkbox" id="sc-Grace" value="Grace" checked style="width:auto;border-radius:4px;"/> Grace</label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:14px;cursor:pointer;"><input type="checkbox" id="sc-Vicky" value="Vicky" checked style="width:auto;border-radius:4px;"/> Vicky</label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:14px;cursor:pointer;"><input type="checkbox" id="sc-水晶" value="水晶" checked style="width:auto;border-radius:4px;"/> 水晶</label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:14px;cursor:pointer;"><input type="checkbox" id="sc-Evonne" value="Evonne" checked style="width:auto;border-radius:4px;"/> Evonne</label>
+
+    <!-- 誰要分：多選，預設全選 -->
+    <div style="margin-bottom:8px;margin-top:12px;">
+      <div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:8px;">分給誰？（可多選，預設四人均攤）</div>
+      <div style="display:flex;gap:6px;" id="split-btns">
+        <button class="member-btn split-on" data-p="Grace" onclick="toggleSplit(this)" style="border-color:#ff3b30;color:#ff3b30;">Grace</button>
+        <button class="member-btn split-on" data-p="Vicky" onclick="toggleSplit(this)" style="border-color:#34c759;color:#34c759;">Vicky</button>
+        <button class="member-btn split-on" data-p="水晶" onclick="toggleSplit(this)" style="border-color:#5ac8fa;color:#5ac8fa;">水晶</button>
+        <button class="member-btn split-on" data-p="Evonne" onclick="toggleSplit(this)" style="border-color:#C9A84C;color:#C9A84C;">Evonne</button>
       </div>
+      <div class="split-preview" id="split-preview"></div>
     </div>
-    <button class="btn btn-primary" style="width:100%;" onclick="addExp()">新增花費</button>
+
+    <button class="btn btn-primary" style="width:100%;background:var(--t1);color:var(--bg);" onclick="addExp()">新增花費</button>
   </div>
 
   <div style="display:flex;justify-content:space-between;align-items:center;padding:0 16px;">
@@ -1703,22 +1707,65 @@ const MEMBER_CLR={Grace:'#ff3b30',Vicky:'#34c759',水晶:'#5ac8fa',Evonne:'#C9A8
 const CCLR={食:'#ff9500',住:'#ff3b30',行:'#0071e3',票:'#bf5af2',購:'#34c759',車:'#5ac8fa',雜:'#aeaeb2'};
 const CNME={食:'餐飲',住:'住宿',行:'交通',票:'門票',購:'購物',車:'租車',雜:'雜費'};
 
-function toggleSplitCustom(){
-  const mode=document.getElementById('esplit-mode').value;
-  document.getElementById('split-custom').style.display=mode==='custom'?'block':'none';
+function selectPayer(btn){
+  const clr={Grace:'#ff3b30',Vicky:'#34c759',水晶:'#5ac8fa',Evonne:'#C9A84C'};
+  document.querySelectorAll('#payer-btns .member-btn').forEach(b=>{
+    b.classList.remove('payer-on');
+    b.style.background='';b.style.color='';
+    b.style.borderColor=clr[b.dataset.p]+'66';
+  });
+  btn.classList.add('payer-on');
+  btn.style.background=clr[btn.dataset.p];
+  btn.style.color='#fff';
+  btn.style.borderColor='transparent';
+  updateSplitPreview();
 }
+
+function toggleSplit(btn){
+  const clr={Grace:'#ff3b30',Vicky:'#34c759',水晶:'#5ac8fa',Evonne:'#C9A84C'};
+  const p=btn.dataset.p;
+  const isOn=btn.classList.contains('split-on');
+  // 至少要有1人
+  const onCount=document.querySelectorAll('#split-btns .member-btn.split-on').length;
+  if(isOn&&onCount<=1){toast('至少要選1人分攤');return;}
+  btn.classList.toggle('split-on',!isOn);
+  btn.classList.toggle('split-off',isOn);
+  if(!isOn){btn.style.borderColor=clr[p];btn.style.color=clr[p];}
+  else{btn.style.borderColor='var(--border)';btn.style.color='var(--t3)';}
+  updateSplitPreview();
+}
+
+function updateSplitPreview(){
+  const amt=parseFloat(document.getElementById('eamt').value)||0;
+  const cur=document.getElementById('ecur').value;
+  const eur=cur==='EUR'?amt:amt/S.rate;
+  const splitBtns=document.querySelectorAll('#split-btns .member-btn.split-on');
+  const splitCount=splitBtns.length;
+  const preview=document.getElementById('split-preview');
+  if(!preview)return;
+  if(eur>0&&splitCount>0){
+    const shareEur=(eur/splitCount).toFixed(2);
+    const shareTwd=Math.round(eur/splitCount*S.rate);
+    const names=[...splitBtns].map(b=>b.dataset.p).join('、');
+    preview.style.display='block';
+    preview.innerHTML=`€${eur.toFixed(2)} ÷ ${splitCount}人（${names}）= <b>每人 €${shareEur} ≈ NT$${shareTwd.toLocaleString()}</b>`;
+  }else{
+    preview.style.display='none';
+  }
+}
+
+function toggleSplitCustom(){} // 舊函式保留以防呼叫
 
 function addExp(){
   const amt=parseFloat(document.getElementById('eamt').value);
   if(!amt||amt<=0){toast('請輸入金額');return;}
   const cur=document.getElementById('ecur').value;
   const eur=cur==='EUR'?amt:amt/S.rate;
-  const payer=document.getElementById('epayer').value;
-  const mode=document.getElementById('esplit-mode').value;
-  let splitWith=[];
-  if(mode==='all') splitWith=[...MEMBERS];
-  else if(mode==='custom') splitWith=MEMBERS.filter(m=>document.getElementById('sc-'+m)?.checked);
-  else splitWith=[];
+  // 讀取付款人（哪個按鈕有 payer-on class）
+  const payerBtn=document.querySelector('#payer-btns .member-btn.payer-on');
+  const payer=payerBtn?payerBtn.dataset.p:'Evonne';
+  // 讀取分攤成員
+  const splitWith=[...document.querySelectorAll('#split-btns .member-btn.split-on')].map(b=>b.dataset.p);
   S.exps.unshift({id:Date.now(),amt,cur,eur,twd:Math.round(eur*S.rate),
     cat:document.getElementById('ecat').value,
     city:document.getElementById('ecity').value,
@@ -1727,6 +1774,7 @@ function addExp(){
     payer,splitWith});
   saveExps();
   document.getElementById('eamt').value='';document.getElementById('enote').value='';
+  document.getElementById('split-preview').style.display='none';
   renderExps();toast('已新增花費');
 }
 function delExp(id){S.exps=S.exps.filter(e=>e.id!==id);saveExps();renderExps();}
