@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════
-   Viaggio Italia 2026 — Service Worker v8
+   Viaggio Italia 2026 — Service Worker v9
    雙 Cache 策略：App Shell + Map Tiles 分離
 ═══════════════════════════════════════════ */
-const CACHE      = 'viaggio-2026-v8';
+const CACHE      = 'viaggio-2026-v9';
 const TILE_CACHE = 'viaggio-tiles-v1';
 const TILE_MAX   = 2000; // 最多快取 tile 數量
 
