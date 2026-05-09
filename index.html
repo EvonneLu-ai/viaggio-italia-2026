@@ -1072,6 +1072,9 @@ textarea{resize:vertical;}
       <button class="poi-btn" onclick="srchPOI('hospital',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>醫院
       </button>
+      <button class="poi-btn" onclick="srchPOI('drinking_water',this)" title="Nasoni 免費飲水機">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10"/><path d="M12 8v8"/><path d="M8 12h8"/><circle cx="18" cy="6" r="3" fill="currentColor" opacity=".3"/></svg>Nasoni 💧
+      </button>
     </div>
   </div>
   <div id="map-wrap">
@@ -1276,7 +1279,28 @@ textarea{resize:vertical;}
       </a>
     </div>
 
-    <!-- ⑤ 文字翻譯 -->
+    <!-- ⑤ Google Lens 識別告示牌 -->
+    <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">&#x2462; Google Lens 識別告示牌</div>
+    <a href="https://lens.google.com" target="_blank"
+      style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:13px;text-decoration:none;color:var(--t1);margin-bottom:8px;">
+      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#EA4335,#FBBC04,#34A853,#4285F4);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><circle cx="11" cy="11" r="4"/></svg>
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:15px;font-weight:700;">Google Lens 識別</div>
+        <div style="font-size:12px;color:var(--t2);margin-top:2px;">拍照辨識 ZTL 告示牌、菜單、路標</div>
+      </div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+    <div style="background:rgba(255,149,0,.08);border:1px solid rgba(255,149,0,.25);border-radius:11px;padding:11px 13px;font-size:12px;color:var(--t1);line-height:1.7;margin-bottom:18px;">
+      <strong style="color:#ff9500;">🔍 在義大利拍這些：</strong><br>
+      📍 <strong>ZTL 標誌</strong>（白底紅圈）→ 限行區，開車勿進<br>
+      🏛️ <strong>Percorso Archeologico</strong> → 考古路徑指標<br>
+      🍽️ <strong>菜單 / 價目表</strong> → 直接翻譯再點餐<br>
+      🚌 <strong>巴士站牌 / 時刻表</strong> → 確認班次
+    </div>
+
+    <!-- ⑥ 文字翻譯 -->
     <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">⑤ 文字輸入翻譯</div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:22px;">
       <div style="display:flex;gap:6px;padding:12px 12px 8px;">
@@ -1835,6 +1859,7 @@ const CITY_GROUPS=[
    tips:{
      warn:['👜 巴勒莫 Ballarò 市場周邊扒手多，包包務必放胸前','🏪 下午 2–5 點多數店家午休（Riposo），這段時間別安排購物','🚗 ZTL 禁止進入區域，自駕務必注意'],
      price:['🍊 街頭小吃超划算：Arancini / Cannoli 約 €2.50–4.00','🦞 雙人海鮮大餐含酒約 €60–80，比北義划算許多','⚠️ 陶爾米納（Taormina）是西西里最貴城市，物價直逼米蘭，需多留預算'],
+     nav:['🏔️ 切法盧方位：永遠以 La Rocca（大岩石山）為座標中心，抬頭看得到山就知道自己在哪個方位','🏺 路標：街道轉角陽台上的陶瓷頭像（Testa di Moro）是西西里獨有地標，可用來辨認巷弄方向','⚠️ 看到寫有 "Percorso Archeologico"（考古路徑）或 "ZTL" 標誌牌，即為限行區邊界，開車勿進'],
    }},
   {name:'Milano & Venezia',  dates:'6/5 – 6/9',   clr:'#5ac8fa', days:[11,12,13,14],mapCoords:[45.4654,9.1859],
    tips:{
@@ -1912,6 +1937,10 @@ function renderItin(){
         ${group.tips.price.length?`<div class="city-tips-sec">
           <div class="city-tips-sec-label">&#x1F4B0; 物價參考</div>
           ${group.tips.price.map(p=>'<div class="city-tip-row price">'+p+'</div>').join('')}
+        </div>`:''}
+        ${group.tips.nav&&group.tips.nav.length?`<div class="city-tips-sec">
+          <div class="city-tips-sec-label">&#x1F9ED; 路標 &amp; 導航提示</div>
+          ${group.tips.nav.map(n=>'<div class="city-tip-row price">'+n+'</div>').join('')}
         </div>`:''}
       </div>
     </div>` : ''}
@@ -2689,7 +2718,21 @@ function initMap(){
   ATTRACTIONS.forEach((a,i)=>{
     const mk=L.marker([a.la,a.lo],{icon:makeMarkerIcon(a.clr)})
       .addTo(S.map)
-      .bindPopup(`<div style="font-size:13px;font-weight:700;color:#1d1d1f;margin-bottom:3px;">${a.n}</div><div style="display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;background:${a.clr}20;color:${a.clr};">${a.city}</div>`);
+      .bindPopup(`
+        <div style="font-size:13px;font-weight:700;color:#1d1d1f;margin-bottom:4px;">${a.n}</div>
+        <div style="display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;background:${a.clr}20;color:${a.clr};margin-bottom:8px;">${a.city}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <a href="comgooglemaps://?daddr=${a.la},${a.lo}&directionsmode=walking" onclick="if(!/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)){event.preventDefault();window.open('https://www.google.com/maps/dir/?api=1&destination=${a.la},${a.lo}&travelmode=walking','_blank');}"
+            style="display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border-radius:7px;background:#4285F4;color:#fff;font-size:11px;font-weight:700;text-decoration:none;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+            導航前往
+          </a>
+          <a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${a.la},${a.lo}" target="_blank"
+            style="display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border-radius:7px;background:#34A853;color:#fff;font-size:11px;font-weight:700;text-decoration:none;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            街景
+          </a>
+        </div>`);
     markerRefs.push({...a,marker:mk});
   });
 
