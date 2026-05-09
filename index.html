@@ -2254,32 +2254,26 @@ function setExpTab(tab, btn){
 }
 
 function renderExps(){
-  // 依 Tab 過濾
-  const filtered = expTab==='shared' ? S.exps.filter(e=>!e.personal)
-                 : expTab==='mine'   ? S.exps.filter(e=>e.personal)
+  // 依 Tab 過濾（嚴格比對 personal===true）
+  const filtered = expTab==='shared' ? S.exps.filter(e=>e.personal!==true)
+                 : expTab==='mine'   ? S.exps.filter(e=>e.personal===true)
                  : S.exps;
 
-  // 頂部統計（全部計算，不受 Tab 影響）
-  const tot=S.exps.reduce((s,e)=>s+e.eur,0);
-  const days=new Set(S.exps.map(e=>e.date)).size||1;
+  // 頂部統計：跟著 Tab 走，個人 Tab 只算個人帳
+  const tot=filtered.reduce((s,e)=>s+e.eur,0);
+  const days=new Set(filtered.map(e=>e.date)).size||1;
+  const statLabel = expTab==='mine' ? '個人花費（歐元）'
+                  : expTab==='shared' ? '共享花費（歐元）'
+                  : '總花費（歐元）';
   document.getElementById('exp-stats').innerHTML=`
-    <div class="stat-card"><div class="stat-val">€${tot.toFixed(2)}</div><div class="stat-label">總花費（歐元）</div></div>
-    <div class="stat-card"><div class="stat-val" style="font-size:18px;">NT$${Math.round(tot*S.rate).toLocaleString()}</div><div class="stat-label">總花費（台幣）</div></div>
-    <div class="stat-card"><div class="stat-val" style="font-size:20px;">${S.exps.length}</div><div class="stat-label">記帳筆數</div></div>
-    <div class="stat-card"><div class="stat-val" style="font-size:18px;">€${(tot/days).toFixed(0)}</div><div class="stat-label">每日平均</div></div>`;
+    <div class="stat-card"><div class="stat-val">€${tot.toFixed(2)}</div><div class="stat-label">${statLabel}</div></div>
+    <div class="stat-card"><div class="stat-val" style="font-size:18px;">NT$${Math.round(tot*S.rate).toLocaleString()}</div><div class="stat-label">折合台幣</div></div>
+    <div class="stat-card"><div class="stat-val" style="font-size:20px;">${filtered.length}</div><div class="stat-label">記帳筆數</div></div>
+    <div class="stat-card"><div class="stat-val" style="font-size:18px;">€${days>0?(tot/days).toFixed(0):'0'}</div><div class="stat-label">每日平均</div></div>`;
 
-  // Tab 小計
+  // Tab 小計列（隱藏，資訊已整合進頂部統計）
   const subEl=document.getElementById('exp-tab-sub');
-  if(subEl){
-    if(expTab==='all'){subEl.style.display='none';}
-    else{
-      const subTot=filtered.reduce((s,e)=>s+e.eur,0);
-      subEl.style.display='block';
-      subEl.textContent=expTab==='mine'
-        ?`個人花費共 ${filtered.length} 筆 · €${subTot.toFixed(2)} ≈ NT$${Math.round(subTot*S.rate).toLocaleString()}`
-        :`共享花費共 ${filtered.length} 筆 · €${subTot.toFixed(2)} ≈ NT$${Math.round(subTot*S.rate).toLocaleString()}`;
-    }
-  }
+  if(subEl)subEl.style.display='none';
 
   // 分攤名字輔助函式
   const splitLabel=(e)=>{
