@@ -1963,20 +1963,63 @@ function renderSplitSummary(){
 }
 
 function exportCSV(){
-  const headers=['日期','備註','城市','類別','EUR','NTD','付款人','分攤成員','人均EUR','人均NTD'];
+  // 標題列：每人各有 EUR 和 NTD 獨立欄
+  const headers=[
+    '日期','備註','城市','類別','付款人',
+    '總金額(EUR)','總金額(NTD)',
+    'Grace分攤(EUR)','Vicky分攤(EUR)','水晶分攤(EUR)','Evonne分攤(EUR)',
+    'Grace分攤(NTD)','Vicky分攤(NTD)','水晶分攤(NTD)','Evonne分攤(NTD)',
+    '備註2'
+  ];
+
   const rows=S.exps.map(e=>{
-    const sw=e.splitWith&&e.splitWith.length?e.splitWith:['個人'];
-    const shareEur=(e.eur/sw.length).toFixed(2);
-    const shareTwd=Math.round(e.eur/sw.length*S.rate);
-    return [e.date,e.note,e.city,CNME[e.cat]||e.cat,e.eur.toFixed(2),e.twd,e.payer||'-',sw.join('/'),shareEur,shareTwd];
+    const sw=e.splitWith&&e.splitWith.length?e.splitWith:[];
+    // 每人分攤 EUR
+    const shareEur=sw.length>0?(e.eur/sw.length):0;
+    const shareTwd=sw.length>0?Math.round(e.eur/sw.length*S.rate):0;
+    const memberEur=MEMBERS.map(m=>sw.includes(m)?shareEur.toFixed(2):'0.00');
+    const memberTwd=MEMBERS.map(m=>sw.includes(m)?shareTwd:'0');
+    const note2=sw.length>0?`${e.payer||'-'}付，${sw.join('+')}各攤€${shareEur.toFixed(2)}`:'個人';
+    return [
+      e.date, e.note, e.city, CNME[e.cat]||e.cat, e.payer||'-',
+      e.eur.toFixed(2), e.twd,
+      ...memberEur, ...memberTwd,
+      note2
+    ];
   });
-  const csv=[headers,...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+
+  // 加總列
+  const totEur=S.exps.reduce((s,e)=>s+e.eur,0);
+  const totTwd=Math.round(totEur*S.rate);
+  const memberTotEur=MEMBERS.map(m=>{
+    let t=0;
+    S.exps.forEach(e=>{
+      const sw=e.splitWith||[];
+      if(sw.includes(m))t+=e.eur/sw.length;
+    });
+    return t.toFixed(2);
+  });
+  const memberTotTwd=MEMBERS.map(m=>{
+    let t=0;
+    S.exps.forEach(e=>{
+      const sw=e.splitWith||[];
+      if(sw.includes(m))t+=e.eur/sw.length*S.rate;
+    });
+    return Math.round(t);
+  });
+  const totalRow=['合計','','','','',totEur.toFixed(2),totTwd,...memberTotEur,...memberTotTwd,''];
+
+  // 匯率說明列
+  const rateRow=[`匯率：1 EUR = ${S.rate} NTD`,'','','','','','','','','','','','','','',''];
+
+  const all=[headers,...rows,[''],totalRow,rateRow];
+  const csv=all.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
   const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download=`viaggio_expenses_${new Date().toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'')}.csv`;
+  a.download=`viaggio_2026_${new Date().toLocaleDateString('zh-TW',{month:'2-digit',day:'2-digit'}).replace(/\//g,'')}.csv`;
   a.click();
-  toast('CSV 匯出成功，可用 Numbers/Excel 開啟！');
+  toast('CSV 匯出！每人各有獨立欄位，Numbers/Excel 可直接看總額');
 }
 
 function exportText(){
