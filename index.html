@@ -321,6 +321,16 @@ textarea{resize:vertical;}
   .city-tip-row.warn{background:rgba(255,59,48,.13);}
 }
 
+/* ── Expense Tab Filter ── */
+.exp-tab{
+  font-size:11px;font-weight:700;padding:4px 10px;
+  border-radius:99px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--t3);
+  cursor:pointer;font-family:inherit;transition:all .15s;
+}
+.exp-tab.exp-tab-on{
+  background:var(--t1);color:var(--bg);border-color:transparent;
+}
 /* ── Tax Return Guide ── */
 .tax-card{
   background:var(--surface);border:1px solid var(--border);
@@ -965,9 +975,16 @@ textarea{resize:vertical;}
     <button class="btn btn-primary" style="width:100%;background:var(--t1);color:var(--bg);" onclick="addExp()">新增花費</button>
   </div>
 
+  <!-- 花費明細 + Tab 篩選 -->
   <div style="display:flex;justify-content:space-between;align-items:center;padding:0 16px;">
     <div class="sec-label" style="padding:16px 0 10px;">花費明細</div>
+    <div style="display:flex;gap:4px;">
+      <button id="exp-tab-all"    onclick="setExpTab('all',this)"    class="exp-tab exp-tab-on">全部</button>
+      <button id="exp-tab-shared" onclick="setExpTab('shared',this)" class="exp-tab">共享</button>
+      <button id="exp-tab-mine"   onclick="setExpTab('mine',this)"   class="exp-tab">個人</button>
+    </div>
   </div>
+  <div id="exp-tab-sub" style="padding:0 16px 8px;font-size:12px;color:var(--t3);display:none;"></div>
   <div class="card" id="exp-list" style="margin-bottom:10px;"></div>
   <div class="sec-label">類別分析</div>
   <div class="card" style="padding:14px 16px;margin-bottom:10px;"><div id="cat-bars"></div></div>
@@ -2227,7 +2244,22 @@ function swapCalc(){
   document.getElementById('calc-twd').value=e?Math.round(e*S.rate):'';
   calcFromEur();
 }
+/* 花費明細 Tab 狀態 */
+let expTab='all'; // 'all' | 'shared' | 'mine'
+function setExpTab(tab, btn){
+  expTab=tab;
+  document.querySelectorAll('.exp-tab').forEach(b=>b.classList.remove('exp-tab-on'));
+  btn.classList.add('exp-tab-on');
+  renderExps();
+}
+
 function renderExps(){
+  // 依 Tab 過濾
+  const filtered = expTab==='shared' ? S.exps.filter(e=>!e.personal)
+                 : expTab==='mine'   ? S.exps.filter(e=>e.personal)
+                 : S.exps;
+
+  // 頂部統計（全部計算，不受 Tab 影響）
   const tot=S.exps.reduce((s,e)=>s+e.eur,0);
   const days=new Set(S.exps.map(e=>e.date)).size||1;
   document.getElementById('exp-stats').innerHTML=`
@@ -2235,15 +2267,40 @@ function renderExps(){
     <div class="stat-card"><div class="stat-val" style="font-size:18px;">NT$${Math.round(tot*S.rate).toLocaleString()}</div><div class="stat-label">總花費（台幣）</div></div>
     <div class="stat-card"><div class="stat-val" style="font-size:20px;">${S.exps.length}</div><div class="stat-label">記帳筆數</div></div>
     <div class="stat-card"><div class="stat-val" style="font-size:18px;">€${(tot/days).toFixed(0)}</div><div class="stat-label">每日平均</div></div>`;
+
+  // Tab 小計
+  const subEl=document.getElementById('exp-tab-sub');
+  if(subEl){
+    if(expTab==='all'){subEl.style.display='none';}
+    else{
+      const subTot=filtered.reduce((s,e)=>s+e.eur,0);
+      subEl.style.display='block';
+      subEl.textContent=expTab==='mine'
+        ?`個人花費共 ${filtered.length} 筆 · €${subTot.toFixed(2)} ≈ NT$${Math.round(subTot*S.rate).toLocaleString()}`
+        :`共享花費共 ${filtered.length} 筆 · €${subTot.toFixed(2)} ≈ NT$${Math.round(subTot*S.rate).toLocaleString()}`;
+    }
+  }
+
+  // 分攤名字輔助函式
+  const splitLabel=(e)=>{
+    if(e.personal||!e.splitWith||!e.splitWith.length)return '';
+    const sw=e.splitWith;
+    if(sw.length===4)return ' · <span style="color:var(--t3);">全員分</span>';
+    const names=sw.map(n=>`<span style="color:${MEMBER_CLR[n]||'var(--t2)'};font-weight:700;">${n}</span>`).join('<span style="color:var(--t3);">・</span>');
+    return ` · ${names}`;
+  };
+
   const listEl=document.getElementById('exp-list');
-  if(!S.exps.length){listEl.innerHTML='<div class="loading">尚無花費記錄</div>';}
-  else{listEl.innerHTML=S.exps.map(e=>`
+  if(!filtered.length){
+    listEl.innerHTML=`<div class="loading" style="color:var(--t3);">${expTab==='mine'?'尚無個人花費':expTab==='shared'?'尚無共享花費':'尚無花費記錄'}</div>`;
+  } else {
+    listEl.innerHTML=filtered.map(e=>`
     <div style="border-bottom:1px solid var(--border2);">
       <div class="exp-item-row">
         <div class="exp-cat-dot" style="background:${CCLR[e.cat]||'#aaa'}"></div>
         <div class="exp-info">
           <div class="exp-name">${e.note}${e.personal?'<span style="display:inline-block;font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;background:var(--surface2);color:var(--t3);margin-left:5px;vertical-align:middle;letter-spacing:.3px;">個人</span>':''}</div>
-          <div class="exp-meta">${e.date} · ${e.city} · ${CNME[e.cat]||e.cat}${e.payer?` · <span style="color:${MEMBER_CLR[e.payer]||'var(--t2)'};font-weight:700;">${e.payer}付</span>`:''}${e.splitWith&&e.splitWith.length&&!e.personal?` · 分${e.splitWith.length}人`:''}</div>
+          <div class="exp-meta">${e.date} · ${e.city} · ${CNME[e.cat]||e.cat}${e.payer?` · <span style="color:${MEMBER_CLR[e.payer]||'var(--t2)'};font-weight:700;">${e.payer}付</span>`:''}${splitLabel(e)}</div>
         </div>
         <div style="text-align:right;margin-right:4px;">
           <div class="exp-eur">${e.cur==='EUR'?'€':'NT$'}${e.amt}</div>
@@ -2253,8 +2310,11 @@ function renderExps(){
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
-    </div>`).join('')+'<div style="height:1px"></div>';}
-  const ct={};S.exps.forEach(e=>{ct[e.cat]=(ct[e.cat]||0)+e.eur;});
+    </div>`).join('')+'<div style="height:1px"></div>';
+  }
+
+  // 類別長條圖（根據當前 Tab 的資料計算）
+  const ct={};filtered.forEach(e=>{ct[e.cat]=(ct[e.cat]||0)+e.eur;});
   const mx=Math.max(.01,...Object.values(ct));
   document.getElementById('cat-bars').innerHTML=Object.entries(ct).sort((a,b)=>b[1]-a[1]).map(([c,v])=>`
     <div class="bar-row">
@@ -2338,15 +2398,15 @@ function exportCSV(){
     'Grace分攤(NTD)','Vicky分攤(NTD)','水晶分攤(NTD)','Evonne分攤(NTD)',
     '備註2'
   ];
-
-  const rows=S.exps.map(e=>{
+  // 只匯出共享帳，個人帳不輸出
+  const sharedExps=S.exps.filter(e=>!e.personal);
+  const rows=sharedExps.map(e=>{
     const sw=e.splitWith&&e.splitWith.length?e.splitWith:[];
-    // 每人分攤 EUR
     const shareEur=sw.length>0?(e.eur/sw.length):0;
     const shareTwd=sw.length>0?Math.round(e.eur/sw.length*S.rate):0;
     const memberEur=MEMBERS.map(m=>sw.includes(m)?shareEur.toFixed(2):'0.00');
     const memberTwd=MEMBERS.map(m=>sw.includes(m)?shareTwd:'0');
-    const note2=sw.length>0?`${e.payer||'-'}付，${sw.join('+')}各攤€${shareEur.toFixed(2)}`:'個人';
+    const note2=sw.length>0?`${e.payer||'-'}付，${sw.join('+')}各攤€${shareEur.toFixed(2)}`:'無分攤';
     return [
       e.date, e.note, e.city, CNME[e.cat]||e.cat, e.payer||'-',
       e.eur.toFixed(2), e.twd,
@@ -2355,12 +2415,12 @@ function exportCSV(){
     ];
   });
 
-  // 加總列
-  const totEur=S.exps.reduce((s,e)=>s+e.eur,0);
+  // 加總列（只算共享帳）
+  const totEur=sharedExps.reduce((s,e)=>s+e.eur,0);
   const totTwd=Math.round(totEur*S.rate);
   const memberTotEur=MEMBERS.map(m=>{
     let t=0;
-    S.exps.forEach(e=>{
+    sharedExps.forEach(e=>{
       const sw=e.splitWith||[];
       if(sw.includes(m))t+=e.eur/sw.length;
     });
@@ -2368,7 +2428,7 @@ function exportCSV(){
   });
   const memberTotTwd=MEMBERS.map(m=>{
     let t=0;
-    S.exps.forEach(e=>{
+    sharedExps.forEach(e=>{
       const sw=e.splitWith||[];
       if(sw.includes(m))t+=e.eur/sw.length*S.rate;
     });
@@ -2379,10 +2439,10 @@ function exportCSV(){
   // 匯率說明列
   const rateRow=[`匯率：1 EUR = ${S.rate} NTD`,'','','','','','','','','','','','','','',''];
 
-  // ── 結算明細區塊 ──
+  // ── 結算明細區塊（只算共享帳）──
   const paid2={},owed2={};
   MEMBERS.forEach(m=>{paid2[m]=0;owed2[m]=0;});
-  S.exps.forEach(e=>{
+  sharedExps.forEach(e=>{
     const sw=e.splitWith||[];if(!sw.length||!e.payer)return;
     const share=e.eur/sw.length;
     if(paid2[e.payer]!==undefined)paid2[e.payer]+=e.eur;
@@ -2420,8 +2480,9 @@ function exportCSV(){
 }
 
 function exportText(){
-  const relevant=S.exps.filter(e=>e.splitWith&&e.splitWith.length>0&&e.payer);
-  if(!S.exps.length){toast('尚無記錄');return;}
+  const relevant=S.exps.filter(e=>e.splitWith&&e.splitWith.length>0&&e.payer&&!e.personal);
+  const sharedAll=S.exps.filter(e=>!e.personal);
+  if(!sharedAll.length){toast('尚無共享記錄');return;}
   const paid={},owed={};
   MEMBERS.forEach(m=>{paid[m]=0;owed[m]=0;});
   relevant.forEach(e=>{
@@ -2441,8 +2502,8 @@ function exportText(){
     creditors[ci].amt-=pay;debtors[di].amt-=pay;
     if(creditors[ci].amt<0.005)ci++;if(debtors[di].amt<0.005)di++;
   }
-  const tot=S.exps.reduce((s,e)=>s+e.eur,0);
-  let text=`🇮🇹 Viaggio Italia 2026 — 花費結算\n`;
+  const tot=sharedAll.reduce((s,e)=>s+e.eur,0);
+  let text=`🇮🇹 Viaggio Italia 2026 — 共享花費結算\n`;
   text+=`總花費：€${tot.toFixed(2)} ≈ NT$${Math.round(tot*S.rate).toLocaleString()}\n`;
   text+=`匯率：1 EUR = ${S.rate} NTD\n\n`;
   text+=`【各人淨額】\n`;
