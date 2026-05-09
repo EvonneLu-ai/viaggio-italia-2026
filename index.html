@@ -870,31 +870,12 @@ textarea{resize:vertical;}
     <div id="tax-result" style="display:none;">
       <div class="shopping-result-card">
         <div class="shopping-result-main" id="tax-result-amt"></div>
+        <div id="tax-result-twd" style="font-size:15px;font-weight:700;color:var(--blue);margin-top:4px;"></div>
         <div class="shopping-result-sub" id="tax-result-sub"></div>
       </div>
       <div style="font-size:12px;color:var(--t2);line-height:1.7;">
         流程：購物時索取 Tax Free 表單 → 離境前在機場海關蓋章 → 機場退稅窗口（Global Blue / Premier）兌現
       </div>
-    </div>
-  </div>
-
-  <div class="sec-label">行李限重追蹤</div>
-  <div class="card" style="margin-bottom:10px;overflow:hidden;">
-    <div style="padding:12px 16px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-      <span style="font-size:13px;color:var(--t2);">額度</span>
-      <input type="number" id="luggage-limit" value="23" min="1" max="50" style="width:64px;text-align:center;" oninput="renderLuggage()"/>
-      <span style="font-size:13px;color:var(--t2);">kg</span>
-      <div style="flex:1;"></div>
-      <div style="font-size:13px;font-weight:700;" id="luggage-total-display">已用 0 kg</div>
-    </div>
-    <div style="padding:8px 16px;background:var(--bg);">
-      <div class="prog-bar"><div class="prog-fill" id="luggage-prog" style="width:0%;background:var(--green);"></div></div>
-    </div>
-    <div id="luggage-list"></div>
-    <div style="padding:10px 12px;display:flex;gap:8px;border-top:1px solid var(--border2);">
-      <input type="text" id="luggage-item-name" placeholder="物品名稱" style="flex:2;"/>
-      <input type="number" id="luggage-item-kg" placeholder="kg" min="0" step="0.1" style="flex:1;"/>
-      <button class="btn btn-primary btn-sm" style="flex-shrink:0;" onclick="addLuggageItem()">新增</button>
     </div>
   </div>
 
@@ -2543,17 +2524,28 @@ let luggageItems=JSON.parse(localStorage.getItem('vi_luggage')||'[]');
 function calcTax(){
   const amt=parseFloat(document.getElementById('tax-amount').value);
   const res=document.getElementById('tax-result');
+  const twdEl=document.getElementById('tax-result-twd');
   if(!amt||amt<0){res.style.display='none';return;}
   res.style.display='block';
   const vat22=amt*0.22;
-  const refundLow=amt*0.11;const refundHigh=amt*0.15;
+  const refundLow=amt*0.11;
+  const refundHigh=amt*0.15;
   const eligible=amt>=155;
   document.getElementById('tax-result-amt').textContent=eligible?
     `€${refundLow.toFixed(2)} – €${refundHigh.toFixed(2)}`:'不符合退稅門檻';
-  document.getElementById('tax-result-sub').textContent=eligible?
-    `消費 €${amt.toFixed(2)}，含 VAT 22% (€${vat22.toFixed(2)})，退稅約 11–15%（扣手續費後）`:
-    `需在同一商店消費滿 €155 才可退稅（您差 €${(155-amt).toFixed(2)})`;
   document.getElementById('tax-result-amt').style.color=eligible?'var(--blue)':'var(--red)';
+  // 台幣換算（用目前匯率）
+  if(eligible&&twdEl){
+    const twdLow=Math.round(refundLow*S.rate);
+    const twdHigh=Math.round(refundHigh*S.rate);
+    twdEl.textContent=`≈ NT$ ${twdLow.toLocaleString()} – ${twdHigh.toLocaleString()}`;
+    twdEl.style.display='block';
+  }else if(twdEl){
+    twdEl.style.display='none';
+  }
+  document.getElementById('tax-result-sub').textContent=eligible?
+    `消費 €${amt.toFixed(2)}，含 VAT 22% (€${vat22.toFixed(2)})，退稅約 11–15%（扣手續費後）· 匯率 ${S.rate}`:
+    `需在同一商店消費滿 €155 才可退稅（您差 €${(155-amt).toFixed(2)})`;
 }
 
 function renderLuggage(){
