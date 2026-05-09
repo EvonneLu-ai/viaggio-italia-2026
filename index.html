@@ -870,14 +870,17 @@ textarea{resize:vertical;}
       </div>
     </div>
 
-    <!-- 誰要分：多選，預設全選 -->
+    <!-- 誰要分：點亮才是要分 -->
     <div style="margin-bottom:8px;margin-top:12px;">
-      <div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:8px;">分給誰？（可多選，預設四人均攤）</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:12px;font-weight:600;color:var(--t2);">分給誰？（點選要分攤的人）</div>
+        <button onclick="selectAllSplit()" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--surface2);border:1px solid var(--border);color:var(--t2);cursor:pointer;font-family:inherit;">全選四人</button>
+      </div>
       <div style="display:flex;gap:6px;" id="split-btns">
-        <button class="member-btn split-on" data-p="Grace" onclick="toggleSplit(this)" style="border-color:#ff3b30;color:#ff3b30;">Grace</button>
-        <button class="member-btn split-on" data-p="Vicky" onclick="toggleSplit(this)" style="border-color:#34c759;color:#34c759;">Vicky</button>
-        <button class="member-btn split-on" data-p="水晶" onclick="toggleSplit(this)" style="border-color:#5ac8fa;color:#5ac8fa;">水晶</button>
-        <button class="member-btn split-on" data-p="Evonne" onclick="toggleSplit(this)" style="border-color:#C9A84C;color:#C9A84C;">Evonne</button>
+        <button class="member-btn split-off" data-p="Grace" onclick="toggleSplit(this)" style="border-color:var(--border);color:var(--t3);">Grace</button>
+        <button class="member-btn split-off" data-p="Vicky" onclick="toggleSplit(this)" style="border-color:var(--border);color:var(--t3);">Vicky</button>
+        <button class="member-btn split-off" data-p="水晶" onclick="toggleSplit(this)" style="border-color:var(--border);color:var(--t3);">水晶</button>
+        <button class="member-btn split-off" data-p="Evonne" onclick="toggleSplit(this)" style="border-color:var(--border);color:var(--t3);">Evonne</button>
       </div>
       <div class="split-preview" id="split-preview"></div>
     </div>
@@ -1725,13 +1728,33 @@ function toggleSplit(btn){
   const clr={Grace:'#ff3b30',Vicky:'#34c759',水晶:'#5ac8fa',Evonne:'#C9A84C'};
   const p=btn.dataset.p;
   const isOn=btn.classList.contains('split-on');
-  // 至少要有1人
-  const onCount=document.querySelectorAll('#split-btns .member-btn.split-on').length;
-  if(isOn&&onCount<=1){toast('至少要選1人分攤');return;}
+  // 點擊 = 加入分攤；再點 = 退出
   btn.classList.toggle('split-on',!isOn);
   btn.classList.toggle('split-off',isOn);
-  if(!isOn){btn.style.borderColor=clr[p];btn.style.color=clr[p];}
-  else{btn.style.borderColor='var(--border)';btn.style.color='var(--t3)';}
+  if(!isOn){
+    // 剛被點選：亮起彩色
+    btn.style.borderColor=clr[p];
+    btn.style.color=clr[p];
+    btn.style.background=clr[p]+'18';
+  }else{
+    // 被取消：暗灰
+    btn.style.borderColor='var(--border)';
+    btn.style.color='var(--t3)';
+    btn.style.background='';
+  }
+  updateSplitPreview();
+}
+
+function selectAllSplit(){
+  const clr={Grace:'#ff3b30',Vicky:'#34c759',水晶:'#5ac8fa',Evonne:'#C9A84C'};
+  document.querySelectorAll('#split-btns .member-btn').forEach(btn=>{
+    const p=btn.dataset.p;
+    btn.classList.add('split-on');
+    btn.classList.remove('split-off');
+    btn.style.borderColor=clr[p];
+    btn.style.color=clr[p];
+    btn.style.background=clr[p]+'18';
+  });
   updateSplitPreview();
 }
 
