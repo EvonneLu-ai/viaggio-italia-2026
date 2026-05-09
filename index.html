@@ -2497,21 +2497,45 @@ function renderDocs(){
 function viewDoc(i){
   const d=docVault[i];
   if(!d)return;
-  // 全螢幕預覽
   const overlay=document.createElement('div');
-  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;';
-  overlay.innerHTML=`<div style="display:flex;width:100%;justify-content:space-between;align-items:center;margin-bottom:12px;color:#fff;">
-    <div><div style="font-size:15px;font-weight:700;">${d.name}</div><div style="font-size:12px;opacity:.6;">${d.cat}</div></div>
-    <div style="display:flex;gap:10px;">
-      <button onclick="deleteDoc(${i});this.closest('[style*=fixed]').remove();" style="background:rgba(255,69,58,.3);border:none;color:#ff453a;padding:7px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;">刪除</button>
-      <button onclick="this.closest('[style*=fixed]').remove();" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:7px 14px;border-radius:8px;cursor:pointer;font-size:15px;">✕</button>
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;';
+  overlay.innerHTML=`
+    <div style="display:flex;width:100%;justify-content:space-between;align-items:center;margin-bottom:12px;color:#fff;">
+      <div><div style="font-size:15px;font-weight:700;">${d.name}</div><div style="font-size:12px;opacity:.6;">${d.cat}</div></div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="downloadDoc(${i})" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:7px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;display:flex;align-items:center;gap:5px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          下載
+        </button>
+        <button onclick="deleteDoc(${i});this.closest('[style*=fixed]').remove();" style="background:rgba(255,69,58,.3);border:none;color:#ff453a;padding:7px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;">刪除</button>
+        <button onclick="this.closest('[style*=fixed]').remove();" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:7px 14px;border-radius:8px;cursor:pointer;font-size:15px;">✕</button>
+      </div>
     </div>
-  </div>
-  ${d.data.startsWith('data:image')?`<img src="${d.data}" style="max-width:100%;max-height:80vh;border-radius:12px;object-fit:contain;"/>`:
-    `<div style="color:#fff;font-size:14px;">PDF 文件：${d.name}</div>`}`;
+    ${d.data.startsWith('data:image')
+      ? `<img src="${d.data}" style="max-width:100%;max-height:80vh;border-radius:12px;object-fit:contain;"/>`
+      : `<div style="color:#fff;font-size:14px;text-align:center;padding:40px;">
+           <div style="font-size:48px;margin-bottom:12px;">📄</div>
+           <div style="font-size:16px;font-weight:700;">${d.name}</div>
+           <div style="font-size:12px;opacity:.6;margin-top:6px;">PDF 文件 · 點「下載」在裝置上開啟</div>
+         </div>`}`;
   document.body.appendChild(overlay);
 }
-function deleteDoc(i){docVault.splice(i,1);localStorage.setItem('vi_docs',JSON.stringify(docVault));renderDocs();}
+function downloadDoc(i){
+  const d=docVault[i];
+  if(!d)return;
+  // 偵測副檔名
+  let ext='.jpg';
+  if(d.data.startsWith('data:image/png'))ext='.png';
+  else if(d.data.startsWith('data:image/gif'))ext='.gif';
+  else if(d.data.startsWith('data:image/webp'))ext='.webp';
+  else if(d.data.startsWith('data:application/pdf'))ext='.pdf';
+  const a=document.createElement('a');
+  a.href=d.data;
+  a.download=d.name+ext;
+  a.click();
+  toast('開始下載：'+d.name);
+}
+function deleteDoc(i){docVault.splice(i,1);localStorage.setItem('vi_docs',JSON.stringify(docVault));renderDocs();toast('文件已刪除');}
 
 /* ════════════════ 4. SHOPPING & TAX ════════════════ */
 let luggageItems=JSON.parse(localStorage.getItem('vi_luggage')||'[]');
