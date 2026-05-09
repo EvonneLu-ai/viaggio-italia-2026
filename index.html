@@ -949,6 +949,7 @@ textarea{resize:vertical;}
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
         <div style="font-size:12px;font-weight:600;color:var(--t2);">分給誰？（點選要分攤的人）</div>
         <button onclick="selectAllSplit()" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--surface2);border:1px solid var(--border);color:var(--t2);cursor:pointer;font-family:inherit;">全選四人</button>
+        <button onclick="clearSplit()" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--surface2);border:1px solid var(--border);color:var(--t3);cursor:pointer;font-family:inherit;">清除</button>
       </div>
       <div style="display:flex;gap:6px;" id="split-btns">
         <button class="member-btn split-off" data-p="Grace" onclick="toggleSplit(this)" style="border-color:var(--border);color:var(--t3);">Grace</button>
@@ -1997,16 +1998,13 @@ function toggleSplit(btn){
   const clr={Grace:'#ff3b30',Vicky:'#34c759',水晶:'#5ac8fa',Evonne:'#C9A84C'};
   const p=btn.dataset.p;
   const isOn=btn.classList.contains('split-on');
-  // 點擊 = 加入分攤；再點 = 退出
   btn.classList.toggle('split-on',!isOn);
   btn.classList.toggle('split-off',isOn);
   if(!isOn){
-    // 剛被點選：亮起彩色
     btn.style.borderColor=clr[p];
     btn.style.color=clr[p];
     btn.style.background=clr[p]+'18';
   }else{
-    // 被取消：暗灰
     btn.style.borderColor='var(--border)';
     btn.style.color='var(--t3)';
     btn.style.background='';
@@ -2025,6 +2023,19 @@ function selectAllSplit(){
     btn.style.background=clr[p]+'18';
   });
   updateSplitPreview();
+}
+
+/* 清除分攤選擇 */
+function clearSplit(){
+  document.querySelectorAll('#split-btns .member-btn').forEach(btn=>{
+    btn.classList.remove('split-on');
+    btn.classList.add('split-off');
+    btn.style.borderColor='var(--border)';
+    btn.style.color='var(--t3)';
+    btn.style.background='';
+  });
+  const preview=document.getElementById('split-preview');
+  if(preview)preview.style.display='none';
 }
 
 function updateSplitPreview(){
@@ -2074,8 +2085,10 @@ function addExp(){
     payer,splitWith,
     personal:isPersonal||undefined}); // 個人帳加標記，共享帳不加欄位
   saveExps();
-  document.getElementById('eamt').value='';document.getElementById('enote').value='';
+  document.getElementById('eamt').value='';
+  document.getElementById('enote').value='';
   document.getElementById('split-preview').style.display='none';
+  clearSplit(); // 提交後自動清除分攤選擇，避免下一筆誤沿用
   renderExps();
   toast(isPersonal?'已新增個人花費（僅本機）':'已新增花費');
 }
