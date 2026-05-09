@@ -1738,9 +1738,10 @@ const EVENTS=[
 ];
 
 /* ════════════════ STATE ════════════════ */
+const _initExps=JSON.parse(localStorage.getItem('vi_e')||'[]');
 const S={
   tab:'itin',
-  exps:JSON.parse(localStorage.getItem('vi_e')||'[]'),
+  exps:_initExps,
   rate:parseFloat(localStorage.getItem('vi_r')||'35'),
   lang:'it|zh-TW',pcat:'全部',eflt:'全部',
   map:null,mapOk:false,poiMk:[],
@@ -2113,7 +2114,7 @@ function addExp(){
   toast(isPersonal?'已新增個人花費（僅本機）':'已新增花費');
 }
 function delExp(id){S.exps=S.exps.filter(e=>e.id!==id);saveExps();renderExps();}
-function clearExp(){if(!confirm('確定清除所有記錄？'))return;S.exps=[];saveExps();renderExps();}
+// clearExp() 已永久移除，資料只能透過個別 delExp() 手動刪除
 
 /* 兩段式刪除確認：第一次按變紅顯示「確定？」，3 秒後自動還原，第二次按才真正刪除 */
 let _delTimer=null;
@@ -2150,13 +2151,11 @@ async function manualSync(btn){
   if(!FB.connected){
     await autoConnect();
   } else {
-    // 拉取最新遠端資料，再推本地
+    // 拉取最新遠端資料，安全合併後推送
     const remote=await fetchFB();
-    if(remote){
-      const personal=S.exps.filter(e=>e.personal);
-      S.exps=[...personal,...remote].sort((a,b)=>b.id-a.id);
-      localStorage.setItem('vi_e',JSON.stringify(S.exps));renderExps();
+    if(remote&&remote.length>0){
       FB.lastHash=JSON.stringify(remote);
+      safeMergeRemote(remote);
     }
     await pushFB();
   }
@@ -2514,8 +2513,29 @@ function exportText(){
 const FB={
   url:'https://italytravel-7e596-default-rtdb.firebaseio.com',
   code:'IT2026',
-  pollTimer:null,lastHash:'',connected:false,pendingPush:false
+  pollTimer:null,lastHash:'',connected:false,pendingPush:false,
+  knownCount:_initExps.filter(e=>e.personal!==true).length // 初始化為本機已有的共享帳筆數
 };
+
+/* ════════ 安全合併：只加不減，本機資料永遠保留 ════════
+ * 邏輯：以本機共享帳為基礎，遠端有但本機沒有的 ID 才新增。
+ *       本機有但遠端沒有的 ID 永遠保留（防止遠端刪除覆蓋本機）。
+ *       只有手動 delExp() 才能真正移除。
+ */
+function safeMergeRemote(remote){
+  if(!remote||!Array.isArray(remote))return;
+  const personal=S.exps.filter(e=>e.personal===true);
+  const localShared=S.exps.filter(e=>e.personal!==true);
+  // 以本機為基礎建立 Map（ID → expense）
+  const map=new Map(localShared.map(e=>[e.id,e]));
+  // 遠端有但本機沒有的 → 新增；遠端也有的 → 以遠端版本更新（備註/金額可能被修改）
+  remote.forEach(e=>map.set(e.id,e));
+  const merged=[...personal,...Array.from(map.values())].sort((a,b)=>b.id-a.id);
+  S.exps=merged;
+  FB.knownCount=merged.filter(e=>e.personal!==true).length;
+  localStorage.setItem('vi_e',JSON.stringify(S.exps));
+  renderExps();
+}
 /* 自動同步核心 */
 function setSyncUI(state){
   // state: 'connecting' | 'online' | 'offline' | 'syncing'
@@ -2548,13 +2568,10 @@ async function autoConnect(){
     FB.connected=true;
     const remote=await fetchFB();
     if(remote&&remote.length>0){
-      // 保留本機的個人帳，合併遠端共享帳
-      const personal=S.exps.filter(e=>e.personal);
-      S.exps=[...personal,...remote].sort((a,b)=>b.id-a.id);
-      localStorage.setItem('vi_e',JSON.stringify(S.exps));renderExps();
       FB.lastHash=JSON.stringify(remote);
+      safeMergeRemote(remote); // 安全合併，只加不減
     } else {
-      await pushFB();
+      await pushFB(); // Firebase 是空的，把本機資料推上去初始化
     }
     setSyncUI('online');
     startPolling();
@@ -2566,12 +2583,17 @@ async function pushFB(){
   if(!FB.connected)return;
   setSyncUI('syncing');
   try{
-    // 只上傳非個人帳，個人帳僅存本機
-    const shared=S.exps.filter(e=>!e.personal);
+    const shared=S.exps.filter(e=>e.personal!==true);
+    // 防護：若本機共享帳突然變成 0 筆，但之前已知有資料 → 跳過此次推送，防止意外清空 Firebase
+    if(shared.length===0&&FB.knownCount>0){
+      setSyncUI('online');
+      return;
+    }
     await fetch(`${FB.url}/trips/${FB.code}/expenses.json`,{
       method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(shared)
     });
     FB.pendingPush=false;
+    FB.knownCount=shared.length;
     setSyncUI('online');
   }catch{FB.pendingPush=true;setSyncUI('offline');}
 }
@@ -2593,10 +2615,7 @@ function startPolling(){
     const h=JSON.stringify(remote);
     if(h!==FB.lastHash){
       FB.lastHash=h;
-      // 合併時保留個人帳
-      const personal=S.exps.filter(e=>e.personal);
-      S.exps=[...personal,...remote].sort((a,b)=>b.id-a.id);
-      localStorage.setItem('vi_e',JSON.stringify(S.exps));renderExps();
+      safeMergeRemote(remote); // 安全合併，只加不減
       setSyncUI('online');
     }
   },5000);
