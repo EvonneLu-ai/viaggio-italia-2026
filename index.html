@@ -1799,6 +1799,9 @@ const EVENTS=[
 
 /* ════════════════ STATE ════════════════ */
 const _initExps=JSON.parse(localStorage.getItem('vi_e')||'[]');
+// 刪除名單（tombstone）：記住被手動刪除的 ID，合併時永遠過濾掉
+const DELETED_IDS=new Set(JSON.parse(localStorage.getItem('vi_del')||'[]'));
+function saveDeleted(){localStorage.setItem('vi_del',JSON.stringify([...DELETED_IDS]));}
 const S={
   tab:'itin',
   exps:_initExps,
@@ -2180,7 +2183,12 @@ function addExp(){
   renderExps();
   toast(isPersonal?'已新增個人花費（僅本機）':'已新增花費');
 }
-function delExp(id){S.exps=S.exps.filter(e=>e.id!==id);saveExps();renderExps();}
+function delExp(id){
+  S.exps=S.exps.filter(e=>e.id!==id);
+  DELETED_IDS.add(id);   // 加入刪除名單，防止同步時被拉回來
+  saveDeleted();
+  saveExps();renderExps();
+}
 // clearExp() 已永久移除，資料只能透過個別 delExp() 手動刪除
 
 /* 兩段式刪除確認：第一次按變紅顯示「確定？」，3 秒後自動還原，第二次按才真正刪除 */
@@ -2593,10 +2601,9 @@ function safeMergeRemote(remote){
   if(!remote||!Array.isArray(remote))return;
   const personal=S.exps.filter(e=>e.personal===true);
   const localShared=S.exps.filter(e=>e.personal!==true);
-  // 以本機為基礎建立 Map（ID → expense）
   const map=new Map(localShared.map(e=>[e.id,e]));
-  // 遠端有但本機沒有的 → 新增；遠端也有的 → 以遠端版本更新（備註/金額可能被修改）
-  remote.forEach(e=>map.set(e.id,e));
+  // 遠端資料合併時，過濾掉已被本機手動刪除的 ID
+  remote.filter(e=>!DELETED_IDS.has(e.id)).forEach(e=>map.set(e.id,e));
   const merged=[...personal,...Array.from(map.values())].sort((a,b)=>b.id-a.id);
   S.exps=merged;
   FB.knownCount=merged.filter(e=>e.personal!==true).length;
@@ -2724,8 +2731,9 @@ function safeMergePersonal(remotePersonal){
   const localPersonal=S.exps.filter(e=>e.personal===true);
   const localShared=S.exps.filter(e=>e.personal!==true);
   const map=new Map(localPersonal.map(e=>[e.id,e]));
-  remotePersonal.forEach(e=>{
-    if(!map.has(e.id))map.set(e.id,{...e,personal:true});// 確保 personal 標記
+  // 過濾掉已被手動刪除的 ID
+  remotePersonal.filter(e=>!DELETED_IDS.has(e.id)).forEach(e=>{
+    if(!map.has(e.id))map.set(e.id,{...e,personal:true});
   });
   S.exps=[...Array.from(map.values()),...localShared].sort((a,b)=>b.id-a.id);
   FB.knownCount=localShared.length;
