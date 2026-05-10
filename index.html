@@ -321,6 +321,16 @@ textarea{resize:vertical;}
   .city-tip-row.warn{background:rgba(255,59,48,.13);}
 }
 
+/* ── Who Am I Modal ── */
+.whoami-btn{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;padding:16px 8px;border-radius:14px;
+  background:var(--surface);border:2px solid var(--border);
+  cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;color:var(--t1);
+  transition:all .15s;
+}
+.whoami-btn:hover,.whoami-btn:active{transform:scale(.97);}
+
 /* ── Expense Tab Filter ── */
 .exp-tab{
   font-size:11px;font-weight:700;padding:4px 10px;
@@ -858,6 +868,14 @@ textarea{resize:vertical;}
         <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
       </svg>
     </button>
+  </div>
+
+  <!-- 身分確認列 -->
+  <div id="identity-bar" style="margin:8px 16px 0;padding:9px 13px;border-radius:10px;background:var(--surface2);display:flex;align-items:center;justify-content:space-between;gap:8px;">
+    <div style="font-size:12px;color:var(--t2);">個人帳同步為
+      <span id="identity-name" style="font-weight:700;color:var(--t1);margin-left:3px;">—</span>
+    </div>
+    <button onclick="showWhoAmI(true)" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--surface);border:1px solid var(--border);color:var(--t3);cursor:pointer;font-family:inherit;">更改</button>
   </div>
 
   <div class="stats-grid" id="exp-stats"></div>
@@ -1584,6 +1602,24 @@ textarea{resize:vertical;}
 </nav>
 <div id="toast"></div>
 
+<!-- ══════ 「你是誰？」初始化 Modal ══════ -->
+<div id="whoami-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;align-items:center;justify-content:center;padding:24px;">
+  <div style="background:var(--bg);border-radius:20px;padding:28px 24px;width:100%;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:32px;margin-bottom:8px;">👋</div>
+      <div style="font-size:20px;font-weight:800;color:var(--t1);margin-bottom:6px;">你是誰？</div>
+      <div style="font-size:13px;color:var(--t2);line-height:1.6;">選擇你的名字，個人花費才能在<br>換手機後繼續同步</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <button onclick="setMyName('Grace')"    class="whoami-btn" style="border-color:rgba(255,59,48,.4);"><span style="color:#ff3b30;font-size:18px;">👩</span><span>Grace</span></button>
+      <button onclick="setMyName('Vicky')"    class="whoami-btn" style="border-color:rgba(52,199,89,.4);"><span style="color:#34c759;font-size:18px;">👩</span><span>Vicky</span></button>
+      <button onclick="setMyName('水晶')"    class="whoami-btn" style="border-color:rgba(90,200,250,.4);"><span style="color:#5ac8fa;font-size:18px;">👩</span><span>水晶</span></button>
+      <button onclick="setMyName('Evonne')"   class="whoami-btn" style="border-color:rgba(201,168,76,.4);"><span style="color:#C9A84C;font-size:18px;">👩</span><span>Evonne</span></button>
+    </div>
+    <div style="font-size:11px;color:var(--t3);text-align:center;margin-top:14px;line-height:1.5;">之後可以在記帳頁修改</div>
+  </div>
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 /* ════════════════ DATA ════════════════ */
@@ -1793,6 +1829,8 @@ window.addEventListener('DOMContentLoaded',()=>{
   const dd=String(today.getDate()).padStart(2,'0');
   const edateEl=document.getElementById('edate');
   if(edateEl)edateEl.value=`${yy}-${mm}-${dd}`;
+  updateIdentityBar();      // 更新記帳頁身分列
+  showWhoAmI(false);        // 若未設定名字則顯示 Modal
   autoConnect();
 });
 
@@ -2604,6 +2642,10 @@ async function autoConnect(){
     }
     setSyncUI('online');
     startPolling();
+    // 拉取個人帳（依 vi_me 名字分開的 Firebase 路徑）
+    const personalRemote=await fetchPersonalFB();
+    if(personalRemote&&personalRemote.length>0)safeMergePersonal(personalRemote);
+    else await pushPersonalFB(); // 沒有遠端資料 → 把本機個人帳推上去
   }catch{
     FB.connected=false;setSyncUI('offline');
   }
@@ -2624,6 +2666,7 @@ async function pushFB(){
     FB.pendingPush=false;
     FB.knownCount=shared.length;
     setSyncUI('online');
+    pushPersonalFB(); // 同步個人帳到自己的 Firebase 路徑
   }catch{FB.pendingPush=true;setSyncUI('offline');}
 }
 async function fetchFB(){
@@ -2650,6 +2693,75 @@ function startPolling(){
   },5000);
 }
 function stopPolling(){if(FB.pollTimer){clearInterval(FB.pollTimer);FB.pollTimer=null;}}
+
+/* ════════ 個人帳雲端同步（依 vi_me 分路徑）════════ */
+function getMyName(){return localStorage.getItem('vi_me')||'';}
+
+async function fetchPersonalFB(){
+  const name=getMyName();if(!name||!FB.connected)return null;
+  try{
+    const r=await fetch(`${FB.url}/trips/${FB.code}/personal/${encodeURIComponent(name)}/expenses.json`);
+    if(!r.ok)return null;
+    const d=await r.json();
+    return Array.isArray(d)?d:(d&&typeof d==='object'?Object.values(d):[]);
+  }catch{return null;}
+}
+
+async function pushPersonalFB(){
+  const name=getMyName();if(!name||!FB.connected)return;
+  const personal=S.exps.filter(e=>e.personal===true);
+  if(personal.length===0)return;
+  try{
+    await fetch(`${FB.url}/trips/${FB.code}/personal/${encodeURIComponent(name)}/expenses.json`,{
+      method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(personal)
+    });
+  }catch{}
+}
+
+/* 拉取並安全合併個人帳（只加不減） */
+function safeMergePersonal(remotePersonal){
+  if(!remotePersonal||!Array.isArray(remotePersonal)||!remotePersonal.length)return;
+  const localPersonal=S.exps.filter(e=>e.personal===true);
+  const localShared=S.exps.filter(e=>e.personal!==true);
+  const map=new Map(localPersonal.map(e=>[e.id,e]));
+  remotePersonal.forEach(e=>{
+    if(!map.has(e.id))map.set(e.id,{...e,personal:true});// 確保 personal 標記
+  });
+  S.exps=[...Array.from(map.values()),...localShared].sort((a,b)=>b.id-a.id);
+  FB.knownCount=localShared.length;
+  localStorage.setItem('vi_e',JSON.stringify(S.exps));
+  renderExps();
+}
+
+/* 「你是誰？」設定 */
+function showWhoAmI(forceShow){
+  const overlay=document.getElementById('whoami-overlay');
+  if(!overlay)return;
+  if(forceShow||!getMyName()){
+    overlay.style.display='flex';
+  }
+}
+function setMyName(name){
+  localStorage.setItem('vi_me',name);
+  const overlay=document.getElementById('whoami-overlay');
+  if(overlay)overlay.style.display='none';
+  updateIdentityBar();
+  // 設定後立即拉取個人帳
+  if(FB.connected){
+    fetchPersonalFB().then(r=>{if(r)safeMergePersonal(r);});
+    pushPersonalFB();
+  }
+  toast(`已設定：你是 ${name}`);
+}
+function updateIdentityBar(){
+  const name=getMyName();
+  const el=document.getElementById('identity-name');
+  if(el){
+    const MEMBER_CLR2={Grace:'#ff3b30',Vicky:'#34c759',水晶:'#5ac8fa',Evonne:'#C9A84C'};
+    el.textContent=name||'（未設定）';
+    el.style.color=MEMBER_CLR2[name]||'var(--t1)';
+  }
+}
 // online/offline 事件監聽
 window.addEventListener('online',()=>{
   if(!FB.connected){autoConnect();}
