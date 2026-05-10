@@ -2660,6 +2660,10 @@ async function autoConnect(){
     const personalRemote=await fetchPersonalFB();
     if(personalRemote&&personalRemote.length>0)safeMergePersonal(personalRemote);
     else await pushPersonalFB(); // 沒有遠端資料 → 把本機個人帳推上去
+    // 拉取個人文件（只有自己看得到）
+    const docsRemote=await fetchDocsFB();
+    if(docsRemote&&docsRemote.length>0)safeMergeDocs(docsRemote);
+    else await pushDocsFB(); // Firebase 無資料 → 推本機文件上去
   }catch{
     FB.connected=false;setSyncUI('offline');
   }
@@ -2730,6 +2734,36 @@ async function pushPersonalFB(){
       method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(personal)
     });
   }catch{}
+}
+
+/* ════════ 離線文件 Firebase 同步（個人私有）════════ */
+async function fetchDocsFB(){
+  const name=getMyName();if(!name||!FB.connected)return null;
+  try{
+    const r=await fetch(`${FB.url}/trips/${FB.code}/personal/${encodeURIComponent(name)}/docs.json`);
+    if(!r.ok)return null;
+    const d=await r.json();
+    return Array.isArray(d)?d:(d&&typeof d==='object'?Object.values(d):[]);
+  }catch{return null;}
+}
+async function pushDocsFB(){
+  const name=getMyName();if(!name||!FB.connected)return;
+  if(!docVault.length)return;
+  try{
+    await fetch(`${FB.url}/trips/${FB.code}/personal/${encodeURIComponent(name)}/docs.json`,{
+      method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(docVault)
+    });
+  }catch{}
+}
+function safeMergeDocs(remote){
+  if(!remote||!Array.isArray(remote)||!remote.length)return;
+  const localIds=new Set(docVault.map(d=>d.id));
+  // 遠端有但本機沒有的才加入（過濾已刪除的）
+  remote.filter(d=>!localIds.has(d.id)&&!DELETED_IDS.has(d.id)).forEach(d=>docVault.push(d));
+  docVault.sort((a,b)=>b.id-a.id);
+  if(docVault.length>20)docVault=docVault.slice(0,20);
+  try{localStorage.setItem('vi_docs',JSON.stringify(docVault));}catch{}
+  renderDocs();
 }
 
 /* 拉取並安全合併個人帳（只加不減） */
@@ -3377,15 +3411,19 @@ let tempDocData=null;
 
 function addDoc(inp){
   const f=inp.files[0];if(!f)return;
+  // 大小警告（base64 後約 1.37 倍，Firebase 單次寫入上限 10MB）
+  if(f.size>3*1024*1024){toast('⚠️ 檔案超過 3MB，可能無法同步到雲端');return;}
   const rd=new FileReader();
   rd.onload=e=>{
     const name=document.getElementById('doc-name-inp').value.trim()||f.name.replace(/\.[^.]+$/,'');
     const cat=document.getElementById('doc-cat-sel').value;
     docVault.unshift({id:Date.now(),name,cat,data:e.target.result,date:new Date().toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'})});
-    if(docVault.length>20){docVault=docVault.slice(0,20);}// 最多20份
-    try{localStorage.setItem('vi_docs',JSON.stringify(docVault));}catch{toast('儲存空間不足，請清除部分文件');}
+    if(docVault.length>20){docVault=docVault.slice(0,20);}
+    try{localStorage.setItem('vi_docs',JSON.stringify(docVault));}catch{toast('本機空間不足，仍嘗試雲端備份');}
     document.getElementById('doc-name-inp').value='';
-    renderDocs();toast('文件已儲存：'+name);
+    renderDocs();
+    toast('文件已儲存：'+name);
+    pushDocsFB(); // 上傳後自動同步到 Firebase
   };rd.readAsDataURL(f);
 }
 function renderDocs(){
@@ -3470,7 +3508,13 @@ function downloadDoc(i){
   document.body.removeChild(a);
   toast('已下載：'+d.name);
 }
-function deleteDoc(i){docVault.splice(i,1);localStorage.setItem('vi_docs',JSON.stringify(docVault));renderDocs();toast('文件已刪除');}
+function deleteDoc(i){
+  const deleted=docVault.splice(i,1);
+  if(deleted[0])DELETED_IDS.add(deleted[0].id),saveDeleted();
+  localStorage.setItem('vi_docs',JSON.stringify(docVault));
+  pushDocsFB(); // 刪除後同步
+  renderDocs();toast('文件已刪除');
+}
 
 /* ════════════════ 4. SHOPPING & TAX ════════════════ */
 let luggageItems=JSON.parse(localStorage.getItem('vi_luggage')||'[]');
