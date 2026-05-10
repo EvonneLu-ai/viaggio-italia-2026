@@ -3405,43 +3405,70 @@ function renderDocs(){
 function viewDoc(i){
   const d=docVault[i];
   if(!d)return;
+  const isPdf=d.data.startsWith('data:application/pdf')||d.data.includes(';base64,')&&d.name.toLowerCase().endsWith('.pdf');
   const overlay=document.createElement('div');
-  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:9999;display:flex;flex-direction:column;padding:0;';
   overlay.innerHTML=`
-    <div style="display:flex;width:100%;justify-content:space-between;align-items:center;margin-bottom:12px;color:#fff;">
+    <div style="display:flex;width:100%;justify-content:space-between;align-items:center;padding:12px 16px;flex-shrink:0;color:#fff;">
       <div><div style="font-size:15px;font-weight:700;">${d.name}</div><div style="font-size:12px;opacity:.6;">${d.cat}</div></div>
       <div style="display:flex;gap:8px;">
         <button onclick="downloadDoc(${i})" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:7px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;display:flex;align-items:center;gap:5px;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          下載
+          ${isPdf?'開啟':'下載'}
         </button>
         <button onclick="deleteDoc(${i});this.closest('[style*=fixed]').remove();" style="background:rgba(255,69,58,.3);border:none;color:#ff453a;padding:7px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;">刪除</button>
         <button onclick="this.closest('[style*=fixed]').remove();" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:7px 14px;border-radius:8px;cursor:pointer;font-size:15px;">✕</button>
       </div>
     </div>
-    ${d.data.startsWith('data:image')
-      ? `<img src="${d.data}" style="max-width:100%;max-height:80vh;border-radius:12px;object-fit:contain;"/>`
-      : `<div style="color:#fff;font-size:14px;text-align:center;padding:40px;">
-           <div style="font-size:48px;margin-bottom:12px;">📄</div>
-           <div style="font-size:16px;font-weight:700;">${d.name}</div>
-           <div style="font-size:12px;opacity:.6;margin-top:6px;">PDF 文件 · 點「下載」在裝置上開啟</div>
-         </div>`}`;
+    <div style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:0 16px 16px;">
+      ${d.data.startsWith('data:image')
+        ? `<img src="${d.data}" style="max-width:100%;max-height:100%;border-radius:12px;object-fit:contain;"/>`
+        : isPdf
+          ? `<iframe src="${d.data}" style="width:100%;height:100%;min-height:70vh;border:none;border-radius:8px;background:#fff;"></iframe>`
+          : `<div style="color:#fff;font-size:14px;text-align:center;padding:40px;">
+               <div style="font-size:48px;margin-bottom:12px;">📄</div>
+               <div style="font-size:16px;font-weight:700;">${d.name}</div>
+               <div style="font-size:12px;opacity:.6;margin-top:6px;">點「開啟」在裝置上查看</div>
+             </div>`}
+    </div>`;
   document.body.appendChild(overlay);
 }
 function downloadDoc(i){
   const d=docVault[i];
   if(!d)return;
-  // 偵測副檔名
+  const isPdf=d.data.startsWith('data:application/pdf')||d.name.toLowerCase().endsWith('.pdf');
+  if(isPdf){
+    // PDF：用 window.open 開新分頁，iOS Safari 可直接預覽
+    const w=window.open();
+    if(w){
+      w.document.write(`<html><head><title>${d.name}</title></head><body style="margin:0;"><embed src="${d.data}" type="application/pdf" width="100%" height="100%"/></body></html>`);
+      w.document.close();
+    } else {
+      // popup 被擋住時的備援：建立 blob URL
+      const byteStr=atob(d.data.split(',')[1]);
+      const ab=new ArrayBuffer(byteStr.length);
+      const ia=new Uint8Array(ab);
+      for(let i=0;i<byteStr.length;i++)ia[i]=byteStr.charCodeAt(i);
+      const blob=new Blob([ab],{type:'application/pdf'});
+      const url=URL.createObjectURL(blob);
+      window.open(url,'_blank');
+      setTimeout(()=>URL.revokeObjectURL(url),30000);
+    }
+    return;
+  }
+  // 圖片：建立可點擊的 a 元素再觸發下載
   let ext='.jpg';
   if(d.data.startsWith('data:image/png'))ext='.png';
   else if(d.data.startsWith('data:image/gif'))ext='.gif';
   else if(d.data.startsWith('data:image/webp'))ext='.webp';
-  else if(d.data.startsWith('data:application/pdf'))ext='.pdf';
   const a=document.createElement('a');
   a.href=d.data;
   a.download=d.name+ext;
+  a.style.display='none';
+  document.body.appendChild(a);
   a.click();
-  toast('開始下載：'+d.name);
+  document.body.removeChild(a);
+  toast('已下載：'+d.name);
 }
 function deleteDoc(i){docVault.splice(i,1);localStorage.setItem('vi_docs',JSON.stringify(docVault));renderDocs();toast('文件已刪除');}
 
