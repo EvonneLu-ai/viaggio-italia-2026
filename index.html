@@ -822,13 +822,13 @@ textarea{resize:vertical;}
       <div class="di-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
       <span class="di-label">文化提醒</span>
     </button>
-    <button class="drawer-item" id="di-taxreturn" onclick="goTab('taxreturn');closeDrawer()">
-      <div class="di-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
-      <span class="di-label">退稅指南</span>
-    </button>
     <button class="drawer-item" id="di-events" onclick="goTab('events');closeDrawer()">
       <div class="di-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
       <span class="di-label">熱門活動</span>
+    </button>
+    <button class="drawer-item" id="di-taxreturn" onclick="goTab('taxreturn');closeDrawer()">
+      <div class="di-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+      <span class="di-label">退稅指南</span>
     </button>
   </div>
   <div class="drawer-footer">
@@ -2910,6 +2910,10 @@ async function autoConnect(){
     const docsRemote=await fetchDocsFB();
     if(docsRemote&&docsRemote.length>0)safeMergeDocs(docsRemote);
     else await pushDocsFB(); // Firebase 無資料 → 推本機文件上去
+    // 拉取行李清單（個人打勾狀態跨裝置同步）
+    const packRemote=await fetchPackingFB();
+    if(packRemote)applyPackingFromFB(packRemote);
+    else await pushPackingFB(); // 遠端無資料 → 推本機上去
   }catch{
     FB.connected=false;setSyncUI('offline');
   }
@@ -2957,6 +2961,40 @@ function startPolling(){
   },5000);
 }
 function stopPolling(){if(FB.pollTimer){clearInterval(FB.pollTimer);FB.pollTimer=null;}}
+
+/* ════════ 行李清單 Firebase 同步（個人私有）════════ */
+async function fetchPackingFB(){
+  const name=getMyName();if(!name||!FB.connected)return null;
+  try{
+    const r=await fetch(`${FB.url}/trips/${FB.code}/personal/${encodeURIComponent(name)}/packing.json`);
+    if(!r.ok)return null;
+    const d=await r.json();
+    return d&&typeof d==='object'?d:null;
+  }catch{return null;}
+}
+async function pushPackingFB(){
+  const name=getMyName();if(!name||!FB.connected)return;
+  try{
+    await fetch(`${FB.url}/trips/${FB.code}/personal/${encodeURIComponent(name)}/packing.json`,{
+      method:'PUT',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({state:packState,custom:packCustom})
+    });
+  }catch{}
+}
+function applyPackingFromFB(remote){
+  if(!remote)return;
+  if(remote.state&&typeof remote.state==='object'){
+    // 合併：本機已勾的保留，遠端有的也加入
+    packState=Object.assign({},remote.state,packState);
+    localStorage.setItem('vi_pack',JSON.stringify(packState));
+  }
+  if(remote.custom&&Array.isArray(remote.custom)&&remote.custom.length>0){
+    const localSet=new Set(packCustom);
+    remote.custom.forEach(i=>{if(!localSet.has(i))packCustom.push(i);});
+    localStorage.setItem('vi_pack_custom',JSON.stringify(packCustom));
+  }
+  renderPacking();
+}
 
 /* ════════ 個人帳雲端同步（依 vi_me 分路徑）════════ */
 function getMyName(){return localStorage.getItem('vi_me')||'';}
@@ -3628,6 +3666,7 @@ function togPackCat(cat){document.getElementById('pcat-'+cat)?.classList.toggle(
 function togglePack(key){
   packState[key]=!packState[key];
   localStorage.setItem('vi_pack',JSON.stringify(packState));
+  pushPackingFB();
   renderPacking();
 }
 function addPackItem(){
@@ -3636,6 +3675,7 @@ function addPackItem(){
   packCustom.push(v);
   localStorage.setItem('vi_pack_custom',JSON.stringify(packCustom));
   document.getElementById('pack-new-input').value='';
+  pushPackingFB();
   renderPacking();toast('已新增：'+v);
 }
 function removePack(item){
@@ -3643,6 +3683,7 @@ function removePack(item){
   delete packState['自訂::'+item];
   localStorage.setItem('vi_pack_custom',JSON.stringify(packCustom));
   localStorage.setItem('vi_pack',JSON.stringify(packState));
+  pushPackingFB();
   renderPacking();
 }
 function clearPackChecked(){
